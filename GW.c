@@ -90,15 +90,13 @@ draw( GraphicWraper *gw, MS_field minefield){
   MS_pos element, elementsh;
   unsigned long bx, by, b2x, b2y;
 
-  SDL_Surface **gui = ( *gw).gui;
-
   MS_video video = gw -> video;
   MS_video shift = gw -> shift;
   
   SDL_Surface *videomode = ( *gw).videomode;
   SDL_Surface **drawfield = ( *gw).drawfield;
   
-  SDL_Surface *sur = gui[ 1];
+  SDL_Surface *sur = ( *gw).sfield;
   
   int ret = 0;
   
@@ -120,12 +118,12 @@ draw( GraphicWraper *gw, MS_field minefield){
     
     if( drawfield[ elementsh.x + elementsh.y * shift.width] != tile){
       
-      MS_BlitSurface( tile, gui[ 0], elementsh.x * ( *gw).ewidth , elementsh.y * ( *gw).eheight, 0, 0, ( *gw).ewidth, ( *gw).eheight);
+      MS_BlitSurface( tile, ( *gw).vfield, elementsh.x * ( *gw).ewidth , elementsh.y * ( *gw).eheight, 0, 0, ( *gw).ewidth, ( *gw).eheight);
       
       drawfield[ elementsh.x + elementsh.y * shift.width] = tile;
       
-      if( sur != gui[ 0]){
-        MS_scale( gui[ 0], gui[ 1],
+      if( sur != ( *gw).vfield){
+        MS_scale( ( *gw).vfield, ( *gw).sfield,
                   ( elementsh.x * shift.realwidth ) / shift.width , ( elementsh.y * shift.realheight) / shift.height,
                   ( shift.realwidth + shift.width) / shift.width, ( shift.realheight + shift.height) / shift.height);
       }
@@ -245,8 +243,8 @@ int
 window_resize( GraphicWraper *window, MS_video new_video){
   int ret = 0;
   
-  if( ( *window).gui[ 1] != ( *window).vfield){
-    SDL_FreeSurface( ( *window).gui[ 1]);
+  if( ( *window).sfield != ( *window).vfield){
+    SDL_FreeSurface( ( *window).sfield);
   }
   
   ( *window).video.realwidth  = ( ( *window).video.realwidth  * new_video.width ) / ( *window).fake.realwidth;
@@ -283,16 +281,16 @@ window_resize( GraphicWraper *window, MS_video new_video){
   
   if( ( *window).video.realwidth  == ( ( *window).video.width  * 15) &&
       ( *window).video.realheight == ( ( *window).video.height * 15)){
-    ( *window).gui[ 1] = ( *window).vfield;
+    ( *window).sfield = ( *window).vfield;
   }else{
-    ( *window).gui[ 1] = SDL_CreateRGBSurface( FALSE, ( *window).video.realwidth, ( *window).video.realheight, 24, 0xff0000, 0xff00, 0xff, 0);
+    ( *window).sfield = SDL_CreateRGBSurface( FALSE, ( *window).video.realwidth, ( *window).video.realheight, 24, 0xff0000, 0xff00, 0xff, 0);
   }
   
-  if( ( *window).gui[ 1] == NULL){
+  if( ( *window).sfield == NULL){
     return -2;
   }
   
-  MS_scale( ( *window).gui[ 0], ( *window).gui[ 1], 0, 0, ( *window).video.realwidth, ( *window).video.realheight);
+  MS_scale( ( *window).vfield, ( *window).sfield, 0, 0, ( *window).video.realwidth, ( *window).video.realheight);
   
   return ret;
 }
@@ -367,19 +365,17 @@ GW_Create( MS_video video, MS_video fake, unsigned long no_resize, MS_field mine
     goto fault;
   }
   
-  ( *GW).gui[ 0] = ( *GW).vfield;
-  
   if( video.realwidth  == ( video.width  * ( *GW).ewidth ) &&
       video.realheight == ( video.height * ( *GW).eheight)){
-    ( *GW).gui[ 1] = ( *GW).vfield;
+    ( *GW).sfield = ( *GW).vfield;
   }else{
-    ( *GW).gui[ 1] = SDL_CreateRGBSurface( FALSE, video.realwidth, video.realheight, 24, 0xff0000, 0xff00, 0xff, 0);
+    ( *GW).sfield = SDL_CreateRGBSurface( FALSE, video.realwidth, video.realheight, 24, 0xff0000, 0xff00, 0xff, 0);
   }
   
-  if( ( *GW).gui[ 1] == NULL){
+  if( ( *GW).sfield == NULL){
     goto fault;
   }
-    
+  
   ( *GW).drawfield = ( SDL_Surface **)malloc( sizeof( SDL_Surface *) * ( *GW).shift.width * ( *GW).shift.height);
   
   if( ( *GW).drawfield == NULL){
@@ -422,9 +418,9 @@ GW_Free( GraphicWraper *GW){
   if( GW != NULL){
     SDL_FreeSurface( ( *GW).videomode);
     
-    SDL_FreeSurface( ( *GW).gui[ 0]);
-    if( ( *GW).gui[ 0] != ( *GW).gui[ 1]){
-      SDL_FreeSurface( ( *GW).gui[ 1]);
+    SDL_FreeSurface( ( *GW).vfield);
+    if( ( *GW).vfield != ( *GW).sfield){
+      SDL_FreeSurface( ( *GW).sfield);
     }
     SDL_FreeSurface( ( *GW).clear);
     SDL_FreeSurface( ( *GW).one  );

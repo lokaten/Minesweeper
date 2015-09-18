@@ -18,9 +18,9 @@ typedef struct{
 
   
 typedef struct{
-  SDL_Surface *gui[ 14];
   SDL_Surface *videomode;
   SDL_Surface *vfield;
+  SDL_Surface *sfield;
   unsigned long global;
   MS_video mfvid;
   MS_video video;
