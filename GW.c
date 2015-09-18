@@ -121,11 +121,15 @@ draw( GraphicWraper *gw, MS_field minefield){
       MS_BlitSurface( tile, ( *gw).vfield, elementsh.x * ( *gw).ewidth , elementsh.y * ( *gw).eheight, 0, 0, ( *gw).ewidth, ( *gw).eheight);
       
       drawfield[ elementsh.x + elementsh.y * shift.width] = tile;
-      
+      /*TODO: resize is broken
       if( sur != ( *gw).vfield){
         MS_scale( ( *gw).vfield, ( *gw).sfield,
                   ( elementsh.x * shift.realwidth ) / shift.width , ( elementsh.y * shift.realheight) / shift.height,
                   ( shift.realwidth + shift.width) / shift.width, ( shift.realheight + shift.height) / shift.height);
+      }
+      */
+      if( sur != ( *gw).vfield){
+        MS_scale( ( *gw).vfield, ( *gw).sfield, 0, 0, gw -> sfield -> w, gw -> sfield -> h);
       }
     }
   }
@@ -185,7 +189,7 @@ drawelement( GraphicWraper *gui, __uint8_t element){
 
 void
 MS_scale( SDL_Surface *src, SDL_Surface *dst, signed long x, signed long y, unsigned long w, unsigned long h){
-  unsigned long sampel = 4;
+  unsigned long sampel = 2;
   unsigned long dw = dst -> w;
   unsigned long dh = dst -> h;
   unsigned long sw = src -> w;

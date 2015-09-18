@@ -187,6 +187,10 @@ main( int argc, char** argv){
     
   srand( ( unsigned)time( ( void *)NULL));
   
+  if( xscale || yscale || video.realwidth || video.realheight || !no_resize){
+    MS_print( mss.err, "\rTODO: resize is broken\n");
+  }
+  
   if( !minefield.width != !minefield.height){
     MS_print( mss.err, "\rspecified --width or --height with out the other isn't recomended.\n");
     helpopt = 2;
