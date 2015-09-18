@@ -160,7 +160,7 @@ drawelement( GraphicWraper *gui, __uint8_t element){
     return ( *gui).cover;
   }
   
-  if( element & EMINE){
+  if( ( element & EMINE) && ( element & ECOUNT) != ECOUNT){
     return ( *gui).mine;
   }
 
