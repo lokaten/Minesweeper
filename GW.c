@@ -167,15 +167,15 @@ drawelement( GraphicWraper *gui, __uint8_t element){
   }
 
   switch( ECOUNT & element){
-  case EC_ZERO : return ( *gui).clear;
-  case EC_ONE  : return ( *gui).one;
-  case EC_TWO  : return ( *gui).two;
-  case EC_THERE: return ( *gui).three;
-  case EC_FOUR : return ( *gui).four;
-  case EC_FIVE : return ( *gui).five;
-  case EC_SIX  : return ( *gui).six;
-  case EC_SEVEN: return ( *gui).seven;
-  case EC_EIGHT: return ( *gui).eight;
+  case 0: return ( *gui).clear;
+  case 1: return ( *gui).one;
+  case 2: return ( *gui).two;
+  case 3: return ( *gui).three;
+  case 4: return ( *gui).four;
+  case 5: return ( *gui).five;
+  case 6: return ( *gui).six;
+  case 7: return ( *gui).seven;
+  case 8: return ( *gui).eight;
   /**/
   case 0xf:  return ( *gui).clear;
   default:

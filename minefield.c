@@ -83,7 +83,7 @@ uncov( MS_field minefield, ComandStream *uncovque, MS_mstr *mine){
       
     /* check if elemnt has no suronding mines and if that is the case continue whit uncovering the neigburing elemnts
      */
-    if( ( uncover_element( minefield, *element, mine) & ECOUNT) == EC_ZERO){
+    if( ( uncover_element( minefield, *element, mine) & ECOUNT) == 0){
       if unlikely( addelement( uncovque, minefield, ( *element).x + 1, ( *element).y + 1) == -2) ret = -2;
       if unlikely( addelement( uncovque, minefield, ( *element).x - 1, ( *element).y + 1) == -2) ret = -2;
       if unlikely( addelement( uncovque, minefield, ( *element).x    , ( *element).y + 1) == -2) ret = -2;

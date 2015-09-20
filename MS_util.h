@@ -98,26 +98,6 @@ typedef struct{
 /*ECOUNT   0b00001111*/
 #define ECOUNT   0x0f
 
-/*EC_ZERO*/
-#define EC_ZERO 0
-/*EC_ONE*/
-#define EC_ONE 1
-/*EC_TWO*/
-#define EC_TWO 2
-/*EC_THERE*/
-#define EC_THERE 3
-/*EC_FOUR*/
-#define EC_FOUR 4
-/*EC_FIVE*/
-#define EC_FIVE 5
-/*EC_SIX*/
-#define EC_SIX 6
-/*EC_SEVEN*/
-#define EC_SEVEN 7
-/*EC_EIGHT*/
-#define EC_EIGHT 8
-
-
 #define MS_RAND_MAX   4294967290u
 #define MS_RAND16_MAX 65535
 #define MS_RAND8_MAX  255
@@ -147,11 +127,10 @@ typedef struct{
  */
 INLINE __uint32_t
 LOCALE_( MS_rand)( __uint32_t seed){
-  return ( ( ( ( __uint64_t)seed + 2654435671u) * 2654435803u) % 4294967291u);
+  return ( ( ( ( __uint64_t)seed + 2654435671lu) * 2654435803lu) % 4294967291lu);
 }
 #define MS_rand LOCALE_( MS_rand)
 
-  
 /*
  * same as "MS_rand()"
  */
