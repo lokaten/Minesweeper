@@ -16,7 +16,7 @@ typedef struct{
   unsigned long noelements;
   unsigned long hit;
   __uint32_t seed;
-  __uint32_t reseed;
+  unsigned long reseed;
 }MS_mstr;
 
 

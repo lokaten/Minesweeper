@@ -62,7 +62,6 @@ main( int argc, char** argv){
   unsigned long debug = 0;
   unsigned long no_resize = 0;
 
-  unsigned long seed = MS_RAND_MAX + 1;
   unsigned long force = 0;
   
   GraphicWraper *window;
@@ -82,7 +81,7 @@ main( int argc, char** argv){
     { OPTSW_LU , "Element high minefield"                 , "height"       , 0  , &( minefield.height)},
     { OPTSW_LU , "Number of mines"                        , "level"        , 0  , &( mine.level      )},
 #ifdef DEBUG
-    { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"         , 0  , &( seed            )},
+    { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"         , 0  , &( mine.reseed     )},
 #endif
     { OPTSW_BO , ""                                       , "global"       , 'g', &( minefield.global)},
     { OPTSW_GRP, ""                                       , "Video"        , 0  , NULL                },
@@ -119,7 +118,8 @@ main( int argc, char** argv){
   minefield.width  = 0;
   minefield.height = 0;
   mine.level       = 0;
-    
+  mine.reseed      = 0;
+  
   video.width  = 0;
   video.height = 0;
   video.realwidth  = 0;
@@ -155,19 +155,13 @@ main( int argc, char** argv){
     mss.out = NULL;
   }
   
-  mine.reseed = ( __uint32_t)seed;
-  
   if( ( beginner || expert || advanced) &&
       ( minefield.width || minefield.height ||
-        mine.level || minefield.global || ( mine.reseed <= MS_RAND_MAX))){
+        mine.level || minefield.global || mine.reseed)){
     MS_print( mss.err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
     helpopt = 2;
   }
-    
-  if( mine.reseed > MS_RAND_MAX){
-    mine.seed = MS_rand_seed();
-  }
-    
+  
   
 #ifdef DEBUG
   if( mss.deb != NULL){
@@ -175,16 +169,16 @@ main( int argc, char** argv){
      * NOTE: user input changes how the minfield is generated.
      */
     
-    if( mine.reseed <= MS_RAND_MAX){
-      mine.seed = mine.reseed;
-    } 
-    
     MS_print( mss.deb, "\rSeed: %08x   \n", mine.seed);
     MS_print( mss.deb, "\rNOTE: user input changes how the minfield is generated.\n", mine.seed);
     MS_print( mss.deb, "\rTODO: print new seed when setminefield is called.\n", mine.seed);
   }
 #endif
-    
+
+  if( !mine.reseed){
+    mine.reseed = MS_rand_seed();
+  }
+  
   srand( ( unsigned)time( ( void *)NULL));
   
   if( xscale || yscale || video.realwidth || video.realheight || !no_resize){
