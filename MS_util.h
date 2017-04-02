@@ -98,7 +98,7 @@ typedef struct{
 /*ECOUNT   0b00001111*/
 #define ECOUNT   0x0f
 
-#define MS_RAND_MAX   4294967290u
+#define MS_RAND_MAX   4294967295u
 #define MS_RAND16_MAX 65535
 #define MS_RAND8_MAX  255
 
@@ -111,9 +111,7 @@ typedef struct{
  * 
  * exmpel 0: seed = MS_rand_seed();
  * 
- * "exmpel 0" is the recomended way to get a good seed, it works around known
- * bad seed's, and will also be updated for futuer stupidity that the devoloper
- * behinde "MS_util.h" migth have...
+ * "exmpel 0" is the recomended way to get a good seed.
  * 
  * exmpel 1: MS_rand( ++seed);
  *
@@ -127,32 +125,13 @@ typedef struct{
  */
 INLINE __uint32_t
 LOCALE_( MS_rand)( __uint32_t seed){
-  return ( ( ( ( __uint64_t)seed + 2654435671lu) * 2654435803lu) % 4294967291lu);
+  return ( ( ( ( __uint64_t)seed + 2654435405lu) * 2654435909lu) & 4294967295lu);
 }
 #define MS_rand LOCALE_( MS_rand)
 
-/*
- * same as "MS_rand()"
- */
-INLINE __uint16_t
-LOCALE_( MS_rand16)( __uint16_t seed){
-  return ( ( ( ( __uint32_t)seed + 1) * 40897) % 65537) - 1;
-}
-#define MS_rand16 LOCALE_( MS_rand16)
 
 /*
- * same as "MS_rand()"
- */
-INLINE __uint8_t
-LOCALE_( MS_rand8)( __uint8_t seed){
-  return ( ( ( ( __uint16_t)seed + 1) * 167) % 257) - 1;
-}
-#define MS_rand8 LOCALE_( MS_rand8)
-
-
-
-/*
- * return a seed, for use with MS_rand( void)
+ * return a seed, for use with MS_rand( __uint32_t seed)
  */
 INLINE __uint32_t
 LOCALE_( rand_seed)( void){
@@ -167,12 +146,7 @@ LOCALE_( rand_seed)( void){
 #else
   seed = ( __uint32_t)time( NULL);
 #endif
-
-  /* break loop-back...*/
-  while( seed == MS_rand( seed)){
-    seed += 42;
-  }
-      
+  
   return seed;
 }
 #define MS_rand_seed LOCALE_( rand_seed)
