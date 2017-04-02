@@ -41,11 +41,7 @@ void CS_Free( ComandStream *);
  * and if you use it rigth it's partily therad safe
  */
 
-
-/* 16 set of 8 byte long words, two dram acses on morden machin's
- * four on older and potantily one on futer
- */
-#define CS_ALOC_SIZE 128
+#define CS_ALOC_SIZE 4096
 
 ComandStream *
 LOCALE_( CS_Create)( size_t size){
