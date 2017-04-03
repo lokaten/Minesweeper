@@ -1,8 +1,5 @@
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
 
-#include "MS_util.h"
 
 #ifdef _MS_GW_H__
 #else
@@ -11,6 +8,11 @@
 extern "C" {
 #endif
 
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+
+#include "MS_util.h"
+  
 typedef struct{
   int x;
   int y;

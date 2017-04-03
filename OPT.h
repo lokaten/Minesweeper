@@ -1,5 +1,4 @@
 
-#include "MS_util.h"
 
 #ifdef _OPT_H__
 #else
@@ -8,7 +7,8 @@
 extern "C" {
 #endif
 
-  
+#include "MS_util.h"
+
 typedef struct{
   unsigned long optsw;
   char *discript;

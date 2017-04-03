@@ -1,10 +1,4 @@
 
-#include <time.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <assert.h>
-
-#include <sys/time.h>
 
 #ifdef _MS_UTIL_H__
 #else
@@ -12,6 +6,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <time.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <assert.h>
+
+#include <sys/time.h>
 
 
 #define TRUE  1

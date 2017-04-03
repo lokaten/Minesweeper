@@ -1,5 +1,4 @@
 
-#include "MS_util.h"
 
 #ifdef _MS_CS_H__
 #else
@@ -8,6 +7,7 @@
 extern "C" {
 #endif
 
+#include "MS_util.h"
 
 typedef struct{
   size_t blk_size;
