@@ -2,6 +2,7 @@
 #define LOCALE_( name) GW_##name
 
 #include "MS_util.h"
+#include "minefield.h"
 #include "GW.h"
 
 

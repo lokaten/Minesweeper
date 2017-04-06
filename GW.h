@@ -12,6 +12,7 @@ extern "C" {
 #include <SDL/SDL_image.h>
 
 #include "MS_util.h"
+#include "minefield.h"
   
 typedef struct{
   int x;

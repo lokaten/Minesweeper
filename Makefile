@@ -10,9 +10,9 @@ ifeq ($(SMALL), yes)
 CFLAGS ?= -Os -DNDEBUG
 endif
 
-CFLAGS ?= -O3 -DNDEBUG
+CFLAGS ?= -Ofast -DNDEBUG
 
-CFLAGS += -pedantic -Wall -Wextra  -Wformat-security -Werror=format-security
+CFLAGS  += -pedantic -Wall -Wextra  -Wformat-security -Werror=format-security
 
 PFLAGS =
 
@@ -78,7 +78,7 @@ endif
 	$(CC) $(CFLAGS) $(PFLAGS) $(LTO_FLAGS) -c -o $@ $<
 
 # Dependencies
-main.o:       main.c        MS_util.h GW.h ComandStream.h OPT.h
-GW.o:         GW.c          MS_util.h GW.h
-minefield.o:  minefield.c   MS_util.h      ComandStream.h
-OPT.o:        OPT.c         MS_util.h                     OPT.h
+main.o:       main.c        MS_util.h GW.h             ComandStream.h OPT.h
+GW.o:         GW.c          MS_util.h GW.h minefield.h
+minefield.o:  minefield.c   MS_util.h                  ComandStream.h
+OPT.o:        OPT.c         MS_util.h                                 OPT.h

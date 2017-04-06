@@ -50,18 +50,6 @@ typedef struct{
   __uint16_t y;
 }MS_pos;
 
-
-typedef struct{
-  __uint8_t *data;
-  unsigned long realwidth;
-  unsigned long realheight;
-  unsigned long width;
-  unsigned long height;
-  unsigned long subwidth;
-  unsigned long subheight;
-  unsigned long global;
-}MS_field;
-
     
 typedef struct{
   unsigned long realheight;
@@ -105,6 +93,18 @@ typedef struct{
 
 #ifdef LOCALE_
 
+INLINE unsigned long
+LOCALE_( gen_divobj)( unsigned long a){
+  return ( 8589934591lu + a) / a;
+}
+#define gen_divobj LOCALE_( gen_divobj)
+  
+INLINE unsigned long
+LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
+  return ( ( ( ( b * divobj) & 8589934591lu) * a) >> 33);
+}
+#define mol_ LOCALE_( mol_)
+  
 /*
  * return a "random" number...
  *

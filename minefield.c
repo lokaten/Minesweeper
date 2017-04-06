@@ -6,21 +6,30 @@
 
 #include "MS_util.h"
 #include "ComandStream.h"
-
 #include "minefield.h"
 
 __uint8_t uncover_element( MS_field, MS_pos, MS_mstr *);
 __uint8_t setmine_element( __uint8_t *, MS_mstr *);
 INLINE int addelement( ComandStream *, MS_field, signed long, signed long);
 
+/*
+INLINE __uint8_t *
+acse( MS_field field, int x, int y){
+  return field.data + ( mol_( ( ( x) + field.width ), field.width , field.width_divobj ) +
+			mol_( ( ( y) + field.height), field.height, field.height_divobj) * field.width);
+}
+*/
 
 void
 setminefield( MS_video video, MS_field minefield, MS_mstr *mine){
   unsigned long i;
   unsigned long x;
   
+  minefield.width_divobj  = gen_divobj( minefield.width );
+  minefield.height_divobj = gen_divobj( minefield.height);
+  
   i = video.height;
-    
+  
   x = minefield.subwidth - video.xdiff;
   x = x < video.width? x: video.width;
   
@@ -43,8 +52,8 @@ setminefield( MS_video video, MS_field minefield, MS_mstr *mine){
   ( *mine).mines = 0;
   
   ( *mine).hit = 0;
-
-  if( ( *mine).reseed <= MS_RAND_MAX){
+  
+  if( ( *mine).reseed){
     ( *mine).seed = ( *mine).reseed;
   }
   

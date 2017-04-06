@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+#include <stdlib.h>
+  
 #include "MS_util.h"
 
 typedef struct{
