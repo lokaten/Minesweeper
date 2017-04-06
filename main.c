@@ -109,11 +109,8 @@ main( int argc, char** argv){
   
   mss.err = stderr;
   mss.out = stdout;
-#ifdef DEBUG
-  mss.deb = stdout;
-#else
   mss.deb = NULL;
-#endif
+  
   
   minefield.width  = 0;
   minefield.height = 0;
@@ -412,6 +409,10 @@ main( int argc, char** argv){
     GW_Free( window);
     
     MS_print( mss.out, "\nBye!\n");
+
+    if( mss.out == NULL){
+      MS_print( mss.deb, "\n");
+    }
     
     exit( ret);
   }
