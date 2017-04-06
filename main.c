@@ -133,8 +133,11 @@ main( int argc, char** argv){
   
   minefield.global = 0;
   
-
-  procopt( mss, opt, argc, argv);
+  
+  if( procopt( mss, opt, argc, argv)){
+    if( !vquiet) MS_print( mss.err, "\rWRong or broken input, pleas refer to --help\n");
+    helpopt = 2;
+  }
   
   
   if( !debug){
@@ -164,15 +167,13 @@ main( int argc, char** argv){
   
   
 #ifdef DEBUG
-  if( mss.deb != NULL){
-    /* print seed so that you can re run spcific minefield
-     * NOTE: user input changes how the minfield is generated.
-     */
+  /* print seed so that you can re run spcific minefield
+   * NOTE: user input changes how the minfield is generated.
+   */
     
-    MS_print( mss.deb, "\rSeed: %08x   \n", mine.seed);
-    MS_print( mss.deb, "\rNOTE: user input changes how the minfield is generated.\n", mine.seed);
-    MS_print( mss.deb, "\rTODO: print new seed when setminefield is called.\n", mine.seed);
-  }
+  MS_print( mss.deb, "\rSeed: %08x   \n", mine.seed);
+  MS_print( mss.deb, "\rNOTE: user input changes how the minfield is generated.\n");
+  MS_print( mss.deb, "\rTODO: print new seed when setminefield is called.\n");
 #endif
 
   if( !mine.reseed){
