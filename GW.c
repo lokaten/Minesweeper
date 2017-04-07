@@ -44,24 +44,25 @@ window_scroll( GraphicWraper *window, MS_diff diff){
 
 int MS_OpenImage( SDL_Texture **tdst, SDL_Renderer *render, SDL_Rect *rec, char *str, __uint32_t c){
   SDL_Surface *img, *dst;
+  int ret = 0;
   if unlikely( str != NULL){
     img = IMG_Load( str);
   }else{
     img = NULL;
   }
-  dst = SDL_CreateRGBSurface( FALSE, ( *rec).h, ( *rec).w, 24, 0xff0000, 0xff00, 0xff, 0x0);
+  dst = SDL_CreateRGBSurface( FALSE, rec -> w, rec -> h, 24, 0xff0000, 0xff00, 0xff, 0x0);
   if unlikely( dst == NULL){
     return -4;
   }
   SDL_FillRect( dst, rec, c);
   if unlikely( img == NULL){
-    return -3;
+    ret =  -3;
   }
-  MS_BlitSurface( img, dst, ( *rec).x, ( *rec).y, 0, 0, ( *rec).w, ( *rec).h);
+  if( img != NULL) MS_BlitSurface( img, dst, rec -> x, rec -> y, 0, 0, rec -> w, rec -> h);
   *tdst = SDL_CreateTextureFromSurface( render, dst);
-  SDL_free( img);
-  SDL_free( dst);
-  return 0;
+  if( img != NULL) SDL_free( img);
+  if( dst != NULL) SDL_free( dst);
+  return ret;
 }
 
 /* 
