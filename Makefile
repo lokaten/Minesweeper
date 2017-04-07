@@ -22,7 +22,7 @@ endif
 
 LTO_FLAGS =
 LDFLAGS =
-LIBS = -lrt -lSDL -lSDL_image
+LIBS = -lrt -lSDL2 -lSDL2_image
 
 ifeq ($(LTO),yes)
 LTO_FLAGS += -flto=1 -fuse-linker-plugin

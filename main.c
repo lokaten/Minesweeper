@@ -463,16 +463,6 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
       switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
       case SDL_QUIT:
         return 0;
-      case SDL_VIDEOEXPOSE:
-        nextframe = tutime;
-        break;
-      case SDL_VIDEORESIZE:
-        if( window_resize( window, ( MS_video){ .width = event.resize.w, .height = event.resize.h})){
-          MS_print( mss.err, "\rresize faild!                                             \n");
-          return -1;
-        }
-        nextframe = tutime;
-        break;
       case SDL_KEYDOWN:
         if( ( err = keypressevent( event, mss, minefield, mfvid, &diff, uncovque, &mine)) > 0){
           nextframe = tutime;
