@@ -47,7 +47,7 @@ extern "C" {
 #endif
   
   void setzero( MS_field, MS_mstr *, MS_video);
-  void setminefield( MS_video, MS_field, MS_mstr *);
+  void setminefield( MS_stream, MS_video, MS_field, MS_mstr *);
   int uncov( MS_field, ComandStream *, MS_mstr *);
   int uncov_elements( MS_field, ComandStream *, MS_video, MS_mstr *);
   

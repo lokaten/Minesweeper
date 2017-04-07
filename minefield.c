@@ -21,7 +21,7 @@ acse( MS_field field, int x, int y){
 */
 
 void
-setminefield( MS_video video, MS_field minefield, MS_mstr *mine){
+setminefield( MS_stream mss, MS_video video, MS_field minefield, MS_mstr *mine){
   unsigned long i;
   unsigned long x;
   
@@ -55,7 +55,11 @@ setminefield( MS_video video, MS_field minefield, MS_mstr *mine){
   
   if( ( *mine).reseed){
     ( *mine).seed = ( *mine).reseed;
+  }else{
+    ( *mine).seed = MS_rand_seed();
   }
+  
+  MS_print( mss.deb, "\rSeed: %08x   \n", mine -> seed);
   
   return;
 }

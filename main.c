@@ -4,7 +4,6 @@
 #include <stdarg.h>
 #include <errno.h>
 
-#include <time.h>
 #include <limits.h>
 
 #define LOCALE_( name) MAIN_##name
@@ -25,7 +24,7 @@ quit(){
 
 
 int mainloop( MS_stream, MS_field, GraphicWraper *, ComandStream *, MS_mstr);
-int keypressevent( SDL_Event, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
+int keypressevent( SDL_Event, MS_stream, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
 int keyreleasevent( SDL_Event, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
 int pointerpressevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
 int pointerreleasevent( SDL_Event, MS_stream, MS_video, MS_field, ComandStream *, MS_mstr *, __uint64_t, __uint64_t);
@@ -161,24 +160,7 @@ main( int argc, char** argv){
     MS_print( mss.err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
     helpopt = 2;
   }
-  
-  
-#ifdef DEBUG
-  /* print seed so that you can re run spcific minefield
-   * NOTE: user input changes how the minfield is generated.
-   */
     
-  MS_print( mss.deb, "\rSeed: %08x   \n", mine.seed);
-  MS_print( mss.deb, "\rNOTE: user input changes how the minfield is generated.\n");
-  MS_print( mss.deb, "\rTODO: print new seed when setminefield is called.\n");
-#endif
-
-  if( !mine.reseed){
-    mine.reseed = MS_rand_seed();
-  }
-  
-  srand( ( unsigned)time( ( void *)NULL));
-  
   if( xscale || yscale || video.realwidth || video.realheight || !no_resize){
     MS_print( mss.err, "\rTODO: resize is broken\n");
   }
@@ -232,7 +214,13 @@ main( int argc, char** argv){
     minefield.height = minefield.height? minefield.height: 16;
     mine.level       = mine.level      ? mine.level      : 99;
   }
-  
+
+    
+  if( mine.level >= ( minefield.width * minefield.height)){
+    mine.level = ( minefield.width * minefield.height + 1) / 3;
+    MS_print( mss.err, "\rMore mine then elments, reset mine cout to: %lu\n", mine.level);
+  }
+    
   if( helpopt){
     if( helpopt == 2){
       if( !force){
@@ -245,6 +233,8 @@ main( int argc, char** argv){
     }
   }
   
+  MS_print( mss.deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
+  MS_print( mss.deb, "\rNOTE: user input changes how the minfield is generated.\n");
   
   if( benchmark){
     minefield.width  = minefield.width ? minefield.width : 3200;
@@ -261,12 +251,7 @@ main( int argc, char** argv){
 
   minefield.width  = minefield.width ? minefield.width : WIDTH;
   minefield.height = minefield.height? minefield.height: HEIGHT;
-  
     
-  if( mine.level >= ( minefield.width * minefield.height)){
-    mine.level = ( minefield.width * minefield.height + 1) / 3;
-    MS_print( mss.err, "\rMore mine then elments, reset mine cout to: %lu\n", mine.level);
-  }
   
   if( mine.level == 0){
     mine.level = ( minefield.width * minefield.height + 4) / 8;
@@ -452,7 +437,8 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
   mfvid.width  = minefield.subwidth;
   mfvid.height = minefield.subheight;
   
-  setminefield( mfvid, minefield, &mine);
+  setminefield( mss, mfvid, minefield, &mine);
+  
   
   while( TRUE){
     
@@ -488,7 +474,7 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
         nextframe = tutime;
         break;
       case SDL_KEYDOWN:
-        if( ( err = keypressevent( event, minefield, mfvid, &diff, uncovque, &mine)) > 0){
+        if( ( err = keypressevent( event, mss, minefield, mfvid, &diff, uncovque, &mine)) > 0){
           nextframe = tutime;
         }
         break;
@@ -563,7 +549,7 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
 
 
 int
-keypressevent( SDL_Event event, MS_field minefield, MS_video mfvid, MS_diff *diff, ComandStream *uncovque, MS_mstr *mine){
+keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvid, MS_diff *diff, ComandStream *uncovque, MS_mstr *mine){
   int ret = 0;
   switch( event.key.keysym.sym){
   case SDLK_ESCAPE:
@@ -571,7 +557,7 @@ keypressevent( SDL_Event event, MS_field minefield, MS_video mfvid, MS_diff *dif
     return 0;
   case SDLK_F2:
     if( ( *mine).uncoverd || ( *mine).flaged){
-      setminefield( mfvid, minefield, mine);
+      setminefield( mss, mfvid, minefield, mine);
       return 1;
     }
     return 0;
