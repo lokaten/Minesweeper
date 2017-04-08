@@ -175,15 +175,15 @@ GW_Create( MS_video video, MS_video fake, unsigned long no_resize, MS_field mine
 
   ( void)no_resize;
   
-  ( *GW).shift.xdiff = 0;
-  ( *GW).shift.ydiff = 0;
-  ( *GW).shift.realxdiff = 0;
-  ( *GW).shift.realydiff = 0;
+  GW -> shift.xdiff = 0;
+  GW -> shift.ydiff = 0;
+  GW -> shift.realxdiff = 0;
+  GW -> shift.realydiff = 0;
   
-  ( *GW).shift.width  = video.width  + 1;
-  ( *GW).shift.height = video.height + 1;
-  ( *GW).shift.realwidth  = ( ( *GW).shift.width  * video.realwidth ) / video.width ;
-  ( *GW).shift.realheight = ( ( *GW).shift.height * video.realheight) / video.height;
+  GW -> shift.width  = video.width  + 1;
+  GW -> shift.height = video.height + 1;
+  GW -> shift.realwidth  = ( GW -> shift.width  * video.realwidth ) / video.width ;
+  GW -> shift.realheight = ( GW -> shift.height * video.realheight) / video.height;
   
   video.xdiff = 0;
   video.ydiff = 0;
@@ -191,21 +191,21 @@ GW_Create( MS_video video, MS_video fake, unsigned long no_resize, MS_field mine
   video.realydiff = 0;
   
   if( video.width < minefield.width){
-    video.width  = ( *GW).shift.width;
-    video.realwidth  = ( *GW).shift.realwidth;
+    video.width  = GW -> shift.width;
+    video.realwidth  = GW -> shift.realwidth;
   }
   
   if( video.height < minefield.height){
-    video.height = ( *GW).shift.height;
-    video.realheight = ( *GW).shift.realheight;
+    video.height = GW -> shift.height;
+    video.realheight = GW -> shift.realheight;
   }
   
   if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)){
     return NULL;
   }
   
-  ( *GW).ewidth  = 15;
-  ( *GW).eheight = 15;
+  GW -> ewidth  = 15;
+  GW -> eheight = 15;
   
   GW -> window = SDL_CreateWindow( "Minesweeper", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 				   fake.realwidth, fake.realheight, 0);
@@ -223,22 +223,22 @@ GW_Create( MS_video video, MS_video fake, unsigned long no_resize, MS_field mine
     SDL_Rect rec;
     rec.x = 0;
     rec.y = 0;
-    rec.h = ( *GW).ewidth;
-    rec.w = ( *GW).eheight;
+    rec.h = GW -> ewidth;
+    rec.w = GW -> eheight;
     
-    MS_OpenImage( &( *GW).clear, GW -> renderer, &rec, "nola.png",  0xeeeeee);
-    MS_OpenImage( &( *GW).one  , GW -> renderer, &rec, "etta.png",  0x0000ff);
-    MS_OpenImage( &( *GW).two  , GW -> renderer, &rec, "tvaa.png",  0x00ff00);
-    MS_OpenImage( &( *GW).three, GW -> renderer, &rec, "trea.png",  0xff0000);
-    MS_OpenImage( &( *GW).four , GW -> renderer, &rec, "fyra.png",  0xcccc00);
-    MS_OpenImage( &( *GW).five , GW -> renderer, &rec, "fema.png",  0xbb0044);
-    MS_OpenImage( &( *GW).six  , GW -> renderer, &rec, "sexa.png",  0x00ffff);
-    MS_OpenImage( &( *GW).seven, GW -> renderer, &rec, "sjua.png",  0xbbbbbb);
-    MS_OpenImage( &( *GW).eight, GW -> renderer, &rec, "ataa.png",  0x666666);
+    MS_OpenImage( &GW -> clear, GW -> renderer, &rec, "nola.png",  0xeeeeee);
+    MS_OpenImage( &GW -> one  , GW -> renderer, &rec, "etta.png",  0x0000ff);
+    MS_OpenImage( &GW -> two  , GW -> renderer, &rec, "tvaa.png",  0x00ff00);
+    MS_OpenImage( &GW -> three, GW -> renderer, &rec, "trea.png",  0xff0000);
+    MS_OpenImage( &GW -> four , GW -> renderer, &rec, "fyra.png",  0xcccc00);
+    MS_OpenImage( &GW -> five , GW -> renderer, &rec, "fema.png",  0xbb0044);
+    MS_OpenImage( &GW -> six  , GW -> renderer, &rec, "sexa.png",  0x00ffff);
+    MS_OpenImage( &GW -> seven, GW -> renderer, &rec, "sjua.png",  0xbbbbbb);
+    MS_OpenImage( &GW -> eight, GW -> renderer, &rec, "ataa.png",  0x666666);
     
-    MS_OpenImage( &( *GW).mine , GW -> renderer, &rec, "mina.png",  0xffaa77);
-    MS_OpenImage( &( *GW).cover, GW -> renderer, &rec, "plata.png", 0x888888);
-    MS_OpenImage( &( *GW).flag , GW -> renderer, &rec, "flaga.png", 0xffff00);
+    MS_OpenImage( &GW -> mine , GW -> renderer, &rec, "mina.png",  0xffaa77);
+    MS_OpenImage( &GW -> cover, GW -> renderer, &rec, "plata.png", 0x888888);
+    MS_OpenImage( &GW -> flag , GW -> renderer, &rec, "flaga.png", 0xffff00);
   }
   
   SDL_EventState( SDL_JOYAXISMOTION, SDL_IGNORE);
@@ -248,8 +248,8 @@ GW_Create( MS_video video, MS_video fake, unsigned long no_resize, MS_field mine
   SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
   SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
   
-  ( *GW).video = video;
-  ( *GW).fake  = fake;
+  GW -> video = video;
+  GW -> fake  = fake;
   
   return GW;
  fault:
