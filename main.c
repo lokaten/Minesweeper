@@ -207,12 +207,7 @@ main( int argc, char** argv){
     mine.level       = mine.level      ? mine.level      : 99;
   }
 
-    
-  if( mine.level >= ( minefield.width * minefield.height)){
-    mine.level = ( minefield.width * minefield.height + 1) / 3;
-    MS_print( mss.err, "\rMore mine then elments, reset mine cout to: %lu\n", mine.level);
-  }
-    
+      
   if( helpopt){
     if( helpopt == 2){
       if( !force){
@@ -305,6 +300,11 @@ main( int argc, char** argv){
   
   if( minefield.realheight == 0){
     minefield.realheight = ( minefield.height * video.realheight) / video.height;
+  }
+  
+  if( mine.level >= ( minefield.width * minefield.height)){
+    mine.level = ( minefield.width * minefield.height + 1) / 3;
+    MS_print( mss.err, "\rMore mine then elments, reset mine cout to: %lu\n", mine.level);
   }
   
   if( !minefield.global && !force){

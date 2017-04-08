@@ -200,6 +200,12 @@ GW_Create( MS_video rel, MS_video log, unsigned long no_resize, MS_field minefie
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
   SDL_RenderSetLogicalSize( GW -> renderer, GW -> logical.realwidth, GW -> logical.realheight);
+
+  if( no_resize){
+    SDL_SetWindowResizable( GW ->  window, SDL_FALSE);
+  }else{
+    SDL_SetWindowResizable( GW ->  window, SDL_TRUE);
+  }
   
   {
     SDL_Rect rec;
