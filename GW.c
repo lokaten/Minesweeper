@@ -190,7 +190,7 @@ GW_Create( MS_video rel, MS_video log, unsigned long no_resize, MS_field minefie
   }
   
   GW -> window = SDL_CreateWindow( "Minesweeper", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-				   GW -> real.realwidth, GW -> real.realheight, 0);
+				   GW -> real.realwidth, GW -> real.realheight, SDL_WINDOW_HIDDEN);
   
   GW -> renderer = SDL_CreateRenderer( GW -> window, -1, 0);
   
@@ -235,7 +235,9 @@ GW_Create( MS_video rel, MS_video log, unsigned long no_resize, MS_field minefie
   SDL_EventState( SDL_JOYBUTTONUP  , SDL_IGNORE);
   SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
   SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
-    
+
+  SDL_ShowWindow( GW -> window);
+  
   return GW;
  fault:
   SDL_Quit();
