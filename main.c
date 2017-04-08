@@ -420,12 +420,18 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
   
   
   while( TRUE){
-    
-    if( nexttu <= tutime){
+
+    if( nexttu > tutime){
+      e = SDL_WaitEventTimeout( &event, ( nexttu - tutime) / 1000000);
+      tutime = getnanosec();
+      if( !mine.uncoverd){
+	gamestart = tutime;
+      }
+    }else{
       if( mine.uncoverd && !mine.hit && mine.uncoverd < ( mine.noelements - mine.level)){
-        MS_print( mss.out, "\r\t\t\t %lu of %lu      ", mine.flaged, mine.level);
+	MS_print( mss.out, "\r\t\t\t %lu of %lu      ", mine.flaged, mine.level);
       }else{
-        gamestart = tutime;
+	gamestart = tutime;
       }
       
       printtime( mss.out, ( tutime - gamestart) / 1000000);
@@ -502,14 +508,6 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
         
         MS_print( mss.deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
       }
-    }
-    
-    if likely( !( e = SDL_PollEvent( &event))){
-      tutime = getnanosec();
-      if( !mine.uncoverd){
-        gamestart = tutime;
-      }
-      SDL_Delay( 1);
     }
   }
   
