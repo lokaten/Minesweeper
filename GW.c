@@ -15,30 +15,24 @@ void MS_scale( SDL_Surface *, SDL_Surface *, signed long, signed long, unsigned 
 
 
 int
-window_scroll( GraphicWraper *window, MS_diff diff){
-  if( !( *window).global){
-    diff.x = ( signed long)( *window).video.realxdiff > diff.x? diff.x: ( signed long)( *window).video.realxdiff;
-    diff.y = ( signed long)( *window).video.realydiff > diff.y? diff.y: ( signed long)( *window).video.realydiff;
-    diff.x = ( ( *window).video.realxdiff + ( *window).fake.realwidth  - diff.x) < ( ( *window).mfvid.realwidth ) ? diff.x: -( signed long)( ( *window).mfvid.realwidth  - ( ( *window).video.realxdiff + ( *window).fake.realwidth ));
-    diff.y = ( ( *window).video.realydiff + ( *window).fake.realheight - diff.y) < ( ( *window).mfvid.realheight) ? diff.y: -( signed long)( ( *window).mfvid.realheight - ( ( *window).video.realydiff + ( *window).fake.realheight));
+window_scroll( GraphicWraper *GW, MS_diff diff){
+  if( !GW -> global){
+    diff.x = ( signed long)GW -> logical.realxdiff > diff.x? diff.x: ( signed long)GW -> logical.realxdiff;
+    diff.y = ( signed long)GW -> logical.realydiff > diff.y? diff.y: ( signed long)GW -> logical.realydiff;
+    diff.x = ( GW -> logical.realxdiff + GW -> logical.realwidth  - diff.x) < ( GW -> mfvid.realwidth ) ? diff.x: -( signed long)( GW -> mfvid.realwidth  - ( GW -> logical.realxdiff + GW -> logical.realwidth ));
+    diff.y = ( GW -> logical.realydiff + GW -> logical.realheight - diff.y) < ( GW -> mfvid.realheight) ? diff.y: -( signed long)( GW -> mfvid.realheight - ( GW -> logical.realydiff + GW -> logical.realheight));
   }
-
+  
   if( ( !diff.x) && ( !diff.y)){
     return 0;
   }
   
-  ( *window).video.realxdiff = ( ( *window).video.realxdiff + ( *window).mfvid.realwidth  - diff.x) % ( *window).mfvid.realwidth;
-  ( *window).video.realydiff = ( ( *window).video.realydiff + ( *window).mfvid.realheight - diff.y) % ( *window).mfvid.realheight;
+  GW -> logical.realxdiff = ( GW -> logical.realxdiff + GW -> mfvid.realwidth  - diff.x) % GW -> mfvid.realwidth;
+  GW -> logical.realydiff = ( GW -> logical.realydiff + GW -> mfvid.realheight - diff.y) % GW -> mfvid.realheight;
   
-  ( *window).video.xdiff = ( ( *window).video.width  * ( *window).video.realxdiff) / ( *window).video.realwidth;
-  ( *window).video.ydiff = ( ( *window).video.height * ( *window).video.realydiff) / ( *window).video.realheight;
+  GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff) / GW -> logical.realwidth;
+  GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff) / GW -> logical.realheight;
   
-  ( *window).shift.realxdiff = ( ( *window).shift.realxdiff + ( *window).video.realwidth  - diff.x) % ( *window).video.realwidth;
-  ( *window).shift.realydiff = ( ( *window).shift.realydiff + ( *window).video.realheight - diff.y) % ( *window).video.realheight;
-  
-  ( *window).shift.xdiff = ( ( *window).video.width  * ( *window).shift.realxdiff) / ( *window).video.realwidth;
-  ( *window).shift.ydiff = ( ( *window).video.height * ( *window).shift.realydiff) / ( *window).video.realheight;
-
   return 1;
 }
 
@@ -98,9 +92,9 @@ draw( GraphicWraper *GW, MS_field minefield){
   unsigned long i;
   SDL_Texture *tile;
 
-  MS_video video = GW -> video; 
+  MS_video video = GW -> logical; 
   
-  i = GW -> shift.width * GW -> shift.height;
+  i = GW -> logical.width * GW -> logical.height;
   
   while( i--){
     
@@ -166,49 +160,37 @@ drawelement( GraphicWraper *gui, __uint8_t element){
 
 
 GraphicWraper *
-GW_Create( MS_video video, MS_video fake, unsigned long no_resize, MS_field minefield){
+GW_Create( MS_video rel, MS_video log, unsigned long no_resize, MS_field minefield){
   GraphicWraper *GW = ( GraphicWraper *)malloc( sizeof( GraphicWraper));
   
   if( GW == NULL){
     return NULL;
   }
 
+  GW -> real    = rel;
+  GW -> logical = log;
+
+  GW -> ewidth  = 15;
+  GW -> eheight = 15;
+  
+  GW -> logical.realwidth  = GW -> logical.width  * GW -> ewidth;
+  GW -> logical.realheight = GW -> logical.height * GW -> eheight;
+
+  GW -> logical.xdiff = 0;
+  GW -> logical.ydiff = 0;
+  
+  GW -> logical.realxdiff = 0;
+  GW -> logical.realydiff = 0;
+  
+  ( void)minefield;
   ( void)no_resize;
-  
-  GW -> shift.xdiff = 0;
-  GW -> shift.ydiff = 0;
-  GW -> shift.realxdiff = 0;
-  GW -> shift.realydiff = 0;
-  
-  GW -> shift.width  = video.width  + 1;
-  GW -> shift.height = video.height + 1;
-  GW -> shift.realwidth  = ( GW -> shift.width  * video.realwidth ) / video.width ;
-  GW -> shift.realheight = ( GW -> shift.height * video.realheight) / video.height;
-  
-  video.xdiff = 0;
-  video.ydiff = 0;
-  video.realxdiff = 0;
-  video.realydiff = 0;
-  
-  if( video.width < minefield.width){
-    video.width  = GW -> shift.width;
-    video.realwidth  = GW -> shift.realwidth;
-  }
-  
-  if( video.height < minefield.height){
-    video.height = GW -> shift.height;
-    video.realheight = GW -> shift.realheight;
-  }
-  
+    
   if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)){
     return NULL;
   }
   
-  GW -> ewidth  = 15;
-  GW -> eheight = 15;
-  
   GW -> window = SDL_CreateWindow( "Minesweeper", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-				   fake.realwidth, fake.realheight, 0);
+				   GW -> real.realwidth, GW -> real.realheight, 0);
   
   GW -> renderer = SDL_CreateRenderer( GW -> window, -1, 0);
   
@@ -217,7 +199,7 @@ GW_Create( MS_video video, MS_video fake, unsigned long no_resize, MS_field mine
   }
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-  SDL_RenderSetLogicalSize( GW -> renderer, GW -> shift.width * GW -> ewidth, GW -> shift.height * GW -> eheight);
+  SDL_RenderSetLogicalSize( GW -> renderer, GW -> logical.realwidth, GW -> logical.realheight);
   
   {
     SDL_Rect rec;
@@ -247,10 +229,7 @@ GW_Create( MS_video video, MS_video fake, unsigned long no_resize, MS_field mine
   SDL_EventState( SDL_JOYBUTTONUP  , SDL_IGNORE);
   SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
   SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
-  
-  GW -> video = video;
-  GW -> fake  = fake;
-  
+    
   return GW;
  fault:
   SDL_Quit();

@@ -25,9 +25,8 @@ typedef struct{
   SDL_Renderer *renderer;
   unsigned long global;
   MS_video mfvid;
-  MS_video video;
-  MS_video shift;
-  MS_video fake;
+  MS_video real;
+  MS_video logical;
   unsigned long ewidth;
   unsigned long eheight;
   SDL_Texture *cover;

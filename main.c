@@ -42,7 +42,6 @@ main( int argc, char** argv){
   
   MS_field minefield;
   MS_video video;
-  MS_video fake;
   MS_mstr mine;
     
   unsigned long expert = 0;
@@ -120,10 +119,7 @@ main( int argc, char** argv){
   video.height = 0;
   video.realwidth  = 0;
   video.realheight = 0;
-  
-  fake.realwidth  = 0;
-  fake.realheight = 0;
-  
+    
   minefield.realwidth  = 0;
   minefield.realheight = 0;
   
@@ -161,10 +157,6 @@ main( int argc, char** argv){
     helpopt = 2;
   }
     
-  if( xscale || yscale || video.realwidth || video.realheight || !no_resize){
-    MS_print( mss.err, "\rTODO: resize is broken\n");
-  }
-  
   if( !minefield.width != !minefield.height){
     MS_print( mss.err, "\rspecified --width or --height with out the other isn't recomended.\n");
     helpopt = 2;
@@ -270,7 +262,6 @@ main( int argc, char** argv){
     if( video.width > minefield.width){
       video.width  = minefield.width;
     }
-    fake.realwidth = video.realwidth <= ( video.width * xscale)? video.realwidth: video.width * xscale;
     video.realwidth = video.width * xscale;
   }
   
@@ -279,7 +270,6 @@ main( int argc, char** argv){
     if( video.height > minefield.height){
       video.height = minefield.height;
     }
-    fake.realheight = video.realheight <= ( video.height * yscale)? video.realheight: video.height * yscale;
     video.realheight = video.height * yscale;
   }
   
@@ -317,17 +307,6 @@ main( int argc, char** argv){
     minefield.realheight = ( minefield.height * video.realheight) / video.height;
   }
   
-  fake.width  = video.width;
-  fake.height = video.height;
-  
-  if( fake.realwidth  == 0){
-    fake.realwidth  = video.realwidth;
-  }
-  
-  if( fake.realheight == 0){
-    fake.realheight = video.realheight;
-  }
-  
   if( !minefield.global && !force){
     if( minefield.width == 9 && minefield.height == 9 && mine.level == 10){
       MS_print( mss.out, "\rMode: beginner \n");
@@ -342,8 +321,8 @@ main( int argc, char** argv){
     }
   }
   
-  window = GW_Create( video, fake, no_resize, minefield);
-
+  window = GW_Create( video, video, no_resize, minefield);
+  
   if( window == NULL){
     exit( 1);
   }
@@ -477,18 +456,18 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
         }
         break;
       case SDL_MOUSEBUTTONDOWN:
-        if( ( err = pointerpressevent( event, window, ( *window).video, minefield, uncovque, &mine)) > 0){
+        if( ( err = pointerpressevent( event, window, window -> logical, minefield, uncovque, &mine)) > 0){
           nextframe = tutime;
         }
         break;
       case SDL_MOUSEBUTTONUP:
-        if( ( err = pointerreleasevent( event, mss, ( *window).video, minefield, uncovque, &mine, tutime, gamestart)) > 0){
+        if( ( err = pointerreleasevent( event, mss, window -> logical, minefield, uncovque, &mine, tutime, gamestart)) > 0){
           nextframe = tutime;
         }
         nextframe = tutime;
         break;
       case SDL_MOUSEMOTION:
-        if( ( err = pointermoveevent( event, window, ( *window).video, minefield, uncovque, &mine)) > 0){
+        if( ( err = pointermoveevent( event, window, window -> logical, minefield, uncovque, &mine)) > 0){
           nextframe = tutime;
         }
         break;
