@@ -509,13 +509,13 @@ keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvi
     quit();
     return 0;
   case SDLK_F2:
-    if( ( *mine).uncoverd || ( *mine).flaged){
+    if( mine -> uncoverd || mine -> flaged){
       setminefield( mss, mfvid, minefield, mine);
       return 1;
     }
     return 0;
   case SDLK_F3:
-    if( ( *mine).uncoverd < ( ( *mine).noelements - ( *mine).flaged)){
+    if( mine -> uncoverd < ( mine -> noelements - mine -> flaged)){
       ret = uncov_elements( minefield, uncovque, mfvid, mine);
     }
     if unlikely( uncov( minefield, uncovque, mine)){
@@ -524,23 +524,23 @@ keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvi
     return ret;
   case SDLK_h:
   case SDLK_LEFT:
-    ( *diff).x -= 3;
-    ( *diff).x = ( *diff).x < -3? -3: ( *diff).x;
+    diff -> x -= 3;
+    diff -> x = diff -> x < -3? -3: diff -> x;
     return 1;
   case SDLK_j:
   case SDLK_DOWN:
-    ( *diff).y += 3;
-    ( *diff).y = ( *diff).y > 3? 3: ( *diff).y;
+    diff -> y += 3;
+    diff -> y = ( *diff).y > 3? 3: diff -> y;
     return 1;
   case SDLK_k:
   case SDLK_UP:
-    ( *diff).y -= 3;
-    ( *diff).y = ( *diff).y < -3? -3: ( *diff).y;
+    diff -> y -= 3;
+    diff -> y = diff -> y < -3? -3: diff -> y;
     return 1;
   case SDLK_l:
   case SDLK_RIGHT:
-    ( *diff).x += 3;
-    ( *diff).x = ( *diff).x > 3? 3: ( *diff).x;
+    diff -> x += 3;
+    diff -> x = ( *diff).x > 3? 3: diff -> x;
     return 1;
   default:
     return 0;
@@ -557,23 +557,23 @@ keyreleasevent( SDL_Event event, MS_field minefield, MS_video mfvid, MS_diff *di
   switch( event.key.keysym.sym){
   case SDLK_h:
   case SDLK_LEFT:
-    ( *diff).x += 3;
-    ( *diff).x = ( *diff).x < 0? 0: ( *diff).x;
+    diff -> x += 3;
+    diff -> x = diff -> x < 0? 0: diff -> x;
     return 0;
   case SDLK_j:
   case SDLK_DOWN:
-    ( *diff).y -= 3;
-    ( *diff).y = ( *diff).y > 0? 0: ( *diff).y;
+    diff -> y -= 3;
+    diff -> y = diff -> y > 0? 0: diff -> y;
     return 0;
   case SDLK_k:
   case SDLK_UP:
-    ( *diff).y += 3;
-    ( *diff).y = ( *diff).y < 0? 0: ( *diff).y;
+    diff -> y += 3;
+    diff -> y = diff -> y < 0? 0: diff -> y;
     return 0;
   case SDLK_l:
   case SDLK_RIGHT:
-    ( *diff).x -= 3;
-    ( *diff).x = ( *diff).x > 0? 0: ( *diff).x;
+    diff -> x -= 3;
+    diff -> x = diff -> x > 0? 0: diff -> x;
     return 0;
   default:
     return 0;
