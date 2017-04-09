@@ -4,7 +4,7 @@ CC = clang -std=c11
 endif
 
 ifeq ($(GCC), yes)
-CC = gcc -std=c89
+CC = gcc -std=c11
 endif
 
 ifeq ($(DEBUG), yes)
