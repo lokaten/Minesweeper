@@ -574,7 +574,7 @@ keyreleasevent( SDL_Event event, MS_field minefield, MS_video mfvid, MS_diff *di
 
 int
 swap_flag( MS_field minefield, int x, int y, MS_mstr *mine){
-  __uint8_t ret, *element = acse( minefield, x, y);
+  __uint8_t ret = 0, *element = acse( minefield, x, y);
   if( *element & EFLAG){
     *element &= ~EFLAG;
     --mine -> flaged;
@@ -584,6 +584,7 @@ swap_flag( MS_field minefield, int x, int y, MS_mstr *mine){
     ++mine -> flaged;
     ret = 1;
   }
+  
   return ( int)ret;
 }
 

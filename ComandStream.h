@@ -49,6 +49,7 @@ INLINE void LOCALE_( CS_Free)( ComandStream *);
 #define CS_ALOC_SIZE 4096
 
 _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
+_Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 
 ComandStream *
 LOCALE_( CS_Create)( size_t size){

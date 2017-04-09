@@ -95,7 +95,7 @@ typedef struct{
 #ifdef LOCALE_
 
 INLINE unsigned long LOCALE_( gen_divobj)( unsigned long);
-  INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
+INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
 INLINE __uint32_t LOCALE_( MS_rand)( __uint32_t);
 INLINE __uint32_t LOCALE_( rand_seed)( void);
 INLINE int LOCALE_( print)( FILE *, const char *, ...);
@@ -161,6 +161,7 @@ LOCALE_( rand_seed)( void){
 }
 #define MS_rand_seed LOCALE_( rand_seed)
 
+_Pragma("GCC diagnostic ignored \"-Wformat-nonliteral\"")
 
 INLINE int
 LOCALE_( print)( FILE *stream, const char * format, ...){

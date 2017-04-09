@@ -18,7 +18,11 @@ endif
 CFLAGS ?= -Ofast -DNDEBUG
 
 CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wstrict-overflow=5 -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
-CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
+CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
+
+ifeq ($(GCC), yes)
+CFLAGS += -Wlogical-op
+endif
 
 ifeq ($(DEV), yes)
 CFLAGS += -Werror -DDEBUG
