@@ -11,8 +11,6 @@ extern "C" {
   
   typedef struct{
     __uint8_t *data;
-    unsigned long realwidth;
-    unsigned long realheight;
     unsigned long width;
     unsigned long width_divobj;
     unsigned long height;

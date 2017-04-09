@@ -43,7 +43,7 @@ main( int argc, char** argv){
   MS_field minefield;
   MS_video video;
   MS_mstr mine;
-    
+  
   unsigned long expert = 0;
   unsigned long advanced = 0;
   unsigned long beginner = 0;
@@ -119,10 +119,7 @@ main( int argc, char** argv){
   video.height = 0;
   video.realwidth  = 0;
   video.realheight = 0;
-    
-  minefield.realwidth  = 0;
-  minefield.realheight = 0;
-  
+      
   minefield.global = 0;
   
   
@@ -286,22 +283,12 @@ main( int argc, char** argv){
   
   if( video.realwidth  == 0){
     video.realwidth  = video.width  * 15;
-    minefield.realwidth  = minefield.width  * 15;
   }
   
   if( video.realheight == 0){
     video.realheight = video.height * 15;
-    minefield.realheight = minefield.height * 15;
   }
-  
-  if( minefield.realwidth  == 0){
-    minefield.realwidth  = ( minefield.width  * video.realwidth ) / video.width;
-  }
-  
-  if( minefield.realheight == 0){
-    minefield.realheight = ( minefield.height * video.realheight) / video.height;
-  }
-  
+    
   if( mine.level >= ( minefield.width * minefield.height)){
     mine.level = ( minefield.width * minefield.height + 1) / 3;
     MS_print( mss.err, "\rMore mine then elments, reset mine cout to: %lu\n", mine.level);
@@ -333,7 +320,7 @@ main( int argc, char** argv){
     SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
   }
   
-  ( *window).global = minefield.global;
+  window -> global = minefield.global;
 
   {
     int ret;
@@ -359,10 +346,10 @@ main( int argc, char** argv){
       memset( minefield.data, ESET, minefield.width * minefield.height);
     }
     
-    ( *window).mfvid.width  = minefield.width;
-    ( *window).mfvid.height = minefield.height;
-    ( *window).mfvid.realwidth  = minefield.realwidth;
-    ( *window).mfvid.realheight = minefield.realheight;
+    window -> mfvid.width  = minefield.width;
+    window -> mfvid.height = minefield.height;
+    window -> mfvid.realwidth  = minefield.width  * window -> ewidth;
+    window -> mfvid.realheight = minefield.height * window -> eheight;
     
     ret = mainloop( mss, minefield, window, uncovque, mine);
     
