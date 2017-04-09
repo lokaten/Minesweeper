@@ -13,7 +13,10 @@ extern "C" {
 #include <assert.h>
 
 #include <sys/time.h>
-
+#ifdef CLOCK_MONOTONIC
+#else
+#include <SDL2/SDL_timer.h>
+#endif
 
 #define TRUE  1
 #define FALSE 0

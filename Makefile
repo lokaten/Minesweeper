@@ -1,6 +1,5 @@
 
-# for now specify gnu99, we shuld make sure that Minesweper complais whit iso c99
-CC = gcc -std=gnu99
+CC = gcc -std=c11
 
 ifeq ($(DEBUG), yes)
 CFLAGS = -Og -ggdb -DDEBUG
