@@ -105,6 +105,8 @@ draw( GraphicWraper *GW, MS_field minefield){
     elementsh.y = ( ( video.height + ( ( minefield.height + ( element.y) - video.ydiff) % minefield.height)) % video.height);
     
     tile = drawelement( GW, minefield.data[ element.x + element.y * minefield.width]);
+
+    if( tile == NULL) return -3;
     
     srect.x = 0;
     srect.y = 0;
