@@ -35,10 +35,11 @@ typedef struct{
 
 
 INLINE ComandStream *LOCALE_( CS_Create)( size_t);
-INLINE void LOCALE_( CS_Free)( ComandStream *);
-INLINE void LOCALE_( CS_Finish)( ComandStream *, void *);
-INLINE void LOCALE_( CS_Push)( ComandStream *, void *);
 INLINE void *LOCALE_( CS_Fetch)( ComandStream *);
+INLINE void LOCALE_( CS_Push)( ComandStream *, void *);
+INLINE void *LOCALE_( CS_Releas)( ComandStream *);
+INLINE void LOCALE_( CS_Finish)( ComandStream *, void *);
+INLINE void LOCALE_( CS_Free)( ComandStream *);
 
 /* 
  * ComandStream interface are a fast way to push large amount of data around,
@@ -115,10 +116,10 @@ LOCALE_( CS_Fetch)( ComandStream *CS){
           ++( *CS).crebfet;
           goto bail;
         }
-        //lock
+        /*lock*/
         *( char **)( ptr + ( *CS).blk_size) = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
         *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) = ptr;
-        //unlock
+        /*unlock*/
       }
       ( *CS).blk_fetch = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
       ( *CS).fetch  = ( *CS).blk_fetch;
@@ -191,10 +192,10 @@ LOCALE_( CS_Finish)( ComandStream *CS, void *ptr){
   if likely( CS != NULL){
     if( ( *CS).efinish >= ( *CS).nelb){
       if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) != ( *CS).blk_finish){
-        //lock
+	/*lock*/
 	char *lptr =  *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
 	*( char **)( ( *CS).blk_fetch + ( ( *CS).blk_size)) = *( char **)( lptr + ( *CS).blk_size);
-	//unlock
+	/*unlock*/
 	free( lptr);
       }
       ( *CS).blk_finish = *( char **)( ( *CS).blk_finish + ( *CS).blk_size);

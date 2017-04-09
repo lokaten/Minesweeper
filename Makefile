@@ -4,7 +4,7 @@ CC = clang -std=c11
 endif
 
 ifeq ($(GCC), yes)
-CC = gcc -std=c11
+CC = gcc -std=c89
 endif
 
 ifeq ($(DEBUG), yes)
@@ -18,17 +18,17 @@ endif
 CFLAGS ?= -Ofast -DNDEBUG
 
 CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wstrict-overflow=5 -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
-CFLAGS += -Wstrict-aliasing -fmax-errors=5 -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
-
-PFLAGS =
+CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
 
 ifeq ($(DEV), yes)
 CFLAGS += -Werror -DDEBUG
 endif
 
+CXXFLAGS = $CFLAGS -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
+
+PFLAGS =
 LTO_FLAGS =
 LDFLAGS =
-LIBS = -lrt -lSDL2 -lSDL2_image
 
 ifeq ($(LTO),yes)
 LTO_FLAGS += -flto=1 -fuse-linker-plugin
@@ -57,6 +57,7 @@ RM = rm -f
 STRIP = strip --strip-unneeded
 
 TARGET = Minesweeper
+LIBS = -lrt -lSDL2 -lSDL2_image
 
 .PHONY: all clean
 .SUFFIXES: .c .o

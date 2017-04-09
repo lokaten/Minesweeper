@@ -91,11 +91,17 @@ typedef struct{
 #define ECOUNT   0x0f
 
 #define MS_RAND_MAX   4294967295u
-#define MS_RAND16_MAX 65535
-#define MS_RAND8_MAX  255
 
 #ifdef LOCALE_
 
+INLINE unsigned long LOCALE_( gen_divobj)( unsigned long);
+  INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
+INLINE __uint32_t LOCALE_( MS_rand)( __uint32_t);
+INLINE __uint32_t LOCALE_( rand_seed)( void);
+INLINE int LOCALE_( print)( FILE *, const char *, ...);
+INLINE __uint64_t LOCALE_( getmicrosec)( void);
+INLINE __uint64_t LOCALE_( getnanosec)( void);
+	
 INLINE unsigned long
 LOCALE_( gen_divobj)( unsigned long a){
   return ( 8589934591lu + a) / a;

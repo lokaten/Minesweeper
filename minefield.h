@@ -34,6 +34,7 @@ extern "C" {
   }MS_mstr;
   
 #ifdef LOCALE_
+  INLINE __uint8_t *LOCALE_( acse)( MS_field, int, int);
   
   INLINE __uint8_t *
   LOCALE_( acse)( MS_field field, int x, int y){

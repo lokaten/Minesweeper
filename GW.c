@@ -249,8 +249,6 @@ GW_Create( MS_video rel, unsigned long no_resize){
 void
 GW_Free( GraphicWraper *GW){
   if( GW != NULL){
-    //free GW -> window
-        
     SDL_Quit();
     
     free( GW);
