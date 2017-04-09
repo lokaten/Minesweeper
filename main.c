@@ -373,13 +373,11 @@ main( int argc, char** argv){
 
 
 int
-mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream *uncovque, MS_mstr mine){
+mainloop( MS_stream mss, MS_field minefield, GraphicWraper *GW, ComandStream *uncovque, MS_mstr mine){
   SDL_Event event;
     
   __uint64_t tutime, nextframe, gamestart, nexttu;
-  
-  MS_video mfvid;
-  
+    
   MS_diff diff;
   
   __uint32_t seed = MS_rand_seed();
@@ -395,16 +393,9 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
   gamestart = tutime;
   nextframe = tutime;
   nexttu = tutime;
-  
-  mfvid.xdiff = 0;
-  mfvid.ydiff = 0;
-  
-  mfvid.width  = minefield.subwidth;
-  mfvid.height = minefield.subheight;
-  
-  setminefield( mss, mfvid, minefield, &mine);
-  
-  
+    
+  setminefield( mss, GW -> mfvid, minefield, &mine);
+    
   while( TRUE){
 
     if( nexttu > tutime){
@@ -435,12 +426,12 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
       case SDL_QUIT:
         return 0;
       case SDL_KEYDOWN:
-        if( ( err = keypressevent( event, mss, minefield, mfvid, &diff, uncovque, &mine)) > 0){
+        if( ( err = keypressevent( event, mss, minefield, GW -> mfvid, &diff, uncovque, &mine)) > 0){
           nextframe = tutime;
         }
         break;
       case SDL_KEYUP:
-        if( ( err = keyreleasevent( event, minefield, mfvid, &diff, uncovque, &mine)) > 0){
+        if( ( err = keyreleasevent( event, minefield, GW -> mfvid, &diff, uncovque, &mine)) > 0){
           nextframe = tutime;
         }
         if( diff.x || diff.y){
@@ -448,18 +439,18 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
         }
         break;
       case SDL_MOUSEBUTTONDOWN:
-        if( ( err = pointerpressevent( event, window, window -> logical, minefield, uncovque, &mine)) > 0){
+        if( ( err = pointerpressevent( event, GW, GW -> logical, minefield, uncovque, &mine)) > 0){
           nextframe = tutime;
         }
         break;
       case SDL_MOUSEBUTTONUP:
-        if( ( err = pointerreleasevent( event, mss, window -> logical, minefield, uncovque, &mine, tutime, gamestart)) > 0){
+        if( ( err = pointerreleasevent( event, mss, GW -> logical, minefield, uncovque, &mine, tutime, gamestart)) > 0){
           nextframe = tutime;
         }
         nextframe = tutime;
         break;
       case SDL_MOUSEMOTION:
-        if( ( err = pointermoveevent( event, window, window -> logical, minefield, uncovque, &mine)) > 0){
+        if( ( err = pointermoveevent( event, GW, GW -> logical, minefield, uncovque, &mine)) > 0){
           nextframe = tutime;
         }
         break;
@@ -473,7 +464,7 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
     }
     
     if( nextframe <= tutime && ( ( nextframe == tutime) || ( diff.x || diff.y))){
-      if( window_scroll( window, diff)){
+      if( window_scroll( GW, diff)){
         nextframe += 1000000000 / 30;
       }
                   
@@ -485,7 +476,7 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *window, ComandStream
         MS_print( mss.err, "\rmine count fall short, curetn count: %lu of %lu \n", mine.mines, mine.level);
       }
       
-      if unlikely( draw( window, minefield) == -3){
+      if unlikely( draw( GW, minefield) == -3){
         MS_print( mss.err, "\r\t\t\t\t\t\t\t\t\t inval data \n");
       }
       
