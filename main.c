@@ -596,9 +596,24 @@ keyreleasevent( SDL_Event event, MS_field minefield, MS_video mfvid, MS_diff *di
 
 
 int
+swap_flag( MS_field minefield, int x, int y, MS_mstr *mine){
+  __uint8_t ret, *element = acse( minefield, x, y);
+  if( *element & EFLAG){
+    *element &= ~EFLAG;
+    --mine -> flaged;
+    ret = 1;
+  }else if( *element & ECOVER){
+    *element|= EFLAG;
+    ++mine -> flaged;
+    ret = 1;
+  }
+  return ( int)ret;
+}
+
+
+int
 pointerpressevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field minefield, ComandStream *uncovque, MS_mstr *mine){
   MS_pos postion;
-  unsigned long pos;
   int ret = 0;
   MS_video vid;
   
@@ -607,8 +622,6 @@ pointerpressevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field 
   
   postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield.width;
   postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield.height;
-  
-  pos = postion.x + postion.y * minefield.width;
   
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
@@ -624,22 +637,11 @@ pointerpressevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field 
       vid.width  = 3;
       vid.height = 3;
     }
-
+    
     ret = uncov_elements( minefield, uncovque, vid, mine);
     break;
   case SDL_BUTTON_RIGHT:
-    if( minefield.data[ pos] & EFLAG){
-      minefield.data[ pos] &= ~EFLAG;
-      --( *mine).flaged;
-      ret = 1;
-      break;
-    }
-
-    if( ( minefield.data[ pos] & ECOVER) && !( minefield.data[ pos] & EFLAG)){
-      minefield.data[ pos] |= EFLAG;
-      ++( *mine).flaged;
-      ret = 1;
-    }
+    swap_flag( minefield, postion.x, postion.y, mine);
     break;
   }
   
@@ -647,17 +649,14 @@ pointerpressevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field 
 }
 
 
-
 int
 pointerreleasevent( SDL_Event event, MS_stream mss, MS_video video, MS_field minefield, ComandStream *uncovque, MS_mstr *mine, __uint64_t tutime, __uint64_t gamestart){
-  MS_pos postion;
+  MS_pos postion, *el;
   int ret = 0;
   MS_video vid;
-
+  
   MS_video mfvid;
   
-  unsigned long pos;
-
   mfvid.xdiff = 0;
   mfvid.ydiff = 0;
   mfvid.width  = minefield.subwidth;
@@ -665,20 +664,16 @@ pointerreleasevent( SDL_Event event, MS_stream mss, MS_video video, MS_field min
   
   postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield.width;
   postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield.height;
-
-  pos = postion.x + postion.y * minefield.width;
   
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
   case SDL_BUTTON_MIDDLE:
-
-    if( ( mine -> uncoverd == ( mine -> noelements - mine -> level))
-        || ( mine -> hit)){
-      MS_pos *el;
-      while( ( el = CS_Releas( uncovque)) != NULL){
-        *acse( minefield, el -> x, el -> y) |= ECOVER;
-        CS_Finish( uncovque, el);
-      }
+    while( ( el = CS_Releas( uncovque)) != NULL){
+      *acse( minefield, el -> x, el -> y) |= ECOVER;
+      CS_Finish( uncovque, el);
+    }
+    
+    if( ( mine -> uncoverd == ( mine -> noelements - mine -> level)) || ( mine -> hit)){
       break;
     }
     
@@ -688,14 +683,6 @@ pointerreleasevent( SDL_Event event, MS_stream mss, MS_video video, MS_field min
     vid.height = 1;
     
     if( event.button.button == SDL_BUTTON_MIDDLE){
-      if( ( ( minefield.data[ pos] & ECOVER) && !( minefield.data[ pos] & EFLAG))){
-        MS_pos *el;
-        while( ( el = CS_Releas( uncovque)) != NULL){
-          *acse( minefield, el -> x, el -> y) |= ECOVER;
-          CS_Finish( uncovque, el);
-        }
-        break;
-      }
       vid.xdiff = ( minefield.width  + vid.xdiff - 1) % minefield.width;
       vid.ydiff = ( minefield.height + vid.ydiff - 1) % minefield.height;
       vid.width  = 3;
@@ -706,26 +693,26 @@ pointerreleasevent( SDL_Event event, MS_stream mss, MS_video video, MS_field min
       /*let's play "Texas Sharpshooter"*/
       setzero( minefield, mine, vid);
     }
-
-    ret = 1;
+    
+    ret += uncov_elements( minefield, uncovque, vid, mine);
     
     if unlikely( uncov( minefield, uncovque, mine)){
       ret = -2;
     }
-
+    
     if likely( gamestart != tutime){
       if unlikely( mine -> hit){
-        printtime( mss.out, ( tutime - gamestart) / 1000000);
+	printtime( mss.out, ( tutime - gamestart) / 1000000);
         MS_print( mss.out, "\r\t\t\t Mine!!               \n");
         uncov_elements( minefield, uncovque, mfvid, mine);
         
         if unlikely( uncov( minefield, uncovque, mine)){
-          ret = -2;
-        }
+	  ret = -2;
+	}
       }
       
       if unlikely( !mine -> hit && ( mine -> uncoverd == ( mine -> noelements - mine -> level))){
-        printtime( mss.out, ( tutime - gamestart) / 1000000);
+	printtime( mss.out, ( tutime - gamestart) / 1000000);
         MS_print( mss.out, "\r\t\t\t Win!!         \n");
       }
     }
@@ -738,16 +725,50 @@ pointerreleasevent( SDL_Event event, MS_stream mss, MS_video video, MS_field min
 
 int
 pointermoveevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field minefield, ComandStream *uncovque, MS_mstr *mine){
-  ( void)event;
+  MS_pos postion, prv_pos;
+  
+  unsigned long pos, pps, ret = 0;
+  
+  MS_video vid;
+  
   ( void)gw;
   ( void)video;
-  ( void)minefield;
-  ( void)mine;
-  ( void)uncovque;
-  return 0;
+  
+  postion.x = ( ( unsigned long)( ( ( event.motion.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield.width;
+  postion.y = ( ( unsigned long)( ( ( event.motion.y + video.realydiff) * video.height) / video.realheight)) % minefield.height;
+  
+  prv_pos.x = ( ( unsigned long)( ( ( event.motion.x - event.motion.xrel + video.realxdiff) * video.width ) / video.realwidth )) % minefield.width;
+  prv_pos.y = ( ( unsigned long)( ( ( event.motion.y - event.motion.yrel + video.realydiff) * video.height) / video.realheight)) % minefield.height;
+  
+  pos = postion.x + postion.y * minefield.width;
+  
+  pps = prv_pos.x + prv_pos.y * minefield.width;
+  
+  if( pos == pps) return 0;
+  
+  if( event.motion.state & SDL_BUTTON_LMASK){
+    vid.xdiff = postion.x;
+    vid.ydiff = postion.y;
+    vid.width  = 1;
+    vid.height = 1;
+    ret += uncov_elements( minefield, uncovque, vid, mine);
+  }
+  
+  if( event.motion.state & SDL_BUTTON_MMASK){
+    vid.xdiff = ( minefield.width  + postion.x - 1) % minefield.width;
+    vid.ydiff = ( minefield.height + postion.y - 1) % minefield.height;
+    vid.width  = 3;
+    vid.height = 3;
+    ret += uncov_elements( minefield, uncovque, vid, mine);
+  }
+  
+  if( event.motion.state & SDL_BUTTON_RMASK){
+    ret += swap_flag( minefield, postion.x, postion.y, mine);
+    ret += swap_flag( minefield, prv_pos.x, prv_pos.y, mine);
+  }
+  
+  return ret;
 }
-
-
 
 
 void
