@@ -125,32 +125,32 @@ draw( GraphicWraper *GW, MS_field minefield){
 
 
 SDL_Texture *
-drawelement( GraphicWraper *gui, __uint8_t element){
+drawelement( GraphicWraper *GW, __uint8_t element){
 
   if( element & EFLAG){
-    return ( *gui).flag;
+    return GW -> flag;
   }
   
   if( element & ECOVER){
-    return ( *gui).cover;
+    return GW -> cover;
   }
   
   if( ( element & EMINE) && ( element & ECOUNT) != ECOUNT){
-    return ( *gui).mine;
+    return GW -> mine;
   }
 
   switch( ECOUNT & element){
-  case 0: return ( *gui).clear;
-  case 1: return ( *gui).one;
-  case 2: return ( *gui).two;
-  case 3: return ( *gui).three;
-  case 4: return ( *gui).four;
-  case 5: return ( *gui).five;
-  case 6: return ( *gui).six;
-  case 7: return ( *gui).seven;
-  case 8: return ( *gui).eight;
+  case 0: return GW -> clear;
+  case 1: return GW -> one;
+  case 2: return GW -> two;
+  case 3: return GW -> three;
+  case 4: return GW -> four;
+  case 5: return GW -> five;
+  case 6: return GW -> six;
+  case 7: return GW -> seven;
+  case 8: return GW -> eight;
   /**/
-  case 0xf:  return ( *gui).clear;
+  case 0xf:  return GW -> clear;
   default:
     return NULL;
   }
