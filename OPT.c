@@ -98,9 +98,10 @@ procopt( MS_stream mss, MS_options *opt, unsigned argc, char **argv){
 }
 
 
-void
+int
 help( MS_stream mss, MS_options *opt){
-  int ret, j = -1;
+  int ret = 0;
+  int j = -1;
   
   while( ++j < OPT_MAX){
     switch( opt[ j].optsw){
@@ -123,13 +124,12 @@ help( MS_stream mss, MS_options *opt){
       MS_print( mss.out, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
       break;
     case OPTSW_NUL:
-      return;
+      return ret;
     default:
       ret = -1;
     }
   }
 
-  ( void)ret;
-  return;
+  return ret;
 }
 
