@@ -61,10 +61,7 @@ main( int argc, char** argv){
   unsigned long no_resize = 0;
 
   unsigned long force = 0;
-  
-  GraphicWraper *window;
-  
-  
+    
   MS_stream mss;
   
   /* put all comand line option in an array ( C99?)
@@ -235,11 +232,11 @@ main( int argc, char** argv){
 
   minefield.width  = minefield.width ? minefield.width : WIDTH;
   minefield.height = minefield.height? minefield.height: HEIGHT;
-    
   
   if( mine.level == 0){
     mine.level = ( minefield.width * minefield.height + 4) / 8;
   }
+
   
   if( xscale && video.width  && ( video.realwidth  >= ( video.width  * xscale))){
     video.realwidth = video.width * xscale;
@@ -308,23 +305,24 @@ main( int argc, char** argv){
     }
   }
   
-  window = GW_Create( video, video, no_resize, minefield);
-  
-  if( window == NULL){
-    exit( 1);
-  }
-
-  if( benchmark){
-    SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
-    SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONUP  , .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
-    SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
-  }
-  
-  window -> global = minefield.global;
-
   {
     int ret;
     ComandStream *uncovque = CS_Create( sizeof( MS_pos));
+    GraphicWraper *GW;
+    
+    GW = GW_Create( video, no_resize);
+    
+    if( GW == NULL){
+      exit( 1);
+    }
+    
+    if( benchmark){
+      SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
+      SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONUP  , .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
+      SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
+    }
+    
+    GW -> global = minefield.global;
     
     minefield.subwidth  = minefield.width;
     minefield.subheight = minefield.height;
@@ -338,7 +336,7 @@ main( int argc, char** argv){
     minefield.data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield.width * minefield.height);
     
     if( minefield.data == NULL){
-      fprintf( stderr, "\rlimet-mem \n");
+      MS_print( mss.err, "\rlimet-mem \n");
       exit( 1);
     }
     
@@ -346,21 +344,21 @@ main( int argc, char** argv){
       memset( minefield.data, ESET, minefield.width * minefield.height);
     }
     
-    window -> mfvid.width  = minefield.width;
-    window -> mfvid.height = minefield.height;
-    window -> mfvid.realwidth  = minefield.width  * window -> ewidth;
-    window -> mfvid.realheight = minefield.height * window -> eheight;
+    GW -> mfvid.width  = minefield.width;
+    GW -> mfvid.height = minefield.height;
+    GW -> mfvid.realwidth  = minefield.width  * GW -> ewidth;
+    GW -> mfvid.realheight = minefield.height * GW -> eheight;
     
-    ret = mainloop( mss, minefield, window, uncovque, mine);
+    ret = mainloop( mss, minefield, GW, uncovque, mine);
     
     free( minefield.data);
     
     CS_Free( uncovque);
     
-    GW_Free( window);
+    GW_Free( GW);
     
     MS_print( mss.out, "\nBye!\n");
-
+    
     if( mss.out == NULL){
       MS_print( mss.deb, "\n");
     }

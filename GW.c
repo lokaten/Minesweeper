@@ -160,31 +160,28 @@ drawelement( GraphicWraper *gui, __uint8_t element){
 
 
 GraphicWraper *
-GW_Create( MS_video rel, MS_video log, unsigned long no_resize, MS_field minefield){
+GW_Create( MS_video rel, unsigned long no_resize){
   GraphicWraper *GW = ( GraphicWraper *)malloc( sizeof( GraphicWraper));
   
   if( GW == NULL){
     return NULL;
   }
-
+  
   GW -> real    = rel;
-  GW -> logical = log;
-
+  GW -> logical = rel;
+  
   GW -> ewidth  = 15;
   GW -> eheight = 15;
   
   GW -> logical.realwidth  = GW -> logical.width  * GW -> ewidth;
   GW -> logical.realheight = GW -> logical.height * GW -> eheight;
-
+  
   GW -> logical.xdiff = 0;
   GW -> logical.ydiff = 0;
   
   GW -> logical.realxdiff = 0;
   GW -> logical.realydiff = 0;
   
-  ( void)minefield;
-  ( void)no_resize;
-    
   if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)){
     return NULL;
   }
@@ -200,7 +197,7 @@ GW_Create( MS_video rel, MS_video log, unsigned long no_resize, MS_field minefie
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
   SDL_RenderSetLogicalSize( GW -> renderer, GW -> logical.realwidth, GW -> logical.realheight);
-
+  
   if( no_resize){
     SDL_SetWindowResizable( GW ->  window, SDL_FALSE);
   }else{
@@ -235,7 +232,7 @@ GW_Create( MS_video rel, MS_video log, unsigned long no_resize, MS_field minefie
   SDL_EventState( SDL_JOYBUTTONUP  , SDL_IGNORE);
   SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
   SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
-
+  
   SDL_ShowWindow( GW -> window);
   
   return GW;
