@@ -14,10 +14,10 @@
 #include "minefield.h"
 #include "OPT.h"
 
-
+void quit( void);
 
 void
-quit(){
+quit( void){
   SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
 }
 
@@ -26,6 +26,7 @@ quit(){
 int mainloop( MS_stream, MS_field, GraphicWraper *, ComandStream *, MS_mstr);
 int keypressevent( SDL_Event, MS_stream, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
 int keyreleasevent( SDL_Event, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
+int swap_flag( MS_field, int, int, MS_mstr *);
 int pointerpressevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
 int pointerreleasevent( SDL_Event, MS_stream, MS_video, MS_field, ComandStream *, MS_mstr *, __uint64_t, __uint64_t);
 int pointermoveevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
@@ -628,6 +629,8 @@ pointerpressevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field 
   case SDL_BUTTON_RIGHT:
     swap_flag( minefield, postion.x, postion.y, mine);
     break;
+  default:
+    break;
   }
   
   return ret;
@@ -701,7 +704,7 @@ pointerreleasevent( SDL_Event event, MS_stream mss, MS_video video, MS_field min
         MS_print( mss.out, "\r\t\t\t Win!!         \n");
       }
     }
-  case SDL_BUTTON_RIGHT:
+  default:
     break;
   }
   return ret;

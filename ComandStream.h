@@ -34,9 +34,11 @@ typedef struct{
 }ComandStream;
 
 
-ComandStream *CS_Create( size_t);
-void CS_Free( ComandStream *);
-
+INLINE ComandStream *LOCALE_( CS_Create)( size_t);
+INLINE void LOCALE_( CS_Free)( ComandStream *);
+INLINE void LOCALE_( CS_Finish)( ComandStream *, void *);
+INLINE void LOCALE_( CS_Push)( ComandStream *, void *);
+INLINE void *LOCALE_( CS_Fetch)( ComandStream *);
 
 /* 
  * ComandStream interface are a fast way to push large amount of data around,
@@ -44,6 +46,8 @@ void CS_Free( ComandStream *);
  */
 
 #define CS_ALOC_SIZE 4096
+
+_Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
 
 ComandStream *
 LOCALE_( CS_Create)( size_t size){
@@ -188,10 +192,10 @@ LOCALE_( CS_Finish)( ComandStream *CS, void *ptr){
     if( ( *CS).efinish >= ( *CS).nelb){
       if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) != ( *CS).blk_finish){
         //lock
-        char *ptr = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
-        *( char **)( ( *CS).blk_fetch + ( ( *CS).blk_size)) = *( char **)( ptr + ( *CS).blk_size);
-        //unlock
-        free( ptr);
+	char *lptr =  *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
+	*( char **)( ( *CS).blk_fetch + ( ( *CS).blk_size)) = *( char **)( lptr + ( *CS).blk_size);
+	//unlock
+	free( lptr);
       }
       ( *CS).blk_finish = *( char **)( ( *CS).blk_finish + ( *CS).blk_size);
       ( *CS).finish = ( *CS).blk_finish;

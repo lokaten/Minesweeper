@@ -41,6 +41,8 @@ procopt( MS_stream mss, MS_options *opt, unsigned argc, char **argv){
             case OPTSW_BO:
               *( opt[ j].data) = TRUE;
               break;
+	    default:
+	      ret = -1;
             }
             break;
           }
@@ -74,9 +76,11 @@ procopt( MS_stream mss, MS_options *opt, unsigned argc, char **argv){
               case OPTSW_BO:
                 *( opt[ j].data) = TRUE;
                 break;
+	      default:
+		ret = -1;
               }
               break;
-            }
+	    }
           }else{
             MS_print( mss.err, "\rShort option \'%c\' dosen't exist\n", *( argv[ i] + k));
             ret = -1;
@@ -96,9 +100,8 @@ procopt( MS_stream mss, MS_options *opt, unsigned argc, char **argv){
 
 void
 help( MS_stream mss, MS_options *opt){
+  int ret, j = -1;
   
-  signed long j = -1;
-
   while( ++j < OPT_MAX){
     switch( opt[ j].optsw){
     case OPTSW_GRP:
@@ -121,9 +124,12 @@ help( MS_stream mss, MS_options *opt){
       break;
     case OPTSW_NUL:
       return;
+    default:
+      ret = -1;
     }
   }
-  
+
+  ( void)ret;
   return;
 }
 

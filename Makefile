@@ -1,5 +1,11 @@
 
+ifeq ($(CLANG), yes)
+CC = clang -std=c11
+endif
+
+ifeq ($(GCC), yes)
 CC = gcc -std=c11
+endif
 
 ifeq ($(DEBUG), yes)
 CFLAGS = -Og -ggdb -DDEBUG
@@ -11,7 +17,8 @@ endif
 
 CFLAGS ?= -Ofast -DNDEBUG
 
-CFLAGS  += -pedantic -Wall -Wextra  -Wformat-security -Werror=format-security
+CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wstrict-overflow=5 -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
+CFLAGS += -Wstrict-aliasing -fmax-errors=5 -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
 
 PFLAGS =
 
