@@ -94,15 +94,18 @@ draw( GraphicWraper *GW, MS_field minefield){
 
   MS_video video = GW -> logical; 
   
-  i = GW -> logical.width * GW -> logical.height;
+  video.width  += 1;
+  video.height += 1;
+  
+  i = video.width * video.height;
   
   while( i--){
     
     element.x = ( video.xdiff + ( i % video.width)) % minefield.width;
     element.y = ( video.ydiff + ( i / video.width)) % minefield.height;
     
-    elementsh.x = ( ( video.width  + ( ( minefield.width  + ( element.x) - video.xdiff) % minefield.width )) % video.width );
-    elementsh.y = ( ( video.height + ( ( minefield.height + ( element.y) - video.ydiff) % minefield.height)) % video.height);
+    elementsh.x = i % video.width;
+    elementsh.y = i / video.height;
     
     tile = drawelement( GW, minefield.data[ element.x + element.y * minefield.width]);
 
@@ -112,8 +115,8 @@ draw( GraphicWraper *GW, MS_field minefield){
     srect.y = 0;
     srect.w = GW -> ewidth;
     srect.h = GW -> eheight;
-    drect.x = elementsh.x * GW -> ewidth;
-    drect.y = elementsh.y * GW -> eheight;
+    drect.x = elementsh.x * GW -> ewidth  - ( video.realxdiff % GW -> ewidth );
+    drect.y = elementsh.y * GW -> eheight - ( video.realydiff % GW -> eheight);
     drect.w = GW -> ewidth;
     drect.h = GW -> eheight;
     

@@ -345,10 +345,10 @@ main( int argc, char** argv){
       memset( minefield.data, ESET, minefield.width * minefield.height);
     }
     
-    GW -> mfvid.width  = minefield.width;
-    GW -> mfvid.height = minefield.height;
-    GW -> mfvid.realwidth  = minefield.width  * GW -> ewidth;
-    GW -> mfvid.realheight = minefield.height * GW -> eheight;
+    GW -> mfvid.width  = minefield.subwidth;
+    GW -> mfvid.height = minefield.subheight;
+    GW -> mfvid.realwidth  = minefield.subwidth  * GW -> ewidth;
+    GW -> mfvid.realheight = minefield.subheight * GW -> eheight;
     
     ret = mainloop( mss, minefield, GW, uncovque, mine);
     
