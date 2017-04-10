@@ -20,50 +20,103 @@ acse( MS_field field, int x, int y){
 }
 */
 
+MS_field *
+MF_Create( MS_stream mss, MS_video video, MS_video mfvid, unsigned long global, unsigned long level){
+  MS_field *minefield = ( MS_field *)malloc( sizeof( MS_field));
+
+  if( minefield == NULL){
+    return NULL;
+  }
+  
+  minefield -> mine = ( MS_mstr *)malloc( sizeof( MS_mstr));
+  
+  if( minefield -> mine == NULL){
+    return NULL;
+  }
+  
+  minefield -> uncovque = CS_Create( sizeof( MS_pos));
+  
+  minefield -> global = global;
+  minefield -> width  = mfvid.width;
+  minefield -> height = mfvid.height;
+  
+  minefield -> subwidth  = mfvid.width;
+  minefield -> subheight = mfvid.height;
+  minefield -> mine -> noelements = mfvid.width * mfvid.height;
+  
+  if( !global){
+    minefield -> width  += 1;
+    minefield -> height += 1;
+  }
+  
+  minefield -> width_divobj  = gen_divobj( minefield -> width );
+  minefield -> height_divobj = gen_divobj( minefield -> height);
+  
+  minefield -> data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield -> width * minefield -> height);
+  
+  if( !global){
+    memset( minefield -> data, ESET, minefield -> width * minefield -> height);
+  }
+  
+  if( minefield -> data == NULL){
+    MS_print( mss.err, "\rlimet-mem \n");
+    exit( 1);
+  }
+  
+  setminefield( minefield, video, level);
+  
+  MS_print( mss.deb, "\rSeed: %08x   \n", minefield -> mine -> seed);
+  
+  return minefield;
+}
+
+
 void
-setminefield( MS_stream mss, MS_video video, MS_field minefield, MS_mstr *mine){
+setminefield( MS_field *minefield, MS_video video, unsigned long level){
   unsigned long i;
   unsigned long x;
   
-  minefield.width_divobj  = gen_divobj( minefield.width );
-  minefield.height_divobj = gen_divobj( minefield.height);
-  
   i = video.height;
   
-  x = minefield.subwidth - video.xdiff;
+  x = minefield -> subwidth - video.xdiff;
   x = x < video.width? x: video.width;
   
   if( x) while( i--){
-    memset( minefield.data + ( video.xdiff + ( ( video.ydiff + i) % minefield.subheight) * minefield.width), ENUT, x);
+    memset( minefield -> data + ( video.xdiff + ( ( video.ydiff + i) % minefield -> subheight) * minefield -> width), ENUT, x);
   }
   
   i = video.height;
   
   if( video.width - x) while( i--){
-    memset( minefield.data + ( ( video.ydiff + i) % minefield.subheight) * minefield.width, ENUT, video.width - x);
+    memset( minefield -> data + ( ( video.ydiff + i) % minefield -> subheight) * minefield -> width, ENUT, video.width - x);
   }
   
-  ( *mine).flaged = 0;
+  minefield -> mine -> level = level;
   
-  ( *mine).uncoverd = 0;
+  minefield -> mine -> flaged = 0;
   
-  ( *mine).set = 0;
+  minefield -> mine -> uncoverd = 0;
   
-  ( *mine).mines = 0;
+  minefield -> mine -> set = 0;
   
-  ( *mine).hit = 0;
+  minefield -> mine -> mines = 0;
   
-  if( ( *mine).reseed){
-    ( *mine).seed = ( *mine).reseed;
-  }else{
-    ( *mine).seed = MS_rand_seed();
-  }
+  minefield -> mine -> hit = 0;
   
-  MS_print( mss.deb, "\rSeed: %08x   \n", mine -> seed);
-  
-  return;
+  minefield -> mine -> seed = MS_rand_seed();
 }
 
+
+void
+MF_Free( MS_field *minefield){
+  if( minefield != NULL){
+    free( minefield -> data);
+
+    free( minefield -> mine);
+    
+    CS_Free( minefield -> uncovque);
+  }
+}
 
 INLINE int
 addelement( ComandStream *uncovque, MS_field minefield, signed long x, signed long y){

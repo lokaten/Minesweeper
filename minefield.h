@@ -10,18 +10,6 @@ extern "C" {
 #include "ComandStream.h"
   
   typedef struct{
-    __uint8_t *data;
-    unsigned long width;
-    unsigned long width_divobj;
-    unsigned long height;
-    unsigned long height_divobj;
-    unsigned long subwidth;
-    unsigned long subheight;
-    unsigned long global;
-  }MS_field;
-  
-  
-  typedef struct{
     unsigned long uncoverd;
     unsigned long set;
     unsigned long mines;
@@ -32,6 +20,21 @@ extern "C" {
     __uint32_t seed;
     unsigned long reseed;
   }MS_mstr;
+
+  
+  typedef struct{
+    __uint8_t *data;
+    ComandStream *uncovque;
+    MS_mstr *mine;
+    unsigned long width;
+    unsigned long width_divobj;
+    unsigned long height;
+    unsigned long height_divobj;
+    unsigned long subwidth;
+    unsigned long subheight;
+    unsigned long global;
+  }MS_field;
+  
   
 #ifdef LOCALE_
   INLINE __uint8_t *LOCALE_( acse)( MS_field, int, int);
@@ -46,7 +49,9 @@ extern "C" {
 #endif
   
   void setzero( MS_field, MS_mstr *, MS_video);
-  void setminefield( MS_stream, MS_video, MS_field, MS_mstr *);
+  MS_field *MF_Create( MS_stream, MS_video, MS_video, unsigned long, unsigned long);
+  void setminefield( MS_field *, MS_video, unsigned long);
+  void MF_Free( MS_field *);
   int uncov( MS_field, ComandStream *, MS_mstr *);
   int uncov_elements( MS_field, ComandStream *, MS_video, MS_mstr *);
   

@@ -23,7 +23,7 @@ quit( void){
 
 
 
-int mainloop( MS_stream, MS_field, GraphicWraper *, ComandStream *, MS_mstr);
+int mainloop( MS_stream, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_stream, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
 int keyreleasevent( SDL_Event, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
 int swap_flag( MS_field, int, int, MS_mstr *);
@@ -41,7 +41,7 @@ void printtime( FILE *, unsigned long);
 int
 main( int argc, char** argv){
   
-  MS_field minefield;
+  MS_video mfvid;
   MS_video video;
   MS_mstr mine;
   
@@ -61,8 +61,9 @@ main( int argc, char** argv){
   unsigned long debug = 0;
   unsigned long no_resize = 0;
 
-  unsigned long force = 0;
-    
+  unsigned long force  = 0;
+  unsigned long global = 0;
+  
   MS_stream mss;
   
   /* put all comand line option in an array ( C99?)
@@ -73,13 +74,13 @@ main( int argc, char** argv){
     { OPTSW_BO , "ignore validation of options"             , "force"        , 'f', &( force           )},
 #endif
     { OPTSW_GRP, ""                                       , "Minefield"    , 0  , NULL                },
-    { OPTSW_LU , "Element wide minefield"                 , "width"        , 0  , &( minefield.width )},
-    { OPTSW_LU , "Element high minefield"                 , "height"       , 0  , &( minefield.height)},
+    { OPTSW_LU , "Element wide minefield"                 , "width"        , 0  , &( mfvid.width )},
+    { OPTSW_LU , "Element high minefield"                 , "height"       , 0  , &( mfvid.height)},
     { OPTSW_LU , "Number of mines"                        , "level"        , 0  , &( mine.level      )},
 #ifdef DEBUG
     { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"         , 0  , &( mine.reseed     )},
 #endif
-    { OPTSW_BO , ""                                       , "global"       , 'g', &( minefield.global)},
+    { OPTSW_BO , ""                                       , "global"       , 'g', &( global          )},
     { OPTSW_GRP, ""                                       , "Video"        , 0  , NULL                },
     { OPTSW_LU , "Element wide window"                    , "video-width"  , 0  , &( video.width     )},
     { OPTSW_LU , "Element high window"                    , "video-height" , 0  , &( video.height    )},
@@ -108,17 +109,20 @@ main( int argc, char** argv){
   mss.deb = NULL;
   
   
-  minefield.width  = 0;
-  minefield.height = 0;
-  mine.level       = 0;
-  mine.reseed      = 0;
+  mfvid.width  = 0;
+  mfvid.height = 0;
+  mfvid.xdiff  = 0;
+  mfvid.ydiff  = 0;
+  mine.level   = 0;
+  mine.reseed  = 0;
   
   video.width  = 0;
   video.height = 0;
   video.realwidth  = 0;
   video.realheight = 0;
-      
-  minefield.global = 0;
+
+  mine.reseed = 0;
+  global = 0;
   
   
   if( procopt( mss, opt, argc, argv)){
@@ -146,13 +150,13 @@ main( int argc, char** argv){
   }
   
   if( ( beginner || expert || advanced) &&
-      ( minefield.width || minefield.height ||
-        mine.level || minefield.global || mine.reseed)){
+      ( mfvid.width || mfvid.height ||
+        mine.level || global || mine.reseed)){
     MS_print( mss.err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
     helpopt = 2;
   }
     
-  if( !minefield.width != !minefield.height){
+  if( !mfvid.width != !mfvid.height){
     MS_print( mss.err, "\rspecified --width or --height with out the other isn't recomended.\n");
     helpopt = 2;
   }
@@ -177,9 +181,9 @@ main( int argc, char** argv){
       MS_print( mss.err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
       helpopt = 2;
     }
-    minefield.width  = minefield.width ? minefield.width :  9;
-    minefield.height = minefield.height? minefield.height:  9;
-    mine.level       = mine.level      ? mine.level      : 10;
+    mfvid.width  = mfvid.width ? mfvid.width :  9;
+    mfvid.height = mfvid.height? mfvid.height:  9;
+    mine.level   = mine.level  ? mine.level  : 10;
   }
   
   if( advanced){
@@ -187,9 +191,9 @@ main( int argc, char** argv){
       MS_print( mss.err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
       helpopt = 2;
     }
-    minefield.width  = minefield.width ? minefield.width : 16;
-    minefield.height = minefield.height? minefield.height: 16;
-    mine.level       = mine.level      ? mine.level      : 40;
+    mfvid.width  = mfvid.width ? mfvid.width : 16;
+    mfvid.height = mfvid.height? mfvid.height: 16;
+    mine.level   = mine.level  ? mine.level  : 40;
   }
   
   if( expert){
@@ -197,9 +201,9 @@ main( int argc, char** argv){
       MS_print( mss.err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
       helpopt = 2;
     }
-    minefield.width  = minefield.width ? minefield.width : 30;
-    minefield.height = minefield.height? minefield.height: 16;
-    mine.level       = mine.level      ? mine.level      : 99;
+    mfvid.width  = mfvid.width ? mfvid.width : 30;
+    mfvid.height = mfvid.height? mfvid.height: 16;
+    mine.level   = mine.level  ? mine.level  : 99;
   }
 
       
@@ -219,8 +223,8 @@ main( int argc, char** argv){
   MS_print( mss.deb, "\rNOTE: user input changes how the minfield is generated.\n");
   
   if( benchmark){
-    minefield.width  = minefield.width ? minefield.width : 3200;
-    minefield.height = minefield.height? minefield.height: 1800;
+    mfvid.width      = mfvid.width     ? mfvid.width     : 3200;
+    mfvid.height     = mfvid.height    ? mfvid.height    : 1800;
     mine.level       = mine.level      ? mine.level      : 1;
     video.width      = video.width     ? video.width     : 1;
     video.height     = video.height    ? video.height    : 1;
@@ -230,12 +234,12 @@ main( int argc, char** argv){
     yscale           = yscale          ? yscale          : 15;
     no_resize = 1;
   }
-
-  minefield.width  = minefield.width ? minefield.width : WIDTH;
-  minefield.height = minefield.height? minefield.height: HEIGHT;
+  
+  mfvid.width  = mfvid.width ? mfvid.width : WIDTH;
+  mfvid.height = mfvid.height? mfvid.height: HEIGHT;
   
   if( mine.level == 0){
-    mine.level = ( minefield.width * minefield.height + 4) / 8;
+    mine.level = ( mfvid.width * mfvid.height + 4) / 8;
   }
 
   
@@ -249,26 +253,26 @@ main( int argc, char** argv){
   
   if( video.realwidth  && xscale && ( video.realwidth  != video.width  * xscale)){
     video.width = ( video.realwidth + xscale - 1) / xscale;
-    if( video.width > minefield.width){
-      video.width  = minefield.width;
+    if( video.width > mfvid.width){
+      video.width  = mfvid.width;
     }
     video.realwidth = video.width * xscale;
   }
   
   if( video.realheight && yscale && ( video.realheight != video.height * yscale)){
     video.height = ( video.realheight + yscale - 1) / yscale;
-    if( video.height > minefield.height){
-      video.height = minefield.height;
+    if( video.height > mfvid.height){
+      video.height = mfvid.height;
     }
     video.realheight = video.height * yscale;
   }
   
-  if( ( video.width  == 0) || ( !force && ( video.width  > minefield.width))){
-    video.width  = minefield.width;
+  if( ( video.width  == 0) || ( !force && ( video.width  > mfvid.width))){
+    video.width  = mfvid.width;
   }
   
-  if( ( video.height == 0) || ( !force && ( video.height > minefield.height))){
-    video.height = minefield.height;
+  if( ( video.height == 0) || ( !force && ( video.height > mfvid.height))){
+    video.height = mfvid.height;
   }
   
   if( ( video.realwidth  == 0) && xscale){
@@ -287,29 +291,29 @@ main( int argc, char** argv){
     video.realheight = video.height * 15;
   }
     
-  if( mine.level >= ( minefield.width * minefield.height)){
-    mine.level = ( minefield.width * minefield.height + 1) / 3;
+  if( mine.level >= ( mfvid.width * mfvid.height)){
+    mine.level = ( mfvid.width * mfvid.height + 1) / 3;
     MS_print( mss.err, "\rMore mine then elments, reset mine cout to: %lu\n", mine.level);
   }
   
-  if( !minefield.global && !force){
-    if( minefield.width == 9 && minefield.height == 9 && mine.level == 10){
+  if( !global && !force){
+    if( mfvid.width == 9 && mfvid.height == 9 && mine.level == 10){
       MS_print( mss.out, "\rMode: beginner \n");
     }
     
-    if( minefield.width == 16 && minefield.height == 16 && mine.level == 40){
+    if( mfvid.width == 16 && mfvid.height == 16 && mine.level == 40){
       MS_print( mss.out, "\rMode: advanced \n");
     }
     
-    if( minefield.width == 30 && minefield.height == 16 && mine.level == 99){
+    if( mfvid.width == 30 && mfvid.height == 16 && mine.level == 99){
       MS_print( mss.out, "\rMode: expert \n");
     }
   }
   
   {
     int ret;
-    ComandStream *uncovque = CS_Create( sizeof( MS_pos));
     GraphicWraper *GW;
+    MS_field *minefield;
     
     GW = GW_Create( video, no_resize);
     
@@ -323,38 +327,18 @@ main( int argc, char** argv){
       SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
     }
     
-    GW -> global = minefield.global;
+    GW -> global = global;
     
-    minefield.subwidth  = minefield.width;
-    minefield.subheight = minefield.height;
-    mine.noelements = minefield.subwidth * minefield.subheight;
+    GW -> mfvid = mfvid;
+
+    GW -> mfvid.realwidth  = mfvid.width  * GW -> ewidth;
+    GW -> mfvid.realheight = mfvid.height * GW -> eheight;
+
+    minefield = MF_Create( mss, mfvid, mfvid, global, mine.level);
+        
+    ret = mainloop( mss, minefield, GW);
     
-    if( !minefield.global){
-      minefield.width  += 1;
-      minefield.height += 1;
-    }
-    
-    minefield.data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield.width * minefield.height);
-    
-    if( minefield.data == NULL){
-      MS_print( mss.err, "\rlimet-mem \n");
-      exit( 1);
-    }
-    
-    if( !minefield.global){
-      memset( minefield.data, ESET, minefield.width * minefield.height);
-    }
-    
-    GW -> mfvid.width  = minefield.subwidth;
-    GW -> mfvid.height = minefield.subheight;
-    GW -> mfvid.realwidth  = minefield.subwidth  * GW -> ewidth;
-    GW -> mfvid.realheight = minefield.subheight * GW -> eheight;
-    
-    ret = mainloop( mss, minefield, GW, uncovque, mine);
-    
-    free( minefield.data);
-    
-    CS_Free( uncovque);
+    MF_Free( minefield);
     
     GW_Free( GW);
     
@@ -373,7 +357,7 @@ main( int argc, char** argv){
 
 
 int
-mainloop( MS_stream mss, MS_field minefield, GraphicWraper *GW, ComandStream *uncovque, MS_mstr mine){
+mainloop( MS_stream mss, MS_field *minefield, GraphicWraper *GW){
   SDL_Event event;
     
   __uint64_t tutime, nextframe, gamestart, nexttu;
@@ -393,20 +377,18 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *GW, ComandStream *un
   gamestart = tutime;
   nextframe = tutime;
   nexttu = tutime;
-    
-  setminefield( mss, GW -> mfvid, minefield, &mine);
-    
+      
   while( TRUE){
-
+    
     if( nexttu > tutime){
       e = SDL_WaitEventTimeout( &event, ( nexttu - tutime) / 1000000);
       tutime = getnanosec();
-      if( !mine.uncoverd){
+      if( !minefield -> mine -> uncoverd){
 	gamestart = tutime;
       }
     }else{
-      if( mine.uncoverd && !mine.hit && mine.uncoverd < ( mine.noelements - mine.level)){
-	MS_print( mss.out, "\r\t\t\t %lu of %lu      ", mine.flaged, mine.level);
+      if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
+	MS_print( mss.out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
       }else{
 	gamestart = tutime;
       }
@@ -426,12 +408,12 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *GW, ComandStream *un
       case SDL_QUIT:
         return 0;
       case SDL_KEYDOWN:
-        if( ( err = keypressevent( event, mss, minefield, GW -> mfvid, &diff, uncovque, &mine)) > 0){
+        if( ( err = keypressevent( event, mss, *minefield, GW -> mfvid, &diff, minefield -> uncovque, minefield -> mine)) > 0){
           nextframe = tutime;
         }
         break;
       case SDL_KEYUP:
-        if( ( err = keyreleasevent( event, minefield, GW -> mfvid, &diff, uncovque, &mine)) > 0){
+        if( ( err = keyreleasevent( event, *minefield, GW -> mfvid, &diff, minefield -> uncovque, minefield -> mine)) > 0){
           nextframe = tutime;
         }
         if( diff.x || diff.y){
@@ -439,18 +421,18 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *GW, ComandStream *un
         }
         break;
       case SDL_MOUSEBUTTONDOWN:
-        if( ( err = pointerpressevent( event, GW, GW -> logical, minefield, uncovque, &mine)) > 0){
+        if( ( err = pointerpressevent( event, GW, GW -> logical, *minefield, minefield -> uncovque, minefield -> mine)) > 0){
           nextframe = tutime;
         }
         break;
       case SDL_MOUSEBUTTONUP:
-        if( ( err = pointerreleasevent( event, mss, GW -> logical, minefield, uncovque, &mine, tutime, gamestart)) > 0){
+        if( ( err = pointerreleasevent( event, mss, GW -> logical, *minefield, minefield -> uncovque,  minefield -> mine, tutime, gamestart)) > 0){
           nextframe = tutime;
         }
         nextframe = tutime;
         break;
       case SDL_MOUSEMOTION:
-        if( ( err = pointermoveevent( event, GW, GW -> logical, minefield, uncovque, &mine)) > 0){
+        if( ( err = pointermoveevent( event, GW, GW -> logical, *minefield, minefield -> uncovque, minefield -> mine)) > 0){
           nextframe = tutime;
         }
         break;
@@ -468,15 +450,15 @@ mainloop( MS_stream mss, MS_field minefield, GraphicWraper *GW, ComandStream *un
         nextframe += 1000000000 / 30;
       }
                   
-      if unlikely( ( mine.mines > mine.level) || ( mine.set > ( mine.noelements))){
-        MS_print( mss.err, "\rIn expliciv error: %lu of %lu, %lu of %lu \n", mine.mines, mine.level, mine.set, mine.noelements);
+      if unlikely( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))){
+        MS_print( mss.err, "\rIn expliciv error: %lu of %lu, %lu of %lu \n", minefield -> mine -> mines, minefield -> mine -> level, minefield -> mine -> set, minefield -> mine -> noelements);
       }
       
-      if unlikely( ( mine.set >= mine.noelements) && ( mine.mines < mine.level)){
-        MS_print( mss.err, "\rmine count fall short, curetn count: %lu of %lu \n", mine.mines, mine.level);
+      if unlikely( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)){
+        MS_print( mss.err, "\rmine count fall short, curetn count: %lu of %lu \n", minefield -> mine -> mines, minefield -> mine -> level);
       }
       
-      if unlikely( draw( GW, minefield) == -3){
+      if unlikely( draw( GW, *minefield) == -3){
         MS_print( mss.err, "\r\t\t\t\t\t\t\t\t\t inval data \n");
       }
       
@@ -501,7 +483,7 @@ keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvi
     return 0;
   case SDLK_F2:
     if( mine -> uncoverd || mine -> flaged){
-      setminefield( mss, mfvid, minefield, mine);
+      setminefield( &minefield, mfvid, minefield.mine -> level);
       return 1;
     }
     return 0;
