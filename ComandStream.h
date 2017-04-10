@@ -14,7 +14,6 @@ extern "C" {
 typedef struct{
   size_t blk_size;
   size_t size;
-  __uint8_t nelb;
   char *blk_fetch;
   char *blk_push;
   char *blk_releas;
@@ -23,14 +22,10 @@ typedef struct{
   char *push;
   char *releas;
   char *finish;
-  __uint8_t efetch;
-  __uint8_t epush;
-  __uint8_t ereleas;
-  __uint8_t efinish;
-  /* count of rejected block fetch */
-  unsigned long crebfet;
-  /* count of rejected element fetch where a block was avaible */
-  unsigned long crefet;
+  __uint16_t efetch;
+  __uint16_t epush;
+  __uint16_t ereleas;
+  __uint16_t efinish;
 }ComandStream;
 
 
@@ -41,15 +36,10 @@ INLINE void *LOCALE_( CS_Releas)( ComandStream *);
 INLINE void LOCALE_( CS_Finish)( ComandStream *, void *);
 INLINE void LOCALE_( CS_Free)( ComandStream *);
 
-/* 
- * ComandStream interface are a fast way to push large amount of data around,
- * and if you use it rigth it's partily therad safe
- */
-
-#define CS_ALOC_SIZE 4096
-
 _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
 _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
+
+#define NC 4096
 
 ComandStream *
 LOCALE_( CS_Create)( size_t size){
@@ -60,16 +50,12 @@ LOCALE_( CS_Create)( size_t size){
     return NULL;
   }
   
-  ( *CS).blk_size = CS_ALOC_SIZE - sizeof( char *);
-  
-  ( *CS).blk_size -= ( *CS).blk_size % size;
-  
+  ( *CS).blk_size = NC * size;
+    
   if( !( *CS).blk_size){
     free( CS);
     return NULL;
   }
-
-  ( *CS).nelb = ( *CS).blk_size / size;
   
   ptr = malloc( ( *CS).blk_size + sizeof( char *));
   
@@ -96,11 +82,7 @@ LOCALE_( CS_Create)( size_t size){
   ( *CS).epush   = 0;
   ( *CS).ereleas = 0;
   ( *CS).efinish = 0;
-  
-  ( *CS).crebfet  = 0;
-  
-  ( *CS).crefet   = 0;
-    
+      
   return CS;
 }
 #define CS_Create LOCALE_( CS_Create)
@@ -110,12 +92,11 @@ INLINE void *
 LOCALE_( CS_Fetch)( ComandStream *CS){
   void *ret = NULL;
   if likely( CS != NULL){
-    if( ( *CS).efetch >= ( *CS).nelb){
+    if unlikely( ( *CS).efetch >= NC){
       if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) == ( *CS).blk_finish){
         char *ptr = malloc( ( *CS).blk_size + sizeof( char *));
         if unlikely( ptr == NULL){
-          ++( *CS).crebfet;
-          goto bail;
+	  goto bail;
         }
         /*lock*/
         *( char **)( ptr + ( *CS).blk_size) = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
@@ -126,12 +107,7 @@ LOCALE_( CS_Fetch)( ComandStream *CS){
       ( *CS).fetch  = ( *CS).blk_fetch;
       ( *CS).efetch = 0;
     }
-    
-    if unlikely( ( ( *CS).fetch + ( *CS).size) > ( ( *CS).blk_fetch + ( *CS).blk_size)){
-      ++( *CS).crefet;
-      goto bail;
-    }
-    
+        
     ret = ( *CS).fetch;
     ( *CS).fetch = ( *CS).fetch + ( *CS).size;
     ++( *CS).efetch;
@@ -147,11 +123,11 @@ LOCALE_( CS_Fetch)( ComandStream *CS){
 INLINE void
 LOCALE_( CS_Push)( ComandStream *CS, void *ptr){
   if likely( CS != NULL){
-    if( ( *CS).epush >= ( *CS).nelb){
+    if unlikely( ( *CS).epush >= NC){
       ( *CS).blk_push = *( char **)( ( *CS).blk_push + ( *CS).blk_size);
       ( *CS).push = ( *CS).blk_push;
       ( *CS).epush = 0;
-    }
+      }
     
     if likely( ( *CS).push == ptr){
       ( *CS).push = ( *CS).push + ( *CS).size;
@@ -170,8 +146,8 @@ LOCALE_( CS_Releas)( ComandStream *CS){
   void *ret = NULL;
   
   if likely( CS != NULL){
-    if( ( *CS).push != ( *CS).releas){
-      if( ( *CS).ereleas >= ( *CS).nelb){
+    if unlikely( ( *CS).push != ( *CS).releas){
+      if( ( *CS).ereleas >= NC){
         ( *CS).blk_releas = *( char **)( ( *CS).blk_releas + ( *CS).blk_size);
         ( *CS).releas = ( *CS).blk_releas;
         ( *CS).ereleas = 0;
@@ -191,7 +167,7 @@ LOCALE_( CS_Releas)( ComandStream *CS){
 INLINE void
 LOCALE_( CS_Finish)( ComandStream *CS, void *ptr){
   if likely( CS != NULL){
-    if( ( *CS).efinish >= ( *CS).nelb){
+    if unlikely( ( *CS).efinish >= NC){
       if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) != ( *CS).blk_finish){
 	/*lock*/
 	char *lptr =  *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
