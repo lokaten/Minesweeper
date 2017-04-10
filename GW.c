@@ -16,6 +16,7 @@ void MS_scale( SDL_Surface *, SDL_Surface *, signed long, signed long, unsigned 
 
 int
 window_scroll( GraphicWraper *GW, MS_diff diff){
+  int ret = 0;
   if( !GW -> global){
     diff.x = ( signed long)GW -> logical.realxdiff > diff.x? diff.x: ( signed long)GW -> logical.realxdiff;
     diff.y = ( signed long)GW -> logical.realydiff > diff.y? diff.y: ( signed long)GW -> logical.realydiff;
@@ -23,22 +24,21 @@ window_scroll( GraphicWraper *GW, MS_diff diff){
     diff.y = ( GW -> logical.realydiff + GW -> logical.realheight - diff.y) < ( GW -> mfvid.realheight) ? diff.y: -( signed long)( GW -> mfvid.realheight - ( GW -> logical.realydiff + GW -> logical.realheight));
   }
   
-  if( ( !diff.x) && ( !diff.y)){
-    return 0;
+  if( ( diff.x) || ( diff.y)){
+    GW -> logical.realxdiff = ( GW -> logical.realxdiff + GW -> mfvid.realwidth  - diff.x) % GW -> mfvid.realwidth;
+    GW -> logical.realydiff = ( GW -> logical.realydiff + GW -> mfvid.realheight - diff.y) % GW -> mfvid.realheight;
+    
+    GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff) / GW -> logical.realwidth;
+    GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff) / GW -> logical.realheight;
+    ret = 1;
   }
   
-  GW -> logical.realxdiff = ( GW -> logical.realxdiff + GW -> mfvid.realwidth  - diff.x) % GW -> mfvid.realwidth;
-  GW -> logical.realydiff = ( GW -> logical.realydiff + GW -> mfvid.realheight - diff.y) % GW -> mfvid.realheight;
-  
-  GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff) / GW -> logical.realwidth;
-  GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff) / GW -> logical.realheight;
-  
-  return 1;
+  return ret;
 }
 
 int MS_OpenImage( SDL_Texture **tdst, SDL_Renderer *render, SDL_Rect *rec, char *str, __uint32_t c){
-  SDL_Surface *img, *dst;
   int ret = 0;
+  SDL_Surface *img, *dst;
   if unlikely( str != NULL){
     img = IMG_Load( str);
   }else{
@@ -46,16 +46,17 @@ int MS_OpenImage( SDL_Texture **tdst, SDL_Renderer *render, SDL_Rect *rec, char 
   }
   dst = SDL_CreateRGBSurface( FALSE, rec -> w, rec -> h, 24, 0xff0000, 0xff00, 0xff, 0x0);
   if unlikely( dst == NULL){
-    return -4;
+    ret = -4;
+  }else{
+    SDL_FillRect( dst, rec, c);
+    if unlikely( img == NULL){
+      ret =  -3;
+    }
+    if( img != NULL) MS_BlitSurface( img, dst, rec -> x, rec -> y, 0, 0, rec -> w, rec -> h);
+    *tdst = SDL_CreateTextureFromSurface( render, dst);
+    if( img != NULL) SDL_free( img);
+    if( dst != NULL) SDL_free( dst);
   }
-  SDL_FillRect( dst, rec, c);
-  if unlikely( img == NULL){
-    ret =  -3;
-  }
-  if( img != NULL) MS_BlitSurface( img, dst, rec -> x, rec -> y, 0, 0, rec -> w, rec -> h);
-  *tdst = SDL_CreateTextureFromSurface( render, dst);
-  if( img != NULL) SDL_free( img);
-  if( dst != NULL) SDL_free( dst);
   return ret;
 }
 
@@ -64,6 +65,7 @@ int MS_OpenImage( SDL_Texture **tdst, SDL_Renderer *render, SDL_Rect *rec, char 
  */
 int
 MS_BlitSurface( SDL_Surface *src, SDL_Surface *dst, unsigned long dx, unsigned long dy, unsigned long sx, unsigned long sy, unsigned long w, unsigned long h){
+  int ret = 0;
   SDL_Rect srect, drect;
     
   srect.x = sx;
@@ -78,21 +80,26 @@ MS_BlitSurface( SDL_Surface *src, SDL_Surface *dst, unsigned long dx, unsigned l
   if likely( dst != NULL){
     if likely( src != NULL){
       SDL_BlitSurface( src, &srect, dst, &drect);
-      return 0;
+      ret = 0;
+    }else{
+      SDL_FillRect( dst, &drect, 0x0);
+      ret = -3;
     }
-    SDL_FillRect( dst, &drect, 0x0);
   }
-  return -3;
+  return ret;
 }
 
 int
 draw( GraphicWraper *GW, MS_field minefield){
+  int ret = 0;
   MS_pos element, elementsh;
   SDL_Rect srect, drect;
   unsigned long i;
   SDL_Texture *tile;
 
-  MS_video video = GW -> logical; 
+  MS_video video = GW -> logical;
+
+  SDL_SetRenderTarget( GW -> renderer, GW -> target);
   
   video.width  += 1;
   video.height += 1;
@@ -109,7 +116,10 @@ draw( GraphicWraper *GW, MS_field minefield){
         
     tile = drawelement( GW, minefield.data[ element.x + element.y * minefield.width]);
 
-    if( tile == NULL) return -3;
+    if( tile == NULL){
+      ret = -3;
+      break;
+    }
     
     srect.x = 0;
     srect.y = 0;
@@ -120,47 +130,60 @@ draw( GraphicWraper *GW, MS_field minefield){
     drect.w = GW -> ewidth;
     drect.h = GW -> eheight;
     
-    SDL_RenderCopy( GW ->  renderer, tile, &srect, &drect);
+    SDL_RenderCopy( GW -> renderer, tile, &srect, &drect);
   }
 
+  SDL_SetRenderTarget( GW ->  renderer, NULL);
+
+  srect.w = GW -> logical.realwidth;
+  srect.h = GW -> logical.realheight;
+  drect.x = 0;
+  drect.y = 0;
+  drect.w = GW -> logical.realwidth;
+  drect.h = GW -> logical.realheight;
+  
+  SDL_RenderCopy( GW -> renderer, GW -> target, &srect, &drect);
+  
   SDL_RenderPresent( GW -> renderer);
       
-  return 0;
+  return ret;
 }
 
 
 SDL_Texture *
 drawelement( GraphicWraper *GW, __uint8_t element){
-
+  SDL_Texture *tile = NULL;
+  
   if( element & EFLAG){
-    return GW -> flag;
+    tile =  GW -> flag;
   }
   
-  if( element & ECOVER){
-    return GW -> cover;
+  if( tile == NULL && ( element & ECOVER)){
+    tile =  GW -> cover;
   }
   
-  if( ( element & EMINE) && ( element & ECOUNT) != ECOUNT){
-    return GW -> mine;
+  if( tile == NULL && ( element & EMINE) && ( element & ECOUNT) != ECOUNT){
+    tile =  GW -> mine;
   }
 
-  switch( ECOUNT & element){
-  case 0: return GW -> clear;
-  case 1: return GW -> one;
-  case 2: return GW -> two;
-  case 3: return GW -> three;
-  case 4: return GW -> four;
-  case 5: return GW -> five;
-  case 6: return GW -> six;
-  case 7: return GW -> seven;
-  case 8: return GW -> eight;
-  /**/
-  case 0xf:  return GW -> clear;
-  default:
-    return NULL;
+  if( tile == NULL){
+    switch( ECOUNT & element){
+    case 0: tile =  GW -> clear; break;
+    case 1: tile =  GW -> one; break;
+    case 2: tile =  GW -> two; break;
+    case 3: tile =  GW -> three; break;
+    case 4: tile =  GW -> four; break;
+    case 5: tile =  GW -> five; break;
+    case 6: tile =  GW -> six; break;
+    case 7: tile =  GW -> seven; break;
+    case 8: tile =  GW -> eight; break;
+    case 0xf:  tile =  GW -> clear;break;
+    default:
+      break;
+    }
   }
   
-  return NULL;
+  return tile;
 }
 
 
@@ -169,7 +192,7 @@ GW_Create( MS_video rel, unsigned long no_resize){
   GraphicWraper *GW = ( GraphicWraper *)malloc( sizeof( GraphicWraper));
   
   if( GW == NULL){
-    return NULL;
+    goto fault;
   }
   
   GW -> real    = rel;
@@ -188,7 +211,7 @@ GW_Create( MS_video rel, unsigned long no_resize){
   GW -> logical.realydiff = 0;
   
   if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)){
-    return NULL;
+    goto fault;
   }
   
   GW -> window = SDL_CreateWindow( "Minesweeper", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -208,6 +231,8 @@ GW_Create( MS_video rel, unsigned long no_resize){
   }else{
     SDL_SetWindowResizable( GW ->  window, SDL_TRUE);
   }
+  
+  SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> logical.realwidth, GW -> logical.realheight);
   
   {
     SDL_Rect rec;
@@ -240,10 +265,14 @@ GW_Create( MS_video rel, unsigned long no_resize){
   
   SDL_ShowWindow( GW -> window);
   
+  if( GW == NULL){
+  fault:
+    if( GW != NULL)free( GW);
+    GW = NULL;
+    SDL_Quit();
+  }
+  
   return GW;
- fault:
-  SDL_Quit();
-  return NULL;
 }
 
 void

@@ -22,6 +22,7 @@ extern "C" {
   
   typedef struct{
     SDL_Window *window;
+    SDL_Texture *target;
     SDL_Renderer *renderer;
     unsigned long global;
     MS_video mfvid;

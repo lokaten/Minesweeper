@@ -12,13 +12,6 @@ __uint8_t uncover_element( MS_field, MS_pos, MS_mstr *);
 __uint8_t setmine_element( __uint8_t *, MS_mstr *);
 INLINE int addelement( ComandStream *, MS_field, signed long, signed long);
 
-/*
-INLINE __uint8_t *
-acse( MS_field field, int x, int y){
-  return field.data + ( mol_( ( ( x) + field.width ), field.width , field.width_divobj ) +
-			mol_( ( ( y) + field.height), field.height, field.height_divobj) * field.width);
-}
-*/
 
 MS_field *
 MF_Create( MS_stream mss, MS_video video, MS_video mfvid, unsigned long global, unsigned long level){

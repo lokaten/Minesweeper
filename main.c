@@ -359,9 +359,9 @@ main( int argc, char** argv){
 int
 mainloop( MS_stream mss, MS_field *minefield, GraphicWraper *GW){
   SDL_Event event;
-    
+  
   __uint64_t tutime, nextframe, gamestart, nexttu;
-    
+  
   MS_diff diff;
   
   __uint32_t seed = MS_rand_seed();
@@ -477,6 +477,9 @@ mainloop( MS_stream mss, MS_field *minefield, GraphicWraper *GW){
 int
 keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvid, MS_diff *diff, ComandStream *uncovque, MS_mstr *mine){
   int ret = 0;
+  
+  ( void)mss;
+  
   switch( event.key.keysym.sym){
   case SDLK_ESCAPE:
     quit();
@@ -484,9 +487,9 @@ keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvi
   case SDLK_F2:
     if( mine -> uncoverd || mine -> flaged){
       setminefield( &minefield, mfvid, minefield.mine -> level);
-      return 1;
+      ret = 1;
     }
-    return 0;
+    break;
   case SDLK_F3:
     if( mine -> uncoverd < ( mine -> noelements - mine -> flaged)){
       ret = uncov_elements( minefield, uncovque, mfvid, mine);
@@ -494,69 +497,72 @@ keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvi
     if unlikely( uncov( minefield, uncovque, mine)){
       ret = -2;
     }
-    return ret;
-  case SDLK_h:
-  case SDLK_LEFT:
+    break;
+  default:
+    break;
+  }
+
+  unsigned e =  event.key.keysym.sym;
+
+  if( e == SDLK_h || e == SDLK_LEFT){
     diff -> x -= 3;
     diff -> x = diff -> x < -3? -3: diff -> x;
-    return 1;
-  case SDLK_j:
-  case SDLK_DOWN:
+    ret = 1;
+  }
+  if( e == SDLK_j || e == SDLK_DOWN){
     diff -> y += 3;
     diff -> y = ( *diff).y > 3? 3: diff -> y;
-    return 1;
-  case SDLK_k:
-  case SDLK_UP:
+    ret = 1;
+  }
+  if( e == SDLK_k || e == SDLK_UP){
     diff -> y -= 3;
     diff -> y = diff -> y < -3? -3: diff -> y;
-    return 1;
-  case SDLK_l:
-  case SDLK_RIGHT:
+    ret =  1;
+  }
+  if( e == SDLK_l || e == SDLK_RIGHT){
     diff -> x += 3;
     diff -> x = ( *diff).x > 3? 3: diff -> x;
-    return 1;
-  default:
-    return 0;
+    ret = 1;
   }
+
+  return ret;
 }
 
 
 int
 keyreleasevent( SDL_Event event, MS_field minefield, MS_video mfvid, MS_diff *diff, ComandStream *uncovque, MS_mstr *mine){
+  int ret = 0;
   ( void) mine;
   ( void) uncovque;
   ( void) minefield;
   ( void) mfvid;
-  switch( event.key.keysym.sym){
-  case SDLK_h:
-  case SDLK_LEFT:
+  unsigned e =  event.key.keysym.sym;
+  
+  if( e == SDLK_h || e == SDLK_LEFT){
     diff -> x += 3;
     diff -> x = diff -> x < 0? 0: diff -> x;
-    return 0;
-  case SDLK_j:
-  case SDLK_DOWN:
+  }
+  if( e == SDLK_j || e == SDLK_DOWN){
     diff -> y -= 3;
     diff -> y = diff -> y > 0? 0: diff -> y;
-    return 0;
-  case SDLK_k:
-  case SDLK_UP:
+  }
+  if( e == SDLK_k || e == SDLK_UP){
     diff -> y += 3;
     diff -> y = diff -> y < 0? 0: diff -> y;
-    return 0;
-  case SDLK_l:
-  case SDLK_RIGHT:
+  }
+  if( e == SDLK_l || e == SDLK_RIGHT){
     diff -> x -= 3;
     diff -> x = diff -> x > 0? 0: diff -> x;
-    return 0;
-  default:
-    return 0;
   }
+
+  return ret;
 }
 
 
 int
 swap_flag( MS_field minefield, int x, int y, MS_mstr *mine){
-  __uint8_t ret = 0, *element = acse( minefield, x, y);
+  int ret;
+  __uint8_t *element = acse( minefield, x, y);
   if( *element & EFLAG){
     *element &= ~EFLAG;
     --mine -> flaged;
@@ -567,14 +573,14 @@ swap_flag( MS_field minefield, int x, int y, MS_mstr *mine){
     ret = 1;
   }
   
-  return ( int)ret;
+  return ret;
 }
 
 
 int
 pointerpressevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field minefield, ComandStream *uncovque, MS_mstr *mine){
-  MS_pos postion;
   int ret = 0;
+  MS_pos postion;
   MS_video vid;
   
   ( void)gw;
@@ -687,9 +693,10 @@ pointerreleasevent( SDL_Event event, MS_stream mss, MS_video video, MS_field min
 
 int
 pointermoveevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field minefield, ComandStream *uncovque, MS_mstr *mine){
+  int ret = 0;
   MS_pos postion, prv_pos;
   
-  unsigned long pos, pps, ret = 0;
+  unsigned long pos, pps;
   
   MS_video vid;
   
@@ -706,27 +713,27 @@ pointermoveevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field m
   
   pps = prv_pos.x + prv_pos.y * minefield.width;
   
-  if( pos == pps) return 0;
-  
-  if( event.motion.state & SDL_BUTTON_LMASK){
-    vid.xdiff = postion.x;
-    vid.ydiff = postion.y;
-    vid.width  = 1;
-    vid.height = 1;
-    ret += uncov_elements( minefield, uncovque, vid, mine);
-  }
-  
-  if( event.motion.state & SDL_BUTTON_MMASK){
-    vid.xdiff = ( minefield.width  + postion.x - 1) % minefield.width;
-    vid.ydiff = ( minefield.height + postion.y - 1) % minefield.height;
-    vid.width  = 3;
-    vid.height = 3;
-    ret += uncov_elements( minefield, uncovque, vid, mine);
-  }
-  
-  if( event.motion.state & SDL_BUTTON_RMASK){
-    ret += swap_flag( minefield, postion.x, postion.y, mine);
-    ret += swap_flag( minefield, prv_pos.x, prv_pos.y, mine);
+  if( pos != pps){
+    if( event.motion.state & SDL_BUTTON_LMASK){
+      vid.xdiff = postion.x;
+      vid.ydiff = postion.y;
+      vid.width  = 1;
+      vid.height = 1;
+      ret += uncov_elements( minefield, uncovque, vid, mine);
+    }
+    
+    if( event.motion.state & SDL_BUTTON_MMASK){
+      vid.xdiff = ( minefield.width  + postion.x - 1) % minefield.width;
+      vid.ydiff = ( minefield.height + postion.y - 1) % minefield.height;
+      vid.width  = 3;
+      vid.height = 3;
+      ret += uncov_elements( minefield, uncovque, vid, mine);
+    }
+    
+    if( event.motion.state & SDL_BUTTON_RMASK){
+      ret += swap_flag( minefield, postion.x, postion.y, mine);
+      ret += swap_flag( minefield, prv_pos.x, prv_pos.y, mine);
+    }
   }
   
   return ret;
