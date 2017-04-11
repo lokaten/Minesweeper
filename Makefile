@@ -5,6 +5,7 @@ endif
 
 ifeq ($(GCC), yes)
 CC = gcc -std=c11
+CXX = g++
 endif
 
 ifeq ($(DEBUG), yes)
@@ -17,9 +18,6 @@ endif
 
 CFLAGS ?= -Ofast -DNDEBUG
 
-CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wstrict-overflow=5 -Wmissing-prototypes -Wstrict-prototypes -Wold-style-definition
-CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
-
 ifeq ($(GCC), yes)
 CFLAGS += -Wlogical-op
 endif
@@ -28,7 +26,13 @@ ifeq ($(DEV), yes)
 CFLAGS += -Werror -DDEBUG
 endif
 
-CXXFLAGS = $CFLAGS -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
+CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security
+CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
+
+CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
+
+CFLAGS += -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes
+
 
 PFLAGS =
 LTO_FLAGS =
