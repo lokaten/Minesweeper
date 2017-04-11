@@ -22,7 +22,7 @@ quit( void){
 }
 
 
-
+int readincmdline( int, char **, MS_video *, MS_video *, MS_stream *, unsigned long *, unsigned long *, unsigned long *, unsigned long *);
 int mainloop( MS_stream, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_stream, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
 int keyreleasevent( SDL_Event, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
@@ -39,17 +39,20 @@ void printtime( FILE *, unsigned long);
 
 
 int
-main( int argc, char** argv){
-  
-  MS_video mfvid;
-  MS_video video;
-  MS_mstr mine;
-  
+readincmdline( int argv,
+	       char **argc,
+	       MS_video *mfvid,
+	       MS_video *video,
+	       MS_stream *mss,
+	       unsigned long *global,
+	       unsigned long *level,
+	       unsigned long *no_resize,
+	       unsigned long *benchmark){
+
   unsigned long expert = 0;
   unsigned long advanced = 0;
   unsigned long beginner = 0;
-  unsigned long benchmark = 0;
-  
+    
   unsigned long helpopt = 0;
   
   unsigned long xscale = 0;
@@ -59,13 +62,8 @@ main( int argc, char** argv){
   unsigned long vquiet = 0;
   
   unsigned long debug = 0;
-  unsigned long no_resize = 0;
-
   unsigned long force  = 0;
-  unsigned long global = 0;
-  
-  MS_stream mss;
-  
+    
   /* put all comand line option in an array ( C99?)
    */
   MS_options opt[] = {
@@ -74,26 +72,26 @@ main( int argc, char** argv){
     { OPTSW_BO , "ignore validation of options"             , "force"        , 'f', &( force           )},
 #endif
     { OPTSW_GRP, ""                                       , "Minefield"    , 0  , NULL                },
-    { OPTSW_LU , "Element wide minefield"                 , "width"        , 0  , &( mfvid.width )},
-    { OPTSW_LU , "Element high minefield"                 , "height"       , 0  , &( mfvid.height)},
-    { OPTSW_LU , "Number of mines"                        , "level"        , 0  , &( mine.level      )},
+    { OPTSW_LU , "Element wide minefield"                 , "width"        , 0  , &( mfvid -> width )},
+    { OPTSW_LU , "Element high minefield"                 , "height"       , 0  , &( mfvid -> height)},
+    { OPTSW_LU , "Number of mines"                        , "level"        , 0  , ( level       )},
 #ifdef DEBUG
-    { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"         , 0  , &( mine.reseed     )},
+    //{ OPTSW_X  , "Generate Minefield based on this seed"  , "seed"         , 0  , &( mine.reseed     )},
 #endif
-    { OPTSW_BO , ""                                       , "global"       , 'g', &( global          )},
+    { OPTSW_BO , ""                                       , "global"       , 'g', ( global          )},
     { OPTSW_GRP, ""                                       , "Video"        , 0  , NULL                },
-    { OPTSW_LU , "Element wide window"                    , "video-width"  , 0  , &( video.width     )},
-    { OPTSW_LU , "Element high window"                    , "video-height" , 0  , &( video.height    )},
-    { OPTSW_LU , "Pixel wide window"                      , "real-width"   , 0  , &( video.realwidth )},
-    { OPTSW_LU , "Pixel high window"                      , "real-height"  , 0  , &( video.realheight)},
+    { OPTSW_LU , "Element wide window"                    , "video-width"  , 0  , &( video -> width     )},
+    { OPTSW_LU , "Element high window"                    , "video-height" , 0  , &( video -> height    )},
+    { OPTSW_LU , "Pixel wide window"                      , "real-width"   , 0  , &( video -> realwidth )},
+    { OPTSW_LU , "Pixel high window"                      , "real-height"  , 0  , &( video -> realheight)},
     { OPTSW_LU , "Pixel wide Element"                     , "scale-width"  , 0  , &( xscale          )},
     { OPTSW_LU , "Pixel high Element"                     , "scale-height" , 0  , &( yscale          )},
-    { OPTSW_BO , "Resize don't work well with all system" , "no-resize"    , 0  , &( no_resize       )},
+    { OPTSW_BO , "Resize don't work well with all system" , "no-resize"    , 0  , ( no_resize       )},
     { OPTSW_GRP, ""                                       , "Mode"         , 0  , NULL                },
     { OPTSW_BO , "Mimic windows minesweeper beginner mode", "beginner"     , 'b', &( beginner        )},
     { OPTSW_BO , "Mimic windows minesweeper advanced mode", "advanced"     , 'a', &( advanced        )},
     { OPTSW_BO , "Mimic windows minesweeper expert mode"  , "expert"       , 'e', &( expert          )},
-    { OPTSW_BO , ""                                       , "benchmark"    , 'B', &( benchmark       )},
+    { OPTSW_BO , ""                                       , "benchmark"    , 'B',  benchmark       },
     { OPTSW_GRP, ""                                       , "Output"       , 0  , NULL                },
     { OPTSW_BO , "Print generic help mesage"              , "help"         , 'h', &( helpopt         )},
     { OPTSW_BO , "Supres reguler output"                  , "quiet"        , 'q', &( quiet           )},
@@ -104,211 +102,222 @@ main( int argc, char** argv){
     { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""             , 0  , NULL                }};
   
   
-  mss.err = stderr;
-  mss.out = stdout;
-  mss.deb = NULL;
+  mss -> err = stderr;
+  mss -> out = stdout;
+  mss -> deb = NULL;
   
   
-  mfvid.width  = 0;
-  mfvid.height = 0;
-  mfvid.xdiff  = 0;
-  mfvid.ydiff  = 0;
-  mine.level   = 0;
-  mine.reseed  = 0;
+  mfvid -> width  = 0;
+  mfvid -> height = 0;
+  mfvid -> xdiff  = 0;
+  mfvid -> ydiff  = 0;
   
-  video.width  = 0;
-  video.height = 0;
-  video.realwidth  = 0;
-  video.realheight = 0;
-
-  mine.reseed = 0;
-  global = 0;
-  
-  
-  if( procopt( mss, opt, argc, argv)){
-    if( !vquiet) MS_print( mss.err, "\rWRong or broken input, pleas refer to --help\n");
+    
+  video -> width  = 0;
+  video -> height = 0;
+  video -> realwidth  = 0;
+  video -> realheight = 0;
+      
+  if( procopt( *mss, opt, argv, argc)){
+    if( !vquiet) MS_print( mss -> err, "\rWRong or broken input, pleas refer to --help\n");
     helpopt = 2;
   }
   
   
   if( !debug){
-    mss.deb = NULL;
+    mss -> deb = NULL;
   }
   
   if( vquiet){
-    mss.out = NULL;
-    mss.err = NULL;
+    mss -> out = NULL;
+    mss -> err = NULL;
   }else{
     if( debug){
-      mss.deb = stdout;
+      mss -> deb = stdout;
     }
   }
 
   
   if( quiet){
-    mss.out = NULL;
+    mss -> out = NULL;
   }
   
   if( ( beginner || expert || advanced) &&
-      ( mfvid.width || mfvid.height ||
-        mine.level || global || mine.reseed)){
-    MS_print( mss.err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
+      ( mfvid -> width || mfvid -> height ||
+        *level || *global)){
+    MS_print( mss -> err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
     helpopt = 2;
   }
     
-  if( !mfvid.width != !mfvid.height){
-    MS_print( mss.err, "\rspecified --width or --height with out the other isn't recomended.\n");
+  if( !mfvid -> width != !mfvid -> height){
+    MS_print( mss -> err, "\rspecified --width or --height with out the other isn't recomended.\n");
     helpopt = 2;
   }
   
   if( !xscale != !yscale){
-    MS_print( mss.err, "\rspecified --scale-width or --scale-height with out the other isn't recomended.\n");
+    MS_print( mss -> err, "\rspecified --scale-width or --scale-height with out the other isn't recomended.\n");
     helpopt = 2;
   }
   
-  if( !video.width != !video.height){
-    MS_print( mss.err, "\rspecified --video-width or --video-height with out the other isn't recomended.\n");
+  if( !video -> width != !video -> height){
+    MS_print( mss -> err, "\rspecified --video-width or --video-height with out the other isn't recomended.\n");
     helpopt = 2;
   }
   
-  if( !video.realwidth != !video.realheight){
-    MS_print( mss.err, "\rspecified --real-width or --real-height with out the other isn't recomended.\n");
+  if( !video -> realwidth != !video -> realheight){
+    MS_print( mss -> err, "\rspecified --real-width or --real-height with out the other isn't recomended.\n");
     helpopt = 2;
   }
     
   if( beginner){
     if( advanced || expert){
-      MS_print( mss.err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
+      MS_print( mss -> err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
       helpopt = 2;
     }
-    mfvid.width  = mfvid.width ? mfvid.width :  9;
-    mfvid.height = mfvid.height? mfvid.height:  9;
-    mine.level   = mine.level  ? mine.level  : 10;
+    mfvid -> width  = mfvid -> width ? mfvid -> width :  9;
+    mfvid -> height = mfvid -> height? mfvid -> height:  9;
+    *level          = *level         ? *level         : 10;
   }
   
   if( advanced){
     if( beginner || expert){
-      MS_print( mss.err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
+      MS_print( mss -> err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
       helpopt = 2;
     }
-    mfvid.width  = mfvid.width ? mfvid.width : 16;
-    mfvid.height = mfvid.height? mfvid.height: 16;
-    mine.level   = mine.level  ? mine.level  : 40;
+    mfvid -> width  = mfvid -> width ? mfvid -> width : 16;
+    mfvid -> height = mfvid -> height? mfvid -> height: 16;
+    *level          = *level         ? *level         : 40;
   }
   
   if( expert){
     if( beginner || advanced){
-      MS_print( mss.err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
+      MS_print( mss -> err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
       helpopt = 2;
     }
-    mfvid.width  = mfvid.width ? mfvid.width : 30;
-    mfvid.height = mfvid.height? mfvid.height: 16;
-    mine.level   = mine.level  ? mine.level  : 99;
+    mfvid -> width  = mfvid -> width ? mfvid -> width : 30;
+    mfvid -> height = mfvid -> height? mfvid -> height: 16;
+    *level          = *level         ? *level         : 99;
   }
 
       
   if( helpopt){
     if( helpopt == 2){
       if( !force){
-        help( mss, opt);
+        help( *mss, opt);
         exit( 1);
       }
     }else{
-      help( mss, opt);
+      help( *mss, opt);
       exit( 0);
     }
   }
   
-  MS_print( mss.deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
-  MS_print( mss.deb, "\rNOTE: user input changes how the minfield is generated.\n");
+  MS_print( mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
+  MS_print( mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
   
-  if( benchmark){
-    mfvid.width      = mfvid.width     ? mfvid.width     : 3200;
-    mfvid.height     = mfvid.height    ? mfvid.height    : 1800;
-    mine.level       = mine.level      ? mine.level      : 1;
-    video.width      = video.width     ? video.width     : 1;
-    video.height     = video.height    ? video.height    : 1;
-    video.realwidth  = video.realwidth ? video.realwidth : 15;
-    video.realheight = video.realheight? video.realheight: 15;
-    xscale           = xscale          ? xscale          : 15;
-    yscale           = yscale          ? yscale          : 15;
-    no_resize = 1;
+  if( *benchmark){
+    mfvid -> width      = mfvid -> width     ? mfvid -> width     : 3200;
+    mfvid -> height     = mfvid -> height    ? mfvid -> height    : 1800;
+    *level              = *level             ? *level             : 1;
+    video -> width      = video -> width     ? video -> width     : 1;
+    video -> height     = video -> height    ? video -> height    : 1;
+    video -> realwidth  = video -> realwidth ? video -> realwidth : 15;
+    video -> realheight = video -> realheight? video -> realheight: 15;
+    xscale              = xscale             ? xscale             : 15;
+    yscale              = yscale             ? yscale             : 15;
+    *no_resize = 1;
   }
   
-  mfvid.width  = mfvid.width ? mfvid.width : WIDTH;
-  mfvid.height = mfvid.height? mfvid.height: HEIGHT;
+  mfvid -> width  = mfvid -> width ? mfvid -> width : WIDTH;
+  mfvid -> height = mfvid -> height? mfvid -> height: HEIGHT;
   
-  if( mine.level == 0){
-    mine.level = ( mfvid.width * mfvid.height + 4) / 8;
-  }
-
-  
-  if( xscale && video.width  && ( video.realwidth  >= ( video.width  * xscale))){
-    video.realwidth = video.width * xscale;
-  }
-  
-  if( yscale && video.height && ( video.realheight >= ( video.height * yscale))){
-    video.realheight = video.height * yscale;
-  }
-  
-  if( video.realwidth  && xscale && ( video.realwidth  != video.width  * xscale)){
-    video.width = ( video.realwidth + xscale - 1) / xscale;
-    if( video.width > mfvid.width){
-      video.width  = mfvid.width;
-    }
-    video.realwidth = video.width * xscale;
-  }
-  
-  if( video.realheight && yscale && ( video.realheight != video.height * yscale)){
-    video.height = ( video.realheight + yscale - 1) / yscale;
-    if( video.height > mfvid.height){
-      video.height = mfvid.height;
-    }
-    video.realheight = video.height * yscale;
-  }
-  
-  if( ( video.width  == 0) || ( !force && ( video.width  > mfvid.width))){
-    video.width  = mfvid.width;
-  }
-  
-  if( ( video.height == 0) || ( !force && ( video.height > mfvid.height))){
-    video.height = mfvid.height;
-  }
-  
-  if( ( video.realwidth  == 0) && xscale){
-    video.realwidth  = video.width  * xscale;
-  }
-  
-  if( ( video.realheight == 0) && yscale){
-    video.realheight = video.height * yscale;
-  }
-  
-  if( video.realwidth  == 0){
-    video.realwidth  = video.width  * 15;
-  }
-  
-  if( video.realheight == 0){
-    video.realheight = video.height * 15;
+  if( *level == 0){
+    *level = ( mfvid -> width * mfvid -> height + 4) / 8;
   }
     
-  if( mine.level >= ( mfvid.width * mfvid.height)){
-    mine.level = ( mfvid.width * mfvid.height + 1) / 3;
-    MS_print( mss.err, "\rMore mine then elments, reset mine cout to: %lu\n", mine.level);
+  if( xscale && video -> width  && ( video -> realwidth  >= ( video -> width  * xscale))){
+    video -> realwidth = video -> width * xscale;
+  }
+  
+  if( yscale && video -> height && ( video -> realheight >= ( video -> height * yscale))){
+    video -> realheight = video -> height * yscale;
+  }
+  
+  if( video -> realwidth  && xscale && ( video -> realwidth  != video -> width  * xscale)){
+    video -> width = ( video -> realwidth + xscale - 1) / xscale;
+    if( video -> width > mfvid -> width){
+      video -> width  = mfvid -> width;
+    }
+    video -> realwidth = video -> width * xscale;
+  }
+  
+  if( video -> realheight && yscale && ( video -> realheight != video -> height * yscale)){
+    video -> height = ( video -> realheight + yscale - 1) / yscale;
+    if( video -> height > mfvid -> height){
+      video -> height = mfvid -> height;
+    }
+    video -> realheight = video -> height * yscale;
+  }
+  
+  if( ( video -> width  == 0) || ( !force && ( video -> width  > mfvid -> width))){
+    video -> width  = mfvid -> width;
+  }
+  
+  if( ( video -> height == 0) || ( !force && ( video -> height > mfvid -> height))){
+    video -> height = mfvid -> height;
+  }
+  
+  if( ( video-> realwidth  == 0) && xscale){
+    video -> realwidth  = video -> width  * xscale;
+  }
+  
+  if( ( video -> realheight == 0) && yscale){
+    video -> realheight = video -> height * yscale;
+  }
+  
+  if( video -> realwidth  == 0){
+    video -> realwidth  = video -> width  * 15;
+  }
+  
+  if( video -> realheight == 0){
+    video -> realheight = video -> height * 15;
+  }
+  
+  if( *level >= ( mfvid -> width * mfvid -> height)){
+    *level = ( mfvid -> width * mfvid -> height + 1) / 3;
+    MS_print( mss -> err, "\rMore mine then elments, reset mine cout to: %lu\n", *level);
   }
   
   if( !global && !force){
-    if( mfvid.width == 9 && mfvid.height == 9 && mine.level == 10){
-      MS_print( mss.out, "\rMode: beginner \n");
+    if( mfvid -> width == 9 && mfvid -> height == 9 && *level == 10){
+      MS_print( mss -> out, "\rMode: beginner \n");
     }
     
-    if( mfvid.width == 16 && mfvid.height == 16 && mine.level == 40){
-      MS_print( mss.out, "\rMode: advanced \n");
+    if( mfvid -> width == 16 && mfvid -> height == 16 && *level == 40){
+      MS_print( mss -> out, "\rMode: advanced \n");
     }
     
-    if( mfvid.width == 30 && mfvid.height == 16 && mine.level == 99){
-      MS_print( mss.out, "\rMode: expert \n");
+    if( mfvid -> width == 30 && mfvid -> height == 16 && *level == 99){
+      MS_print( mss -> out, "\rMode: expert \n");
     }
   }
+
+  return 0;
+}
+
+int
+main( int argv, char** argc){
+  
+  MS_video mfvid;
+  MS_video video;
+  MS_stream mss;
+  
+  unsigned long global = 0;
+  unsigned long level  = 0;
+  unsigned long no_resize = 0;
+  unsigned long benchmark = 0;
+  
+  readincmdline( argv, argc, &mfvid, &video, &mss, &global, &level, &no_resize, &benchmark);
   
   {
     int ret;
@@ -330,12 +339,12 @@ main( int argc, char** argv){
     GW -> global = global;
     
     GW -> mfvid = mfvid;
-
+    
     GW -> mfvid.realwidth  = mfvid.width  * GW -> ewidth;
     GW -> mfvid.realheight = mfvid.height * GW -> eheight;
-
-    minefield = MF_Create( mss, mfvid, mfvid, global, mine.level);
-        
+    
+    minefield = MF_Create( mss, mfvid, mfvid, global, level);
+    
     ret = mainloop( mss, minefield, GW);
     
     MF_Free( minefield);
