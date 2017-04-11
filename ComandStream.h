@@ -91,30 +91,29 @@ LOCALE_( CS_Create)( size_t size){
 INLINE void *
 LOCALE_( CS_Fetch)( ComandStream *CS){
   void *ret = NULL;
-  if likely( CS != NULL){
-    if unlikely( ( *CS).efetch >= NC){
-      if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) == ( *CS).blk_finish){
-        char *ptr = malloc( ( *CS).blk_size + sizeof( char *));
-        if unlikely( ptr == NULL){
-	  goto bail;
-        }
-        /*lock*/
-        *( char **)( ptr + ( *CS).blk_size) = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
-        *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) = ptr;
-        /*unlock*/
+  assert( CS != NULL);
+  if unlikely( ( *CS).efetch >= NC){
+    if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) == ( *CS).blk_finish){
+      char *ptr = malloc( ( *CS).blk_size + sizeof( char *));
+      if unlikely( ptr == NULL){
+	goto bail;
       }
-      ( *CS).blk_fetch = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
-      ( *CS).fetch  = ( *CS).blk_fetch;
-      ( *CS).efetch = 0;
+      /*lock*/
+      *( char **)( ptr + ( *CS).blk_size) = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
+      *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) = ptr;
+      /*unlock*/
     }
-        
-    ret = ( *CS).fetch;
-    ( *CS).fetch = ( *CS).fetch + ( *CS).size;
-    ++( *CS).efetch;
+    ( *CS).blk_fetch = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
+    ( *CS).fetch  = ( *CS).blk_fetch;
+    ( *CS).efetch = 0;
   }
   
+  ret = ( *CS).fetch;
+  ( *CS).fetch = ( *CS).fetch + ( *CS).size;
+  ++( *CS).efetch;
+  
  bail:
-    
+  
   return ret;
 }
 #define CS_Fetch LOCALE_( CS_Fetch)
@@ -122,17 +121,17 @@ LOCALE_( CS_Fetch)( ComandStream *CS){
 
 INLINE void
 LOCALE_( CS_Push)( ComandStream *CS, void *ptr){
-  if likely( CS != NULL){
-    if unlikely( ( *CS).epush >= NC){
-      ( *CS).blk_push = *( char **)( ( *CS).blk_push + ( *CS).blk_size);
-      ( *CS).push = ( *CS).blk_push;
-      ( *CS).epush = 0;
-      }
-    
-    if likely( ( *CS).push == ptr){
-      ( *CS).push = ( *CS).push + ( *CS).size;
-      ++( *CS).epush;
-    }
+  assert( CS != NULL);
+  
+  if unlikely( ( *CS).epush >= NC){
+    ( *CS).blk_push = *( char **)( ( *CS).blk_push + ( *CS).blk_size);
+    ( *CS).push = ( *CS).blk_push;
+    ( *CS).epush = 0;
+  }
+  
+  if likely( ( *CS).push == ptr){
+    ( *CS).push = ( *CS).push + ( *CS).size;
+    ++( *CS).epush;
   }
 }
 #define CS_Push LOCALE_( CS_Push)
@@ -145,20 +144,19 @@ INLINE void *
 LOCALE_( CS_Releas)( ComandStream *CS){
   void *ret = NULL;
   
-  if likely( CS != NULL){
-    if unlikely( ( *CS).push != ( *CS).releas){
-      if( ( *CS).ereleas >= NC){
-        ( *CS).blk_releas = *( char **)( ( *CS).blk_releas + ( *CS).blk_size);
-        ( *CS).releas = ( *CS).blk_releas;
-        ( *CS).ereleas = 0;
-      }
-      
-      ret = ( *CS).releas;
-      ( *CS).releas = ( *CS).releas + ( *CS).size;
-      ++( *CS).ereleas;
+  assert( CS != NULL);
+  if unlikely( ( *CS).push != ( *CS).releas){
+    if unlikely( ( *CS).ereleas >= NC){
+      ( *CS).blk_releas = *( char **)( ( *CS).blk_releas + ( *CS).blk_size);
+      ( *CS).releas = ( *CS).blk_releas;
+      ( *CS).ereleas = 0;
     }
-  }
     
+    ret = ( *CS).releas;
+    ( *CS).releas = ( *CS).releas + ( *CS).size;
+    ++( *CS).ereleas;
+  }
+      
   return ret;
 }
 #define CS_Releas LOCALE_( CS_Releas)
@@ -166,24 +164,23 @@ LOCALE_( CS_Releas)( ComandStream *CS){
 
 INLINE void
 LOCALE_( CS_Finish)( ComandStream *CS, void *ptr){
-  if likely( CS != NULL){
-    if unlikely( ( *CS).efinish >= NC){
-      if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) != ( *CS).blk_finish){
-	/*lock*/
-	char *lptr =  *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
-	*( char **)( ( *CS).blk_fetch + ( ( *CS).blk_size)) = *( char **)( lptr + ( *CS).blk_size);
-	/*unlock*/
-	free( lptr);
-      }
-      ( *CS).blk_finish = *( char **)( ( *CS).blk_finish + ( *CS).blk_size);
-      ( *CS).finish = ( *CS).blk_finish;
-      ( *CS).efinish = 0;
+  assert( CS != NULL);
+  if unlikely( ( *CS).efinish >= NC){
+    if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) != ( *CS).blk_finish){
+      /*lock*/
+      char *lptr =  *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
+      *( char **)( ( *CS).blk_fetch + ( ( *CS).blk_size)) = *( char **)( lptr + ( *CS).blk_size);
+      /*unlock*/
+      free( lptr);
     }
-    
-    if likely( ( *CS).finish == ptr){
-      ( *CS).finish = ( *CS).finish + ( *CS).size;
-      ++( *CS).efinish;
-    }
+    ( *CS).blk_finish = *( char **)( ( *CS).blk_finish + ( *CS).blk_size);
+    ( *CS).finish = ( *CS).blk_finish;
+    ( *CS).efinish = 0;
+  }
+  
+  if likely( ( *CS).finish == ptr){
+    ( *CS).finish = ( *CS).finish + ( *CS).size;
+    ++( *CS).efinish;
   }
 }
 #define CS_Finish LOCALE_( CS_Finish)

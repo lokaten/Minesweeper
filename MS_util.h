@@ -49,8 +49,8 @@ extern "C" {
 #endif
 
 typedef struct{
-  __uint16_t x;
-  __uint16_t y;
+  unsigned long x;
+  unsigned long y;
 }MS_pos;
 
     
@@ -96,24 +96,36 @@ typedef struct{
 
 INLINE unsigned long LOCALE_( gen_divobj)( unsigned long);
 INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
-INLINE __uint32_t LOCALE_( MS_rand)( __uint32_t);
-INLINE __uint32_t LOCALE_( rand_seed)( void);
+INLINE __uint32_t LOCALE_( MS_rand)( unsigned long);
+INLINE unsigned long LOCALE_( rand_seed)( void);
 INLINE int LOCALE_( print)( FILE *, const char *, ...);
 INLINE __uint64_t LOCALE_( getmicrosec)( void);
 INLINE __uint64_t LOCALE_( getnanosec)( void);
-	
+
 INLINE unsigned long
 LOCALE_( gen_divobj)( unsigned long a){
+  assert( a < ( 1lu << 33));
   return ( 8589934591lu + a) / a;
 }
 #define gen_divobj LOCALE_( gen_divobj)
   
 INLINE unsigned long
 LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
+  assert( b < ( 1lu << 31));
+  assert( divobj == ( 8589934591lu + a) / a);
   return ( ( ( ( b * divobj) & 8589934591lu) * a) >> 33);
 }
 #define mol_ LOCALE_( mol_)
-  
+
+INLINE unsigned long
+LOCALE_( div_)( unsigned long b, unsigned long a, unsigned long divobj){
+  ( void)a;
+  assert( b < ( 1lu << 31));
+  assert( divobj == ( 8589934591lu + a) / a);
+  return ( b * ( divobj >> 1)) >> 32;
+}
+#define div_ LOCALE_( mol_)
+
 /*
  * return a "random" number...
  *
@@ -134,7 +146,7 @@ LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
  * it's farliy easy to caluculate the "secret" numbers.
  */
 INLINE __uint32_t
-LOCALE_( MS_rand)( __uint32_t seed){
+LOCALE_( MS_rand)( unsigned long seed){
   return ( ( ( ( __uint64_t)seed + 2654435405lu) * 2654435909lu) & 4294967295lu);
 }
 #define MS_rand LOCALE_( MS_rand)
@@ -143,9 +155,9 @@ LOCALE_( MS_rand)( __uint32_t seed){
 /*
  * return a seed, for use with MS_rand( __uint32_t seed)
  */
-INLINE __uint32_t
+INLINE unsigned long
 LOCALE_( rand_seed)( void){
-  __uint32_t seed;
+  unsigned long seed;
   
 #ifdef CLOCK_REALTIME
   struct timespec tv;

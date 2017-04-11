@@ -47,7 +47,7 @@ extern "C" {
   }
 #define acse LOCALE_( acse)
   */
-    
+  
   INLINE __uint8_t *
   LOCALE_( acse)( MS_field field, int x, int y){
     return field.data + ( mol_( ( ( x) + field.width ), field.width , field.width_divobj ) +
