@@ -22,8 +22,8 @@ quit( void){
 }
 
 
-int readincmdline( int, char **, MS_video *, MS_video *, MS_stream *, unsigned long *, unsigned long *, unsigned long *, unsigned long *);
-int mainloop( MS_stream, MS_field *, GraphicWraper *);
+int readincmdline( int, char **, MS_field *, MS_video *, MS_stream *, unsigned long *, unsigned long *);
+int mainloop( MS_stream *, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_stream, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
 int keyreleasevent( SDL_Event, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
 int swap_flag( MS_field, int, int, MS_mstr *);
@@ -41,11 +41,9 @@ void printtime( FILE *, unsigned long);
 int
 readincmdline( int argv,
 	       char **argc,
-	       MS_video *mfvid,
+	       MS_field *mfvid,
 	       MS_video *video,
 	       MS_stream *mss,
-	       unsigned long *global,
-	       unsigned long *level,
 	       unsigned long *no_resize,
 	       unsigned long *benchmark){
 
@@ -63,7 +61,7 @@ readincmdline( int argv,
   
   unsigned long debug = 0;
   unsigned long force  = 0;
-    
+  
   /* put all comand line option in an array ( C99?)
    */
   MS_options opt[] = {
@@ -74,11 +72,11 @@ readincmdline( int argv,
     { OPTSW_GRP, ""                                       , "Minefield"    , 0  , NULL                },
     { OPTSW_LU , "Element wide minefield"                 , "width"        , 0  , &( mfvid -> width )},
     { OPTSW_LU , "Element high minefield"                 , "height"       , 0  , &( mfvid -> height)},
-    { OPTSW_LU , "Number of mines"                        , "level"        , 0  , ( level       )},
+    { OPTSW_LU , "Number of mines"                        , "level"        , 0  , &( mfvid -> level       )},
 #ifdef DEBUG
     //{ OPTSW_X  , "Generate Minefield based on this seed"  , "seed"         , 0  , &( mine.reseed     )},
 #endif
-    { OPTSW_BO , ""                                       , "global"       , 'g', ( global          )},
+    { OPTSW_BO , ""                                       , "global"       , 'g', &( mfvid -> global          )},
     { OPTSW_GRP, ""                                       , "Video"        , 0  , NULL                },
     { OPTSW_LU , "Element wide window"                    , "video-width"  , 0  , &( video -> width     )},
     { OPTSW_LU , "Element high window"                    , "video-height" , 0  , &( video -> height    )},
@@ -109,15 +107,15 @@ readincmdline( int argv,
   
   mfvid -> width  = 0;
   mfvid -> height = 0;
-  mfvid -> xdiff  = 0;
-  mfvid -> ydiff  = 0;
-  
     
+  mfvid -> level = 0;
+  mfvid -> global = 0;
+  
   video -> width  = 0;
   video -> height = 0;
   video -> realwidth  = 0;
   video -> realheight = 0;
-      
+  
   if( procopt( *mss, opt, argv, argc)){
     if( !vquiet) MS_print( mss -> err, "\rWRong or broken input, pleas refer to --help\n");
     helpopt = 2;
@@ -144,7 +142,7 @@ readincmdline( int argv,
   
   if( ( beginner || expert || advanced) &&
       ( mfvid -> width || mfvid -> height ||
-        *level || *global)){
+        mfvid -> level || mfvid -> global)){
     MS_print( mss -> err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
     helpopt = 2;
   }
@@ -176,7 +174,7 @@ readincmdline( int argv,
     }
     mfvid -> width  = mfvid -> width ? mfvid -> width :  9;
     mfvid -> height = mfvid -> height? mfvid -> height:  9;
-    *level          = *level         ? *level         : 10;
+    mfvid -> level  = mfvid -> level ? mfvid -> level : 10;
   }
   
   if( advanced){
@@ -186,7 +184,7 @@ readincmdline( int argv,
     }
     mfvid -> width  = mfvid -> width ? mfvid -> width : 16;
     mfvid -> height = mfvid -> height? mfvid -> height: 16;
-    *level          = *level         ? *level         : 40;
+    mfvid -> level  = mfvid -> level ? mfvid -> level : 40;
   }
   
   if( expert){
@@ -196,7 +194,7 @@ readincmdline( int argv,
     }
     mfvid -> width  = mfvid -> width ? mfvid -> width : 30;
     mfvid -> height = mfvid -> height? mfvid -> height: 16;
-    *level          = *level         ? *level         : 99;
+    mfvid -> level  = mfvid -> level ? mfvid -> level : 99;
   }
 
       
@@ -218,7 +216,7 @@ readincmdline( int argv,
   if( *benchmark){
     mfvid -> width      = mfvid -> width     ? mfvid -> width     : 3200;
     mfvid -> height     = mfvid -> height    ? mfvid -> height    : 1800;
-    *level              = *level             ? *level             : 1;
+    mfvid -> level      = mfvid -> level     ? mfvid -> level     : 1;
     video -> width      = video -> width     ? video -> width     : 1;
     video -> height     = video -> height    ? video -> height    : 1;
     video -> realwidth  = video -> realwidth ? video -> realwidth : 15;
@@ -231,8 +229,8 @@ readincmdline( int argv,
   mfvid -> width  = mfvid -> width ? mfvid -> width : WIDTH;
   mfvid -> height = mfvid -> height? mfvid -> height: HEIGHT;
   
-  if( *level == 0){
-    *level = ( mfvid -> width * mfvid -> height + 4) / 8;
+  if( mfvid -> level == 0){
+    mfvid -> level = ( mfvid -> width * mfvid -> height + 4) / 8;
   }
     
   if( xscale && video -> width  && ( video -> realwidth  >= ( video -> width  * xscale))){
@@ -283,21 +281,21 @@ readincmdline( int argv,
     video -> realheight = video -> height * 15;
   }
   
-  if( *level >= ( mfvid -> width * mfvid -> height)){
-    *level = ( mfvid -> width * mfvid -> height + 1) / 3;
-    MS_print( mss -> err, "\rMore mine then elments, reset mine cout to: %lu\n", *level);
+  if( mfvid -> level >= ( mfvid -> width * mfvid -> height)){
+    mfvid -> level = ( mfvid -> width * mfvid -> height + 1) / 3;
+    MS_print( mss -> err, "\rMore mine then elments, reset mine cout to: %lu\n", mfvid -> level);
   }
   
-  if( !global && !force){
-    if( mfvid -> width == 9 && mfvid -> height == 9 && *level == 10){
+  if( !mfvid -> global && !force){
+    if( mfvid -> width == 9 && mfvid -> height == 9 && mfvid -> level == 10){
       MS_print( mss -> out, "\rMode: beginner \n");
     }
     
-    if( mfvid -> width == 16 && mfvid -> height == 16 && *level == 40){
+    if( mfvid -> width == 16 && mfvid -> height == 16 && mfvid -> level == 40){
       MS_print( mss -> out, "\rMode: advanced \n");
     }
     
-    if( mfvid -> width == 30 && mfvid -> height == 16 && *level == 99){
+    if( mfvid -> width == 30 && mfvid -> height == 16 && mfvid -> level == 99){
       MS_print( mss -> out, "\rMode: expert \n");
     }
   }
@@ -307,22 +305,19 @@ readincmdline( int argv,
 
 int
 main( int argv, char** argc){
-  
-  MS_video mfvid;
-  MS_video video;
-  MS_stream mss;
-  
-  unsigned long global = 0;
-  unsigned long level  = 0;
-  unsigned long no_resize = 0;
-  unsigned long benchmark = 0;
-  
-  readincmdline( argv, argc, &mfvid, &video, &mss, &global, &level, &no_resize, &benchmark);
-  
+  int ret;
+  GraphicWraper *GW;
+  MS_field *minefield;
+  MS_stream *mss = ( MS_stream *)malloc( sizeof( MS_stream));
+    
   {
-    int ret;
-    GraphicWraper *GW;
-    MS_field *minefield;
+    MS_field mfvid;
+    MS_video video;
+        
+    unsigned long no_resize = 0;
+    unsigned long benchmark = 0;
+    
+    readincmdline( argv, argc, &mfvid, &video, mss, &no_resize, &benchmark);
     
     GW = GW_Create( video, no_resize);
     
@@ -336,37 +331,41 @@ main( int argv, char** argc){
       SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
     }
     
-    GW -> global = global;
+    GW -> global = mfvid.global;
     
-    GW -> mfvid = mfvid;
+    GW -> mfvid.width  = mfvid.width;
+    GW -> mfvid.height = mfvid.height;
+    GW -> mfvid.xdiff  = 0;
+    GW -> mfvid.ydiff  = 0;
     
     GW -> mfvid.realwidth  = mfvid.width  * GW -> ewidth;
     GW -> mfvid.realheight = mfvid.height * GW -> eheight;
     
-    minefield = MF_Create( mss, mfvid, mfvid, global, level);
-    
-    ret = mainloop( mss, minefield, GW);
-    
-    MF_Free( minefield);
-    
-    GW_Free( GW);
-    
-    MS_print( mss.out, "\nBye!\n");
-    
-    if( mss.out == NULL){
-      MS_print( mss.deb, "\n");
-    }
-    
-    exit( ret);
+    minefield = MF_Create( mss, GW -> mfvid, GW -> mfvid, mfvid.global, mfvid.level);
   }
   
-  return 1;
+  ret = mainloop( mss, minefield, GW);
+  
+  MF_Free( minefield);
+  
+  GW_Free( GW);
+  
+  MS_print( mss -> out, "\nBye!\n");
+  
+  if( mss -> out == NULL){
+    MS_print( mss -> deb, "\n");
+  }
+  
+  exit( ret);
+  
+  return ret;
 }
 
 
 
+
 int
-mainloop( MS_stream mss, MS_field *minefield, GraphicWraper *GW){
+mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
   SDL_Event event;
   
   __uint64_t tutime, nextframe, gamestart, nexttu;
@@ -397,12 +396,12 @@ mainloop( MS_stream mss, MS_field *minefield, GraphicWraper *GW){
       }
     }else{
       if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
-	MS_print( mss.out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
+	MS_print( mss -> out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
       }else{
 	gamestart = tutime;
       }
       
-      printtime( mss.out, ( tutime - gamestart) / 1000000);
+      printtime( mss -> out, ( tutime - gamestart) / 1000000);
       
       /* to make sure the time looks like it updatet consistanly we randomaize
        * the time we wait betwen updating it, with max time betwen update beigen 150ms
@@ -417,7 +416,7 @@ mainloop( MS_stream mss, MS_field *minefield, GraphicWraper *GW){
       case SDL_QUIT:
         return 0;
       case SDL_KEYDOWN:
-        if( ( err = keypressevent( event, mss, *minefield, GW -> mfvid, &diff, minefield -> uncovque, minefield -> mine)) > 0){
+        if( ( err = keypressevent( event, *mss, *minefield, GW -> mfvid, &diff, minefield -> uncovque, minefield -> mine)) > 0){
           nextframe = tutime;
         }
         break;
@@ -435,7 +434,7 @@ mainloop( MS_stream mss, MS_field *minefield, GraphicWraper *GW){
         }
         break;
       case SDL_MOUSEBUTTONUP:
-        if( ( err = pointerreleasevent( event, mss, GW -> logical, *minefield, minefield -> uncovque,  minefield -> mine, tutime, gamestart)) > 0){
+        if( ( err = pointerreleasevent( event, *mss, GW -> logical, *minefield, minefield -> uncovque,  minefield -> mine, tutime, gamestart)) > 0){
           nextframe = tutime;
         }
         nextframe = tutime;
@@ -450,7 +449,7 @@ mainloop( MS_stream mss, MS_field *minefield, GraphicWraper *GW){
       }
       
       if unlikely( err == -2){
-        MS_print( mss.err, "\r\t\t\t\t\t\t\t\t\t alloc limet!     \n");
+        MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t alloc limet!     \n");
       }
     }
     
@@ -460,21 +459,21 @@ mainloop( MS_stream mss, MS_field *minefield, GraphicWraper *GW){
       }
                   
       if unlikely( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))){
-        MS_print( mss.err, "\rIn expliciv error: %lu of %lu, %lu of %lu \n", minefield -> mine -> mines, minefield -> mine -> level, minefield -> mine -> set, minefield -> mine -> noelements);
+        MS_print( mss -> err, "\rIn expliciv error: %lu of %lu, %lu of %lu \n", minefield -> mine -> mines, minefield -> mine -> level, minefield -> mine -> set, minefield -> mine -> noelements);
       }
       
       if unlikely( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)){
-        MS_print( mss.err, "\rmine count fall short, curetn count: %lu of %lu \n", minefield -> mine -> mines, minefield -> mine -> level);
+        MS_print( mss -> err, "\rmine count fall short, curetn count: %lu of %lu \n", minefield -> mine -> mines, minefield -> mine -> level);
       }
       
       if unlikely( draw( GW, *minefield) == -3){
-        MS_print( mss.err, "\r\t\t\t\t\t\t\t\t\t inval data \n");
+        MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t inval data \n");
       }
       
-      if( mss.deb != NULL){
+      if( mss -> deb != NULL){
         __uint64_t mytime = getnanosec() - tutime;
         
-        MS_print( mss.deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
+        MS_print( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
       }
     }
   }

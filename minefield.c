@@ -14,7 +14,7 @@ INLINE int addelement( ComandStream *, MS_field, signed long, signed long);
 
 
 MS_field *
-MF_Create( MS_stream mss, MS_video video, MS_video mfvid, unsigned long global, unsigned long level){
+MF_Create( MS_stream *mss, MS_video video, MS_video mfvid, unsigned long global, unsigned long level){
   MS_field *minefield = ( MS_field *)malloc( sizeof( MS_field));
 
   if( minefield == NULL){
@@ -52,13 +52,13 @@ MF_Create( MS_stream mss, MS_video video, MS_video mfvid, unsigned long global, 
   }
   
   if( minefield -> data == NULL){
-    MS_print( mss.err, "\rlimet-mem \n");
+    MS_print( mss -> err, "\rlimet-mem \n");
     exit( 1);
   }
   
   setminefield( minefield, video, level);
   
-  MS_print( mss.deb, "\rSeed: %08x   \n", minefield -> mine -> seed);
+  MS_print( mss -> deb, "\rSeed: %08x   \n", minefield -> mine -> seed);
   
   return minefield;
 }

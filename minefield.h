@@ -18,7 +18,6 @@ extern "C" {
     unsigned long noelements;
     unsigned long hit;
     __uint32_t seed;
-    unsigned long reseed;
   }MS_mstr;
 
   
@@ -33,6 +32,8 @@ extern "C" {
     unsigned long subwidth;
     unsigned long subheight;
     unsigned long global;
+    unsigned long reseed;
+    unsigned long level;
   }MS_field;
   
   
@@ -57,7 +58,7 @@ extern "C" {
 #endif
   
   void setzero( MS_field, MS_mstr *, MS_video);
-  MS_field *MF_Create( MS_stream, MS_video, MS_video, unsigned long, unsigned long);
+  MS_field *MF_Create( MS_stream *, MS_video, MS_video, unsigned long, unsigned long);
   void setminefield( MS_field *, MS_video, unsigned long);
   void MF_Free( MS_field *);
   int uncov( MS_field, ComandStream *, MS_mstr *);
