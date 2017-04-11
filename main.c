@@ -50,11 +50,11 @@ readincmdline( int argv,
   unsigned long expert = 0;
   unsigned long advanced = 0;
   unsigned long beginner = 0;
-    
+  
   unsigned long helpopt = 0;
   
-  unsigned long xscale = 0;
-  unsigned long yscale = 0;
+  unsigned long xscale = 15;
+  unsigned long yscale = 15;
   
   unsigned long quiet = 0;
   unsigned long vquiet = 0;
@@ -105,10 +105,10 @@ readincmdline( int argv,
   mss -> deb = NULL;
   
   
-  mfvid -> width  = 0;
-  mfvid -> height = 0;
+  mfvid -> width  = 9;
+  mfvid -> height = 9;
     
-  mfvid -> level = 0;
+  mfvid -> level  = 10;
   mfvid -> global = 0;
   
   video -> width  = 0;
@@ -139,42 +139,15 @@ readincmdline( int argv,
   if( quiet){
     mss -> out = NULL;
   }
-  
-  if( ( beginner || expert || advanced) &&
-      ( mfvid -> width || mfvid -> height ||
-        mfvid -> level || mfvid -> global)){
-    MS_print( mss -> err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
-    helpopt = 2;
-  }
-    
-  if( !mfvid -> width != !mfvid -> height){
-    MS_print( mss -> err, "\rspecified --width or --height with out the other isn't recomended.\n");
-    helpopt = 2;
-  }
-  
-  if( !xscale != !yscale){
-    MS_print( mss -> err, "\rspecified --scale-width or --scale-height with out the other isn't recomended.\n");
-    helpopt = 2;
-  }
-  
-  if( !video -> width != !video -> height){
-    MS_print( mss -> err, "\rspecified --video-width or --video-height with out the other isn't recomended.\n");
-    helpopt = 2;
-  }
-  
-  if( !video -> realwidth != !video -> realheight){
-    MS_print( mss -> err, "\rspecified --real-width or --real-height with out the other isn't recomended.\n");
-    helpopt = 2;
-  }
-    
+
   if( beginner){
     if( advanced || expert){
       MS_print( mss -> err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
       helpopt = 2;
     }
-    mfvid -> width  = mfvid -> width ? mfvid -> width :  9;
-    mfvid -> height = mfvid -> height? mfvid -> height:  9;
-    mfvid -> level  = mfvid -> level ? mfvid -> level : 10;
+    mfvid -> width  =  9;
+    mfvid -> height =  9;
+    mfvid -> level  = 10;
   }
   
   if( advanced){
@@ -182,9 +155,9 @@ readincmdline( int argv,
       MS_print( mss -> err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
       helpopt = 2;
     }
-    mfvid -> width  = mfvid -> width ? mfvid -> width : 16;
-    mfvid -> height = mfvid -> height? mfvid -> height: 16;
-    mfvid -> level  = mfvid -> level ? mfvid -> level : 40;
+    mfvid -> width  = 16;
+    mfvid -> height = 16;
+    mfvid -> level  = 40;
   }
   
   if( expert){
@@ -192,54 +165,25 @@ readincmdline( int argv,
       MS_print( mss -> err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
       helpopt = 2;
     }
-    mfvid -> width  = mfvid -> width ? mfvid -> width : 30;
-    mfvid -> height = mfvid -> height? mfvid -> height: 16;
-    mfvid -> level  = mfvid -> level ? mfvid -> level : 99;
+    mfvid -> width  = 30;
+    mfvid -> height = 16;
+    mfvid -> level  = 99;
   }
-
-      
-  if( helpopt){
-    if( helpopt == 2){
-      if( !force){
-        help( *mss, opt);
-        exit( 1);
-      }
-    }else{
-      help( *mss, opt);
-      exit( 0);
-    }
-  }
-  
-  MS_print( mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
-  MS_print( mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
-  
+    
   if( *benchmark){
     mfvid -> width      = mfvid -> width     ? mfvid -> width     : 3200;
     mfvid -> height     = mfvid -> height    ? mfvid -> height    : 1800;
     mfvid -> level      = mfvid -> level     ? mfvid -> level     : 1;
     video -> width      = video -> width     ? video -> width     : 1;
     video -> height     = video -> height    ? video -> height    : 1;
-    video -> realwidth  = video -> realwidth ? video -> realwidth : 15;
-    video -> realheight = video -> realheight? video -> realheight: 15;
-    xscale              = xscale             ? xscale             : 15;
-    yscale              = yscale             ? yscale             : 15;
     *no_resize = 1;
   }
   
-  mfvid -> width  = mfvid -> width ? mfvid -> width : WIDTH;
-  mfvid -> height = mfvid -> height? mfvid -> height: HEIGHT;
+  video -> width  = video -> width ? video -> width : mfvid -> width;
+  video -> height = video -> height? video -> height: mfvid -> height;
   
-  if( mfvid -> level == 0){
-    mfvid -> level = ( mfvid -> width * mfvid -> height + 4) / 8;
-  }
-    
-  if( xscale && video -> width  && ( video -> realwidth  >= ( video -> width  * xscale))){
-    video -> realwidth = video -> width * xscale;
-  }
-  
-  if( yscale && video -> height && ( video -> realheight >= ( video -> height * yscale))){
-    video -> realheight = video -> height * yscale;
-  }
+  video -> realwidth  = video -> realwidth ? video -> realwidth : video -> width  * xscale;
+  video -> realheight = video -> realheight? video -> realheight: video -> height * yscale;
   
   if( video -> realwidth  && xscale && ( video -> realwidth  != video -> width  * xscale)){
     video -> width = ( video -> realwidth + xscale - 1) / xscale;
@@ -256,50 +200,59 @@ readincmdline( int argv,
     }
     video -> realheight = video -> height * yscale;
   }
-  
-  if( ( video -> width  == 0) || ( !force && ( video -> width  > mfvid -> width))){
-    video -> width  = mfvid -> width;
-  }
-  
-  if( ( video -> height == 0) || ( !force && ( video -> height > mfvid -> height))){
-    video -> height = mfvid -> height;
-  }
-  
-  if( ( video-> realwidth  == 0) && xscale){
-    video -> realwidth  = video -> width  * xscale;
-  }
-  
-  if( ( video -> realheight == 0) && yscale){
-    video -> realheight = video -> height * yscale;
-  }
-  
-  if( video -> realwidth  == 0){
-    video -> realwidth  = video -> width  * 15;
-  }
-  
-  if( video -> realheight == 0){
-    video -> realheight = video -> height * 15;
-  }
-  
+    
   if( mfvid -> level >= ( mfvid -> width * mfvid -> height)){
     mfvid -> level = ( mfvid -> width * mfvid -> height + 1) / 3;
-    MS_print( mss -> err, "\rMore mine then elments, reset mine cout to: %lu\n", mfvid -> level);
+    MS_print( mss -> err, "\rMore mine then elments!\n", mfvid -> level);
+    helpopt = 2;
+  }
+    
+  if( ( !mfvid -> global && !force) && ( mfvid -> width == 9 && mfvid -> height == 9 && mfvid -> level == 10)){
+    MS_print( mss -> out, "\rMode: beginner \n");
+  }else{
+    if( beginner){
+      MS_print( mss -> err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
+      helpopt = 2;
+    }
   }
   
-  if( !mfvid -> global && !force){
-    if( mfvid -> width == 9 && mfvid -> height == 9 && mfvid -> level == 10){
-      MS_print( mss -> out, "\rMode: beginner \n");
-    }
-    
-    if( mfvid -> width == 16 && mfvid -> height == 16 && mfvid -> level == 40){
-      MS_print( mss -> out, "\rMode: advanced \n");
-    }
-    
-    if( mfvid -> width == 30 && mfvid -> height == 16 && mfvid -> level == 99){
-      MS_print( mss -> out, "\rMode: expert \n");
+  if( ( !mfvid -> global && !force) && ( mfvid -> width == 16 && mfvid -> height == 16 && mfvid -> level == 40)){
+    MS_print( mss -> out, "\rMode: advanced \n");
+  }else{
+    if( advanced){
+      MS_print( mss -> err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
+      helpopt = 2;
     }
   }
 
+  if( ( !mfvid -> global && !force) && ( mfvid -> width == 30 && mfvid -> height == 16 && mfvid -> level == 99)){
+    MS_print( mss -> out, "\rMode: expert \n");
+  }else{
+    if( expert){
+      MS_print( mss -> err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
+      helpopt = 2;
+    }
+  }
+    
+  if( helpopt){
+    if( helpopt == 2){
+      if( !force){
+        help( *mss, opt);
+        exit( 1);
+      }
+    }else{
+      help( *mss, opt);
+      exit( 0);
+    }
+  }
+  
+  MS_print( mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
+  MS_print( mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
+  
+  MS_print( mss -> deb, "\rwidth: %lu   ", mfvid -> width);
+  MS_print( mss -> deb, "\r\t\theight: %lu   ", mfvid -> height);
+  MS_print( mss -> deb, "\r\t\t\t\tlevel: %lu   \n", mfvid -> level);
+    
   return 0;
 }
 
