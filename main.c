@@ -65,39 +65,37 @@ readincmdline( int argv,
   /* put all comand line option in an array ( C99?)
    */
   MS_options opt[] = {
-    { OPTSW_GRP, ""                                       , "Options"      , 0  , NULL                },
+    { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                   },
 #ifdef DEBUG
-    { OPTSW_BO , "ignore validation of options"             , "force"        , 'f', &( force           )},
+    { OPTSW_BO , "ignore validation of options"           , "force"          , 'f', &( force              )},
 #endif
-    { OPTSW_GRP, ""                                       , "Minefield"    , 0  , NULL                },
-    { OPTSW_LU , "Element wide minefield"                 , "width"        , 0  , &( mfvid -> width )},
-    { OPTSW_LU , "Element high minefield"                 , "height"       , 0  , &( mfvid -> height)},
-    { OPTSW_LU , "Number of mines"                        , "level"        , 0  , &( mfvid -> level       )},
+    { OPTSW_GRP, ""                                       , "Minefield"      , 0  , NULL                   },
+    { OPTSW_LU , "Element wide minefield"                 , "width"          , 0  , &( mfvid -> width     )},
+    { OPTSW_LU , "Element high minefield"                 , "height"         , 0  , &( mfvid -> height    )},
+    { OPTSW_LU , "Number of mines"                        , "level"          , 0  , &( mfvid -> level     )},
 #ifdef DEBUG
-    //{ OPTSW_X  , "Generate Minefield based on this seed"  , "seed"         , 0  , &( mine.reseed     )},
+    { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"           , 0  , &( mfvid -> reseed    )},
 #endif
-    { OPTSW_BO , ""                                       , "global"       , 'g', &( mfvid -> global          )},
-    { OPTSW_GRP, ""                                       , "Video"        , 0  , NULL                },
-    { OPTSW_LU , "Element wide window"                    , "video-width"  , 0  , &( video -> width     )},
-    { OPTSW_LU , "Element high window"                    , "video-height" , 0  , &( video -> height    )},
-    { OPTSW_LU , "Pixel wide window"                      , "real-width"   , 0  , &( video -> realwidth )},
-    { OPTSW_LU , "Pixel high window"                      , "real-height"  , 0  , &( video -> realheight)},
-    { OPTSW_LU , "Pixel wide Element"                     , "scale-width"  , 0  , &( xscale          )},
-    { OPTSW_LU , "Pixel high Element"                     , "scale-height" , 0  , &( yscale          )},
-    { OPTSW_BO , "Resize don't work well with all system" , "no-resize"    , 0  , ( no_resize       )},
-    { OPTSW_GRP, ""                                       , "Mode"         , 0  , NULL                },
-    { OPTSW_BO , "Mimic windows minesweeper beginner mode", "beginner"     , 'b', &( beginner        )},
-    { OPTSW_BO , "Mimic windows minesweeper advanced mode", "advanced"     , 'a', &( advanced        )},
-    { OPTSW_BO , "Mimic windows minesweeper expert mode"  , "expert"       , 'e', &( expert          )},
-    { OPTSW_BO , ""                                       , "benchmark"    , 'B',  benchmark       },
-    { OPTSW_GRP, ""                                       , "Output"       , 0  , NULL                },
-    { OPTSW_BO , "Print generic help mesage"              , "help"         , 'h', &( helpopt         )},
-    { OPTSW_BO , "Supres reguler output"                  , "quiet"        , 'q', &( quiet           )},
-    { OPTSW_BO , "Supres all output"                      , "very-quiet"   , 'Q', &( vquiet          )},
+    { OPTSW_BO , ""                                       , "global"         , 'g', &( mfvid -> global    )},
+    { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                   },
+    { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( video -> realwidth )},
+    { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( video -> realheight)},
+    { OPTSW_LU , "Pixel wide Element"                     , "element-width"  , 0  , &( xscale             )},
+    { OPTSW_LU , "Pixel high Element"                     , "element-height" , 0  , &( yscale             )},
+    { OPTSW_BO , "Resize don't work well with all system" , "no-resize"      , 0  , ( no_resize           )},
+    { OPTSW_GRP, ""                                       , "Mode"           , 0  , NULL                   },
+    { OPTSW_BO , "Mimic windows minesweeper beginner mode", "beginner"       , 'b', &( beginner           )},
+    { OPTSW_BO , "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &( advanced           )},
+    { OPTSW_BO , "Mimic windows minesweeper expert mode"  , "expert"         , 'e', &( expert             )},
+    { OPTSW_BO , ""                                       , "benchmark"      , 'B',  benchmark             },
+    { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                   },
+    { OPTSW_BO , "Print generic help mesage"              , "help"           , 'h', &( helpopt            )},
+    { OPTSW_BO , "Supres reguler output"                  , "quiet"          , 'q', &( quiet              )},
+    { OPTSW_BO , "Supres all output"                      , "very-quiet"     , 'Q', &( vquiet             )},
 #ifdef DEBUG
-    { OPTSW_BO , "Debug data"                             , "debug"        , 'd', &( debug           )},
+    { OPTSW_BO , "Debug data"                             , "debug"          , 'd', &( debug              )},
 #endif
-    { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""             , 0  , NULL                }};
+    { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                   }};
   
   
   mss -> err = stderr;
@@ -134,7 +132,7 @@ readincmdline( int argv,
       mss -> deb = stdout;
     }
   }
-
+  
   
   if( quiet){
     mss -> out = NULL;
@@ -185,22 +183,9 @@ readincmdline( int argv,
   video -> realwidth  = video -> realwidth ? video -> realwidth : video -> width  * xscale;
   video -> realheight = video -> realheight? video -> realheight: video -> height * yscale;
   
-  if( video -> realwidth  && xscale && ( video -> realwidth  != video -> width  * xscale)){
-    video -> width = ( video -> realwidth + xscale - 1) / xscale;
-    if( video -> width > mfvid -> width){
-      video -> width  = mfvid -> width;
-    }
-    video -> realwidth = video -> width * xscale;
-  }
+  video -> width  = video -> width  * xscale <= video -> realwidth ? video -> width : ( video -> realwidth  + ( xscale - 1)) / xscale;
+  video -> height = video -> height * yscale <= video -> realheight? video -> height: ( video -> realheight + ( yscale - 1)) / yscale;
   
-  if( video -> realheight && yscale && ( video -> realheight != video -> height * yscale)){
-    video -> height = ( video -> realheight + yscale - 1) / yscale;
-    if( video -> height > mfvid -> height){
-      video -> height = mfvid -> height;
-    }
-    video -> realheight = video -> height * yscale;
-  }
-    
   if( mfvid -> level >= ( mfvid -> width * mfvid -> height)){
     mfvid -> level = ( mfvid -> width * mfvid -> height + 1) / 3;
     MS_print( mss -> err, "\rMore mine then elments!\n", mfvid -> level);
