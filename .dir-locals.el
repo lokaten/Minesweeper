@@ -1,3 +1,6 @@
 
-(setq indent-tabs-mode nil)
-(highlight-trailing-whitespace)
+
+( nil (( custom-set-variables)
+       '(indent-tabs-mode nil)))
+
+

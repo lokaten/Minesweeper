@@ -28,8 +28,8 @@ extern "C" {
   
 #define OPT_MAX 200
   
-  int procopt( MS_stream, MS_options *, unsigned, char **);
-  int help( MS_stream, MS_options *);
+  int procopt( MS_stream *, MS_options *, unsigned, char **);
+  int help( FILE *, MS_options *);
   
   
 #ifdef __cplusplus

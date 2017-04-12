@@ -32,21 +32,15 @@ int pointerreleasevent( SDL_Event, MS_stream, MS_video, MS_field, ComandStream *
 int pointermoveevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
 void printtime( FILE *, unsigned long);
 
-
-/*Beginner*/
-#define WIDTH   9
-#define HEIGHT  9
-
-
 int
 readincmdline( int argv,
-	       char **argc,
-	       MS_field *mfvid,
-	       MS_video *video,
-	       MS_stream *mss,
-	       unsigned long *no_resize,
-	       unsigned long *benchmark){
-
+               char **argc,
+               MS_field *mfvid,
+               MS_video *video,
+               MS_stream *mss,
+               unsigned long *no_resize,
+               unsigned long *benchmark){
+  
   unsigned long expert = 0;
   unsigned long advanced = 0;
   unsigned long beginner = 0;
@@ -108,13 +102,14 @@ readincmdline( int argv,
     
   mfvid -> level  = 10;
   mfvid -> global = 0;
+  mfvid -> reseed = 0;
   
   video -> width  = 0;
   video -> height = 0;
   video -> realwidth  = 0;
   video -> realheight = 0;
   
-  if( procopt( *mss, opt, argv, argc)){
+  if( procopt( mss, opt, argv, argc)){
     if( !vquiet) MS_print( mss -> err, "\rWRong or broken input, pleas refer to --help\n");
     helpopt = 2;
   }
@@ -222,11 +217,11 @@ readincmdline( int argv,
   if( helpopt){
     if( helpopt == 2){
       if( !force){
-        help( *mss, opt);
+        help( mss -> out, opt);
         exit( 1);
       }
     }else{
-      help( *mss, opt);
+      help( mss -> out, opt);
       exit( 0);
     }
   }
@@ -280,6 +275,10 @@ main( int argv, char** argc){
     GW -> mfvid.realheight = mfvid.height * GW -> eheight;
     
     minefield = MF_Create( mss, GW -> mfvid, GW -> mfvid, mfvid.global, mfvid.level);
+
+    minefield -> level = mfvid.level;
+    minefield -> reseed = mfvid.reseed;
+    minefield -> mine -> seed = minefield -> reseed;
   }
   
   ret = mainloop( mss, minefield, GW);
@@ -432,7 +431,7 @@ keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvi
     return 0;
   case SDLK_F2:
     if( mine -> uncoverd || mine -> flaged){
-      setminefield( &minefield, mfvid, minefield.mine -> level);
+      setminefield( &minefield, &mss, mfvid);
       ret = 1;
     }
     break;

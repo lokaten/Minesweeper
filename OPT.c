@@ -9,9 +9,9 @@
 #include "OPT.h"
 
 int
-procopt( MS_stream mss, MS_options *opt, unsigned argc, char **argv){
+procopt( MS_stream *mss, MS_options *opt, unsigned argc, char **argv){
+  int ret = 0;
   unsigned long i = 0;
-  unsigned long ret = 0;
   char *lr = NULL;
   
   while( ++i < argc){
@@ -47,7 +47,7 @@ procopt( MS_stream mss, MS_options *opt, unsigned argc, char **argv){
             break;
           }
         }else{
-          MS_print( mss.err, "\rOption \'%s\' dosen't exist\n", argv[ i]);
+          MS_print( mss -> err, "\rOption \'%s\' dosen't exist\n", argv[ i]);
           ret = -1;
           break;
         }
@@ -82,7 +82,7 @@ procopt( MS_stream mss, MS_options *opt, unsigned argc, char **argv){
               break;
 	    }
           }else{
-            MS_print( mss.err, "\rShort option \'%c\' dosen't exist\n", *( argv[ i] + k));
+            MS_print( mss -> err, "\rShort option \'%c\' dosen't exist\n", *( argv[ i] + k));
             ret = -1;
             break;
           }
@@ -99,29 +99,29 @@ procopt( MS_stream mss, MS_options *opt, unsigned argc, char **argv){
 
 
 int
-help( MS_stream mss, MS_options *opt){
+help( FILE *stream, MS_options *opt){
   int ret = 0;
   int j = -1;
   
   while( ++j < OPT_MAX){
     switch( opt[ j].optsw){
     case OPTSW_GRP:
-      MS_print( mss.out, "\r%s: \n", opt[ j].name);
+      MS_print( stream, "\r%s: \n", opt[ j].name);
       break;
     case OPTSW_LU:
-      MS_print( mss.out, "\r\t --%s ", opt[ j].name);
-      MS_print( mss.out, "\r\t\t\t\t\t <int> ");
-      MS_print( mss.out, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
+      MS_print( stream, "\r\t --%s ", opt[ j].name);
+      MS_print( stream, "\r\t\t\t\t\t <int> ");
+      MS_print( stream, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
       break;
     case OPTSW_X:
-      MS_print( mss.out, "\r\t --%s ", opt[ j].name);
-      MS_print( mss.out, "\r\t\t\t\t\t <hex> ");
-      MS_print( mss.out, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
+      MS_print( stream, "\r\t --%s ", opt[ j].name);
+      MS_print( stream, "\r\t\t\t\t\t <hex> ");
+      MS_print( stream, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
       break;
     case OPTSW_BO:
-      MS_print( mss.out, "\r\t --%s ", opt[ j].name);
-      MS_print( mss.out, "\r\t\t\t\t %c ", opt[ j].chr);
-      MS_print( mss.out, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
+      MS_print( stream, "\r\t --%s ", opt[ j].name);
+      MS_print( stream, "\r\t\t\t\t %c ", opt[ j].chr);
+      MS_print( stream, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
       break;
     case OPTSW_NUL:
       return ret;

@@ -56,16 +56,14 @@ MF_Create( MS_stream *mss, MS_video video, MS_video mfvid, unsigned long global,
     exit( 1);
   }
   
-  setminefield( minefield, video, level);
-  
-  MS_print( mss -> deb, "\rSeed: %08x   \n", minefield -> mine -> seed);
-  
+  setminefield( minefield, mss, video);
+    
   return minefield;
 }
 
 
 void
-setminefield( MS_field *minefield, MS_video video, unsigned long level){
+setminefield( MS_field *minefield, MS_stream *mss, MS_video video){
   unsigned long i;
   unsigned long x;
   
@@ -84,7 +82,7 @@ setminefield( MS_field *minefield, MS_video video, unsigned long level){
     memset( minefield -> data + ( ( video.ydiff + i) % minefield -> subheight) * minefield -> width, ENUT, video.width - x);
   }
   
-  minefield -> mine -> level = level;
+  minefield -> mine -> level = minefield -> level;
   
   minefield -> mine -> flaged = 0;
   
@@ -97,6 +95,12 @@ setminefield( MS_field *minefield, MS_video video, unsigned long level){
   minefield -> mine -> hit = 0;
   
   minefield -> mine -> seed = MS_rand_seed();
+  
+  if( minefield -> reseed){
+    minefield -> mine -> seed = minefield -> reseed;
+  }
+  
+  MS_print( mss -> deb, "\rSeed: %08x   \n", minefield -> mine -> seed);
 }
 
 

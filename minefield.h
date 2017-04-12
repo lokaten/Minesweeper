@@ -59,7 +59,7 @@ extern "C" {
   
   void setzero( MS_field, MS_mstr *, MS_video);
   MS_field *MF_Create( MS_stream *, MS_video, MS_video, unsigned long, unsigned long);
-  void setminefield( MS_field *, MS_video, unsigned long);
+  void setminefield( MS_field *, MS_stream *, MS_video);
   void MF_Free( MS_field *);
   int uncov( MS_field, ComandStream *, MS_mstr *);
   int uncov_elements( MS_field, ComandStream *, MS_video, MS_mstr *);
