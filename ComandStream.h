@@ -57,7 +57,7 @@ LOCALE_( CS_Create)( size_t size){
     return NULL;
   }
   
-  ptr = malloc( ( *CS).blk_size + sizeof( char *));
+  ptr = ( char *)malloc( ( *CS).blk_size + sizeof( char *));
   
   if( ptr == NULL){
     free( CS);
@@ -94,7 +94,7 @@ LOCALE_( CS_Fetch)( ComandStream *CS){
   assert( CS != NULL);
   if unlikely( ( *CS).efetch >= NC){
     if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) == ( *CS).blk_finish){
-      char *ptr = malloc( ( *CS).blk_size + sizeof( char *));
+      char *ptr = ( char *)malloc( ( *CS).blk_size + sizeof( char *));
       if unlikely( ptr == NULL){
 	goto bail;
       }

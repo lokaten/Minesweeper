@@ -14,9 +14,9 @@ INLINE int addelement( ComandStream *, MS_field, signed long, signed long);
 
 
 MS_field *
-MF_Create( MS_stream *mss, MS_video video, MS_video mfvid, unsigned long global, unsigned long level){
+MF_Create( MS_stream *mss, MS_video video, MS_video mfvid, unsigned long global){
   MS_field *minefield = ( MS_field *)malloc( sizeof( MS_field));
-
+  
   if( minefield == NULL){
     return NULL;
   }
@@ -121,7 +121,7 @@ addelement( ComandStream *uncovque, MS_field minefield, signed long x, signed lo
   /* check that ECOVER is true, to not uncover the same element twice, and also skip if EFLAG is true
    */
   if( ( *acse( minefield, x, y) & ECOVER) && ( *acse( minefield, x, y) & EFLAG) ^ EFLAG){
-    MS_pos *pos = CS_Fetch( uncovque);
+    MS_pos *pos = ( MS_pos *)CS_Fetch( uncovque);
     if likely( pos != NULL){
       ( *pos).x = ( x + minefield.width ) % minefield.width;
       ( *pos).y = ( y + minefield.height) % minefield.height;

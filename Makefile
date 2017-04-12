@@ -8,6 +8,10 @@ CC = gcc -std=c11
 CXX = g++
 endif
 
+ifeq ($(GPP), yes)
+CC = g++
+endif
+
 ifeq ($(DEBUG), yes)
 CFLAGS = -Og -ggdb -DDEBUG
 endif
@@ -31,8 +35,11 @@ CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabl
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
 
+ifeq ($(GPP), yes)
+CFLAGS += -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
+else
 CFLAGS += -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes
-
+endif
 
 PFLAGS =
 LTO_FLAGS =

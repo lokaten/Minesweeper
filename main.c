@@ -18,7 +18,8 @@ void quit( void);
 
 void
 quit( void){
-  SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
+  SDL_Event key = ( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}};
+  SDL_PushEvent( &key);
 }
 
 
@@ -58,7 +59,7 @@ readincmdline( int argv,
   
   /* put all comand line option in an array ( C99?)
    */
-  MS_options opt[] = {
+  MS_options opt[ OPT_MAX] = {
     { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                   },
 #ifdef DEBUG
     { OPTSW_BO , "ignore validation of options"           , "force"          , 'f', &( force              )},
@@ -81,7 +82,10 @@ readincmdline( int argv,
     { OPTSW_BO , "Mimic windows minesweeper beginner mode", "beginner"       , 'b', &( beginner           )},
     { OPTSW_BO , "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &( advanced           )},
     { OPTSW_BO , "Mimic windows minesweeper expert mode"  , "expert"         , 'e', &( expert             )},
+#ifdef __cplusplus
+#else
     { OPTSW_BO , ""                                       , "benchmark"      , 'B',  benchmark             },
+#endif
     { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                   },
     { OPTSW_BO , "Print generic help mesage"              , "help"           , 'h', &( helpopt            )},
     { OPTSW_BO , "Supres reguler output"                  , "quiet"          , 'q', &( quiet              )},
@@ -257,12 +261,15 @@ main( int argv, char** argc){
     if( GW == NULL){
       exit( 1);
     }
-    
+
+#ifdef __cplusplus
+#else
     if( benchmark){
       SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
       SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONUP  , .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
       SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
     }
+#endif
     
     GW -> global = mfvid.global;
     
@@ -274,7 +281,7 @@ main( int argv, char** argc){
     GW -> mfvid.realwidth  = mfvid.width  * GW -> ewidth;
     GW -> mfvid.realheight = mfvid.height * GW -> eheight;
     
-    minefield = MF_Create( mss, GW -> mfvid, GW -> mfvid, mfvid.global, mfvid.level);
+    minefield = MF_Create( mss, GW -> mfvid, GW -> mfvid, mfvid.global);
 
     minefield -> level = mfvid.level;
     minefield -> reseed = mfvid.reseed;
@@ -343,7 +350,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       /* to make sure the time looks like it updatet consistanly we randomaize
        * the time we wait betwen updating it, with max time betwen update beigen 150ms
        */
-      nexttu += 50000000llu + ( ( ( __uint64_t)( seed = MS_rand( seed)) * 100000000llu) / MS_RAND_MAX);
+      nexttu += 50000000lu + ( ( ( __uint64_t)( seed = MS_rand( seed)) * 100000000lu) / MS_RAND_MAX);
     }
     
     if( e){
@@ -422,10 +429,10 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
 int
 keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvid, MS_diff *diff, ComandStream *uncovque, MS_mstr *mine){
   int ret = 0;
-  
+  unsigned e =  event.key.keysym.sym;
   ( void)mss;
   
-  switch( event.key.keysym.sym){
+  switch( e){
   case SDLK_ESCAPE:
     quit();
     return 0;
@@ -446,9 +453,7 @@ keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvi
   default:
     break;
   }
-
-  unsigned e =  event.key.keysym.sym;
-
+  
   if( e == SDLK_h || e == SDLK_LEFT){
     diff -> x -= 3;
     diff -> x = diff -> x < -3? -3: diff -> x;
@@ -477,12 +482,12 @@ keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvi
 int
 keyreleasevent( SDL_Event event, MS_field minefield, MS_video mfvid, MS_diff *diff, ComandStream *uncovque, MS_mstr *mine){
   int ret = 0;
+  unsigned e =  event.key.keysym.sym;
   ( void) mine;
   ( void) uncovque;
   ( void) minefield;
   ( void) mfvid;
-  unsigned e =  event.key.keysym.sym;
-  
+    
   if( e == SDLK_h || e == SDLK_LEFT){
     diff -> x += 3;
     diff -> x = diff -> x < 0? 0: diff -> x;
@@ -506,7 +511,7 @@ keyreleasevent( SDL_Event event, MS_field minefield, MS_video mfvid, MS_diff *di
 
 int
 swap_flag( MS_field minefield, int x, int y, MS_mstr *mine){
-  int ret;
+  int ret = 0;
   __uint8_t *element = acse( minefield, x, y);
   if( *element & EFLAG){
     *element &= ~EFLAG;
@@ -581,7 +586,7 @@ pointerreleasevent( SDL_Event event, MS_stream mss, MS_video video, MS_field min
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
   case SDL_BUTTON_MIDDLE:
-    while( ( el = CS_Releas( uncovque)) != NULL){
+    while( ( el = ( MS_pos *)CS_Releas( uncovque)) != NULL){
       *acse( minefield, el -> x, el -> y) |= ECOVER;
       CS_Finish( uncovque, el);
     }

@@ -96,6 +96,7 @@ typedef struct{
 
 INLINE unsigned long LOCALE_( gen_divobj)( unsigned long);
 INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
+INLINE unsigned long LOCALE_( div_)( unsigned long, unsigned long, unsigned long);
 INLINE __uint32_t LOCALE_( MS_rand)( unsigned long);
 INLINE unsigned long LOCALE_( rand_seed)( void);
 INLINE int LOCALE_( print)( FILE *, const char *, ...);
