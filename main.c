@@ -57,7 +57,7 @@ readincmdline( int argv,
   unsigned long debug = 0;
   unsigned long force  = 0;
   
-  /* put all comand line option in an array ( C99?)
+  /* put all comand line option in an array ( C99?) 
    */
   MS_options opt[ OPT_MAX] = {
     { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                   },
@@ -281,11 +281,7 @@ main( int argv, char** argc){
     GW -> mfvid.realwidth  = mfvid.width  * GW -> ewidth;
     GW -> mfvid.realheight = mfvid.height * GW -> eheight;
     
-    minefield = MF_Create( mss, GW -> mfvid, GW -> mfvid, mfvid.global);
-
-    minefield -> level = mfvid.level;
-    minefield -> reseed = mfvid.reseed;
-    minefield -> mine -> seed = minefield -> reseed;
+    minefield = MF_Create( mss, mfvid, GW -> mfvid);
   }
   
   ret = mainloop( mss, minefield, GW);

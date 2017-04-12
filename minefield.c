@@ -14,7 +14,7 @@ INLINE int addelement( ComandStream *, MS_field, signed long, signed long);
 
 
 MS_field *
-MF_Create( MS_stream *mss, MS_video video, MS_video mfvid, unsigned long global){
+MF_Create( MS_stream *mss, MS_field mfvid, MS_video video){
   MS_field *minefield = ( MS_field *)malloc( sizeof( MS_field));
   
   if( minefield == NULL){
@@ -29,7 +29,10 @@ MF_Create( MS_stream *mss, MS_video video, MS_video mfvid, unsigned long global)
   
   minefield -> uncovque = CS_Create( sizeof( MS_pos));
   
-  minefield -> global = global;
+  minefield -> global = mfvid.global;
+  minefield -> level  = mfvid.level;
+  minefield -> reseed = mfvid.reseed;
+  
   minefield -> width  = mfvid.width;
   minefield -> height = mfvid.height;
   
@@ -37,7 +40,7 @@ MF_Create( MS_stream *mss, MS_video video, MS_video mfvid, unsigned long global)
   minefield -> subheight = mfvid.height;
   minefield -> mine -> noelements = mfvid.width * mfvid.height;
   
-  if( !global){
+  if( !minefield -> global){
     minefield -> width  += 1;
     minefield -> height += 1;
   }
@@ -47,7 +50,7 @@ MF_Create( MS_stream *mss, MS_video video, MS_video mfvid, unsigned long global)
   
   minefield -> data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield -> width * minefield -> height);
   
-  if( !global){
+  if( !minefield -> global){
     memset( minefield -> data, ESET, minefield -> width * minefield -> height);
   }
   

@@ -9,7 +9,7 @@ CXX = g++
 endif
 
 ifeq ($(GPP), yes)
-CC = g++
+CC = g++ -std=c++11
 endif
 
 ifeq ($(DEBUG), yes)
