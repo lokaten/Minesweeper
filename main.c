@@ -82,8 +82,7 @@ readincmdline( int argv,
     { OPTSW_BO , "Mimic windows minesweeper beginner mode", "beginner"       , 'b', &( beginner           )},
     { OPTSW_BO , "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &( advanced           )},
     { OPTSW_BO , "Mimic windows minesweeper expert mode"  , "expert"         , 'e', &( expert             )},
-#ifdef __cplusplus
-#else
+#ifdef DEBUG
     { OPTSW_BO , ""                                       , "benchmark"      , 'B',  benchmark             },
 #endif
     { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                   },
@@ -168,11 +167,11 @@ readincmdline( int argv,
   }
     
   if( *benchmark){
-    mfvid -> width      = mfvid -> width     ? mfvid -> width     : 3200;
-    mfvid -> height     = mfvid -> height    ? mfvid -> height    : 1800;
-    mfvid -> level      = mfvid -> level     ? mfvid -> level     : 1;
-    video -> width      = video -> width     ? video -> width     : 1;
-    video -> height     = video -> height    ? video -> height    : 1;
+    mfvid -> width      = 3200;
+    mfvid -> height     = 1800;
+    mfvid -> level      = 1;
+    video -> width      = 1;
+    video -> height     = 1;
     *no_resize = 1;
   }
   
@@ -261,7 +260,7 @@ main( int argv, char** argc){
     if( GW == NULL){
       exit( 1);
     }
-
+    
 #ifdef __cplusplus
 #else
     if( benchmark){
