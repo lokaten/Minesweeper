@@ -28,7 +28,7 @@ int mainloop( MS_stream *, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
 int keyreleasevent( SDL_Event, MS_diff *);
 int swap_flag( MS_field, int, int, MS_mstr *);
-int pointerpressevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
+int pointerpressevent( SDL_Event, MS_field *, MS_video);
 int pointerreleasevent( SDL_Event, MS_stream, MS_video, MS_field, ComandStream *, MS_mstr *, __uint64_t, __uint64_t);
 int pointermoveevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
 void printtime( FILE *, unsigned long);
@@ -290,7 +290,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
         }
         break;
       case SDL_MOUSEBUTTONDOWN:
-        if( ( err = pointerpressevent( event, GW, GW -> logical, *minefield, minefield -> uncovque, minefield -> mine)) > 0){
+        if( ( err = pointerpressevent( event, minefield, GW -> logical)) > 0){
           nextframe = tutime;
         }
         break;
@@ -441,16 +441,15 @@ swap_flag( MS_field minefield, int x, int y, MS_mstr *mine){
 
 
 int
-pointerpressevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field minefield, ComandStream *uncovque, MS_mstr *mine){
+pointerpressevent( SDL_Event event,
+                   MS_field *minefield,
+                   MS_video video){
   int ret = 0;
   MS_pos postion;
   MS_video vid;
   
-  ( void)gw;
-  ( void)uncovque;
-  
-  postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield.width;
-  postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield.height;
+  postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
+  postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
   
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
@@ -461,16 +460,16 @@ pointerpressevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field 
     vid.height = 1;
     
     if( event.button.button == SDL_BUTTON_MIDDLE){
-      vid.xdiff = ( minefield.width  + vid.xdiff - 1) % minefield.width;
-      vid.ydiff = ( minefield.height + vid.ydiff - 1) % minefield.height;
+      vid.xdiff = ( minefield -> width  + vid.xdiff - 1) % minefield -> width;
+      vid.ydiff = ( minefield -> height + vid.ydiff - 1) % minefield -> height;
       vid.width  = 3;
       vid.height = 3;
     }
     
-    ret = uncov_elements( minefield, uncovque, vid, mine);
+    ret = uncov_elements( *minefield, minefield -> uncovque, vid, minefield -> mine);
     break;
   case SDL_BUTTON_RIGHT:
-    swap_flag( minefield, postion.x, postion.y, mine);
+    swap_flag( *minefield, postion.x, postion.y, minefield -> mine);
     break;
   default:
     break;
