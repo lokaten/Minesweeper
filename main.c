@@ -27,7 +27,7 @@ int readincmdline( int, char **, MS_field *, MS_video *, MS_stream *, unsigned l
 int mainloop( MS_stream *, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
 int keyreleasevent( SDL_Event, MS_diff *);
-int swap_flag( MS_field, int, int, MS_mstr *);
+int swap_flag( MS_field *, int, int);
 int pointerpressevent( SDL_Event, MS_field *, MS_video);
 int pointerreleasevent( SDL_Event, MS_field *, MS_stream *, MS_video, __uint64_t, __uint64_t);
 int pointermoveevent( SDL_Event, MS_field *, MS_video);
@@ -423,16 +423,16 @@ keyreleasevent( SDL_Event event,
 
 
 int
-swap_flag( MS_field minefield, int x, int y, MS_mstr *mine){
+swap_flag( MS_field *minefield, int x, int y){
   int ret = 0;
-  __uint8_t *element = acse( minefield, x, y);
+  __uint8_t *element = acse( *minefield, x, y);
   if( *element & EFLAG){
     *element &= ~EFLAG;
-    --mine -> flaged;
+    --minefield -> mine -> flaged;
     ret = 1;
   }else if( *element & ECOVER){
     *element|= EFLAG;
-    ++mine -> flaged;
+    ++minefield -> mine -> flaged;
     ret = 1;
   }
   
@@ -469,7 +469,7 @@ pointerpressevent( SDL_Event event,
     ret = uncov_elements( *minefield, minefield -> uncovque, vid, minefield -> mine);
     break;
   case SDL_BUTTON_RIGHT:
-    swap_flag( *minefield, postion.x, postion.y, minefield -> mine);
+    swap_flag( minefield, postion.x, postion.y);
     break;
   default:
     break;
@@ -591,8 +591,8 @@ pointermoveevent( SDL_Event event,
     }
     
     if( event.motion.state & SDL_BUTTON_RMASK){
-      ret += swap_flag( *minefield, postion.x, postion.y, minefield -> mine);
-      ret += swap_flag( *minefield, prv_pos.x, prv_pos.y, minefield -> mine);
+      ret += swap_flag( minefield, postion.x, postion.y);
+      ret += swap_flag( minefield, prv_pos.x, prv_pos.y);
     }
   }
   
