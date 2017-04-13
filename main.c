@@ -30,7 +30,7 @@ int keyreleasevent( SDL_Event, MS_diff *);
 int swap_flag( MS_field, int, int, MS_mstr *);
 int pointerpressevent( SDL_Event, MS_field *, MS_video);
 int pointerreleasevent( SDL_Event, MS_field *, MS_stream *, MS_video, __uint64_t, __uint64_t);
-int pointermoveevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
+int pointermoveevent( SDL_Event, MS_field *, MS_video);
 void printtime( FILE *, unsigned long);
 
 int
@@ -301,7 +301,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
         nextframe = tutime;
         break;
       case SDL_MOUSEMOTION:
-        if( ( err = pointermoveevent( event, GW, GW -> logical, *minefield, minefield -> uncovque, minefield -> mine)) > 0){
+        if( ( err = pointermoveevent( event, minefield, GW -> logical)) > 0){
           nextframe = tutime;
         }
         break;
@@ -553,26 +553,25 @@ pointerreleasevent( SDL_Event event,
 
 
 int
-pointermoveevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field minefield, ComandStream *uncovque, MS_mstr *mine){
+pointermoveevent( SDL_Event event,
+                  MS_field *minefield,
+                  MS_video video){
   int ret = 0;
   MS_pos postion, prv_pos;
   
   unsigned long pos, pps;
   
   MS_video vid;
+    
+  postion.x = ( ( unsigned long)( ( ( event.motion.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
+  postion.y = ( ( unsigned long)( ( ( event.motion.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
   
-  ( void)gw;
-  ( void)video;
+  prv_pos.x = ( ( unsigned long)( ( ( event.motion.x - event.motion.xrel + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
+  prv_pos.y = ( ( unsigned long)( ( ( event.motion.y - event.motion.yrel + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
   
-  postion.x = ( ( unsigned long)( ( ( event.motion.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield.width;
-  postion.y = ( ( unsigned long)( ( ( event.motion.y + video.realydiff) * video.height) / video.realheight)) % minefield.height;
+  pos = postion.x + postion.y * minefield -> width;
   
-  prv_pos.x = ( ( unsigned long)( ( ( event.motion.x - event.motion.xrel + video.realxdiff) * video.width ) / video.realwidth )) % minefield.width;
-  prv_pos.y = ( ( unsigned long)( ( ( event.motion.y - event.motion.yrel + video.realydiff) * video.height) / video.realheight)) % minefield.height;
-  
-  pos = postion.x + postion.y * minefield.width;
-  
-  pps = prv_pos.x + prv_pos.y * minefield.width;
+  pps = prv_pos.x + prv_pos.y * minefield -> width;
   
   if( pos != pps){
     if( event.motion.state & SDL_BUTTON_LMASK){
@@ -580,20 +579,20 @@ pointermoveevent( SDL_Event event, GraphicWraper *gw, MS_video video, MS_field m
       vid.ydiff = postion.y;
       vid.width  = 1;
       vid.height = 1;
-      ret += uncov_elements( minefield, uncovque, vid, mine);
+      ret += uncov_elements( *minefield, minefield -> uncovque, vid, minefield -> mine);
     }
     
     if( event.motion.state & SDL_BUTTON_MMASK){
-      vid.xdiff = ( minefield.width  + postion.x - 1) % minefield.width;
-      vid.ydiff = ( minefield.height + postion.y - 1) % minefield.height;
+      vid.xdiff = ( minefield -> width  + postion.x - 1) % minefield -> width;
+      vid.ydiff = ( minefield -> height + postion.y - 1) % minefield -> height;
       vid.width  = 3;
       vid.height = 3;
-      ret += uncov_elements( minefield, uncovque, vid, mine);
+      ret += uncov_elements( *minefield, minefield -> uncovque, vid, minefield -> mine);
     }
     
     if( event.motion.state & SDL_BUTTON_RMASK){
-      ret += swap_flag( minefield, postion.x, postion.y, mine);
-      ret += swap_flag( minefield, prv_pos.x, prv_pos.y, mine);
+      ret += swap_flag( *minefield, postion.x, postion.y, minefield -> mine);
+      ret += swap_flag( *minefield, prv_pos.x, prv_pos.y, minefield -> mine);
     }
   }
   
