@@ -38,9 +38,6 @@ procopt( MS_stream *mss, MS_options *opt, unsigned argc, char **argv){
                 }
               }
               break;
-            case OPTSW_BO:
-              *( unsigned long *)( opt[ j].data) = TRUE;
-              break;
             case OPTSW_CPY:
               *( void **)( opt[ j].data) = ( void *)( opt[ j].value);
               break;
@@ -79,10 +76,9 @@ procopt( MS_stream *mss, MS_options *opt, unsigned argc, char **argv){
                   }
                 }
                 break;
-              case OPTSW_BO:
-                *( unsigned long *)( opt[ j].data) = TRUE;
-                break;
-	      default:
+              case OPTSW_CPY:
+                *( void **)( opt[ j].data) = ( void *)( opt[ j].value);
+              default:
 		ret = -1;
               }
               break;
@@ -124,7 +120,7 @@ help( FILE *stream, MS_options *opt){
       MS_print( stream, "\r\t\t\t\t\t <hex> ");
       MS_print( stream, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
       break;
-    case OPTSW_BO:
+    case OPTSW_CPY:
       MS_print( stream, "\r\t --%s ", opt[ j].name);
       MS_print( stream, "\r\t\t\t\t %c ", opt[ j].chr);
       MS_print( stream, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);

@@ -47,11 +47,7 @@ readincmdline( int argv,
   MS_field field_advanced  = { .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0};
   MS_field field_expert    = { .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0};
   MS_field field_benchmark = { .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0};
-  
-  unsigned long expert = 0;
-  unsigned long advanced = 0;
-  unsigned long beginner = 0;
-  
+    
   unsigned long helpopt = 0;
   
   unsigned long xscale = 15;
@@ -78,19 +74,19 @@ readincmdline( int argv,
     { OPTSW_CPY, "ignore validation of options"           , "force"          , 'f', &( force                  ), &opt_true},
 #endif
     { OPTSW_GRP, ""                                       , "Minefield"      , 0  , NULL                       , NULL},
-    { OPTSW_LU , "Element wide minefield"                 , "width"          , 0  , &( mfvid -> width ), NULL},
-    { OPTSW_LU , "Element high minefield"                 , "height"         , 0  , &( mfvid -> height), NULL},
-    { OPTSW_LU , "Number of mines"                        , "level"          , 0  , &( mfvid -> level ), NULL},
+    { OPTSW_LU , "Element wide minefield"                 , "width"          , 0  , &( field_custom.width     ), NULL},
+    { OPTSW_LU , "Element high minefield"                 , "height"         , 0  , &( field_custom.height    ), NULL},
+    { OPTSW_LU , "Number of mines"                        , "level"          , 0  , &( field_custom.level     ), NULL},
 #ifdef DEBUG
-    { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"           , 0  , &( mfvid -> reseed), NULL},
+    { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"           , 0  , &( field_custom.reseed    ), NULL},
 #endif
-    { OPTSW_CPY, ""                                       , "global"         , 'g', &( mfvid -> global), &opt_true},
+    { OPTSW_CPY, ""                                       , "global"         , 'g', &( field_custom.global    ), &opt_true},
     { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                       , NULL},
     { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( video -> realwidth     ), NULL},
     { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( video -> realheight    ), NULL},
     { OPTSW_LU , "Pixel wide Element"                     , "element-width"  , 0  , &( xscale                 ), NULL},
     { OPTSW_LU , "Pixel high Element"                     , "element-height" , 0  , &( yscale                 ), NULL},
-    { OPTSW_BO , "Resize don't work well with all system" , "no-resize"      , 0  , ( no_resize               ), NULL},
+    { OPTSW_CPY, "Resize don't work well with all system" , "no-resize"      , 0  , ( no_resize               ), &opt_true},
     { OPTSW_GRP, ""                                       , "Mode"           , 0  , NULL                       , NULL},
     { OPTSW_CPY, "Mimic windows minesweeper beginner mode", "beginner"       , 'b', &mfvid                     , &field_beginner },
     { OPTSW_CPY, "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &mfvid                     , &field_advanced },
@@ -99,11 +95,11 @@ readincmdline( int argv,
     { OPTSW_CPY, ""                                       , "benchmark"      , 'B', &mfvid                     , &field_benchmark},
 #endif
     { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                       , NULL},
-    { OPTSW_BO , "Print generic help mesage"              , "help"           , 'h', &( helpopt                ), NULL},
-    { OPTSW_BO , "Supres reguler output"                  , "quiet"          , 'q', &( quiet                  ), NULL},
-    { OPTSW_BO , "Supres all output"                      , "very-quiet"     , 'Q', &( vquiet                 ), NULL},
+    { OPTSW_CPY, "Print generic help mesage"              , "help"           , 'h', &( helpopt                ), &opt_true},
+    { OPTSW_CPY, "Supres reguler output"                  , "quiet"          , 'q', &( quiet                  ), &opt_true},
+    { OPTSW_CPY, "Supres all output"                      , "very-quiet"     , 'Q', &( vquiet                 ), &opt_true},
 #ifdef DEBUG
-    { OPTSW_BO , "Debug data"                             , "debug"          , 'd', &debug                , NULL},
+    { OPTSW_CPY, "Debug data"                             , "debug"          , 'd', &( debug                  ), &opt_true},
 #endif
     { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                       , NULL}};
       
@@ -144,29 +140,14 @@ readincmdline( int argv,
     
   if( ( !mfvid -> global) && ( mfvid -> width == 9 && mfvid -> height == 9 && mfvid -> level == 10)){
     MS_print( mss -> out, "\rMode: beginner \n");
-  }else{
-    if( beginner){
-      MS_print( mss -> err, "\rThe \"Mode\" options are not comatibel with eche other or \"Minefield\" options\n");
-      helpopt = 2;
-    }
   }
   
   if( ( !mfvid -> global) && ( mfvid -> width == 16 && mfvid -> height == 16 && mfvid -> level == 40)){
     MS_print( mss -> out, "\rMode: advanced \n");
-  }else{
-    if( advanced){
-      MS_print( mss -> err, "\rThe \"Mode\" options are not comatibel with eche other or \"Minefield\" options\n");
-      helpopt = 2;
-    }
   }
 
   if( ( !mfvid -> global) && ( mfvid -> width == 30 && mfvid -> height == 16 && mfvid -> level == 99)){
     MS_print( mss -> out, "\rMode: expert \n");
-  }else{
-    if( expert){
-      MS_print( mss -> err, "\rThe \"Mode\" options are not comatibel with eche other or \"Minefield\" options\n");
-      helpopt = 2;
-    }
   }
     
   if( helpopt){

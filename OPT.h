@@ -11,7 +11,6 @@ extern "C" {
 
   typedef enum{
     OPTSW_NUL = 0,
-    OPTSW_BO  = 1,
     OPTSW_LU  = 2,
     OPTSW_X   = 3,
     OPTSW_GRP = 4,
