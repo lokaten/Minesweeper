@@ -29,7 +29,7 @@ int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
 int keyreleasevent( SDL_Event, MS_diff *);
 int swap_flag( MS_field, int, int, MS_mstr *);
 int pointerpressevent( SDL_Event, MS_field *, MS_video);
-int pointerreleasevent( SDL_Event, MS_stream, MS_video, MS_field, ComandStream *, MS_mstr *, __uint64_t, __uint64_t);
+int pointerreleasevent( SDL_Event, MS_field *, MS_stream *, MS_video, __uint64_t, __uint64_t);
 int pointermoveevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
 void printtime( FILE *, unsigned long);
 
@@ -295,7 +295,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
         }
         break;
       case SDL_MOUSEBUTTONUP:
-        if( ( err = pointerreleasevent( event, *mss, GW -> logical, *minefield, minefield -> uncovque,  minefield -> mine, tutime, gamestart)) > 0){
+        if( ( err = pointerreleasevent( event, minefield, mss, GW -> logical, tutime, gamestart)) > 0){
           nextframe = tutime;
         }
         nextframe = tutime;
@@ -480,30 +480,30 @@ pointerpressevent( SDL_Event event,
 
 
 int
-pointerreleasevent( SDL_Event event, MS_stream mss, MS_video video, MS_field minefield, ComandStream *uncovque, MS_mstr *mine, __uint64_t tutime, __uint64_t gamestart){
-  MS_pos postion, *el;
+pointerreleasevent( SDL_Event event,
+                    MS_field *minefield,
+                    MS_stream *mss,
+                    MS_video video,
+                    __uint64_t tutime,
+                    __uint64_t gamestart){
   int ret = 0;
+  MS_pos postion, *el;
   MS_video vid;
   
-  MS_video mfvid;
+  MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = minefield -> subwidth, .height = minefield -> subheight};
   
-  mfvid.xdiff = 0;
-  mfvid.ydiff = 0;
-  mfvid.width  = minefield.subwidth;
-  mfvid.height = minefield.subheight;
-  
-  postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield.width;
-  postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield.height;
+  postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
+  postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
   
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
   case SDL_BUTTON_MIDDLE:
-    while( ( el = ( MS_pos *)CS_Releas( uncovque)) != NULL){
-      *acse( minefield, el -> x, el -> y) |= ECOVER;
-      CS_Finish( uncovque, el);
+    while( ( el = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
+      *acse( *minefield, el -> x, el -> y) |= ECOVER;
+      CS_Finish( minefield -> uncovque, el);
     }
     
-    if( ( mine -> uncoverd == ( mine -> noelements - mine -> level)) || ( mine -> hit)){
+    if( ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level)) || ( minefield -> mine -> hit)){
       break;
     }
     
@@ -513,39 +513,38 @@ pointerreleasevent( SDL_Event event, MS_stream mss, MS_video video, MS_field min
     vid.height = 1;
     
     if( event.button.button == SDL_BUTTON_MIDDLE){
-      vid.xdiff = ( minefield.width  + vid.xdiff - 1) % minefield.width;
-      vid.ydiff = ( minefield.height + vid.ydiff - 1) % minefield.height;
+      vid.xdiff = ( minefield -> width  + vid.xdiff - 1) % minefield -> width;
+      vid.ydiff = ( minefield -> height + vid.ydiff - 1) % minefield -> height;
       vid.width  = 3;
       vid.height = 3;
     }
     
-    if( ( *mine).set == 0){
+    if( minefield -> mine -> set == 0){
       /*let's play "Texas Sharpshooter"*/
-      setzero( minefield, mine, vid);
+      setzero( *minefield, minefield -> mine, vid);
     }
     
-    ret += uncov_elements( minefield, uncovque, vid, mine);
+    ret += uncov_elements( *minefield, minefield -> uncovque, vid, minefield -> mine);
     
-    if unlikely( uncov( minefield, uncovque, mine)){
+    if unlikely( uncov( *minefield, minefield -> uncovque, minefield -> mine)){
       ret = -2;
     }
     
-    if likely( gamestart != tutime){
-      if unlikely( mine -> hit){
-	printtime( mss.out, ( tutime - gamestart) / 1000000);
-        MS_print( mss.out, "\r\t\t\t Mine!!               \n");
-        uncov_elements( minefield, uncovque, mfvid, mine);
-        
-        if unlikely( uncov( minefield, uncovque, mine)){
-	  ret = -2;
-	}
-      }
+    if unlikely( minefield -> mine -> hit){
+      printtime( mss -> out, ( tutime - gamestart) / 1000000);
+      MS_print( mss -> out, "\r\t\t\t Mine!!               \n");
+      uncov_elements( *minefield, minefield -> uncovque, mfvid, minefield -> mine);
       
-      if unlikely( !mine -> hit && ( mine -> uncoverd == ( mine -> noelements - mine -> level))){
-	printtime( mss.out, ( tutime - gamestart) / 1000000);
-        MS_print( mss.out, "\r\t\t\t Win!!         \n");
+      if unlikely( uncov( *minefield, minefield -> uncovque, minefield -> mine)){
+	ret = -2;
       }
     }
+    
+    if unlikely( !minefield -> mine -> hit && ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level))){
+      printtime( mss -> out, ( tutime - gamestart) / 1000000);
+      MS_print( mss -> out, "\r\t\t\t Win!!         \n");
+    }
+    
   default:
     break;
   }
