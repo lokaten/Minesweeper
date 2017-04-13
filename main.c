@@ -26,7 +26,7 @@ quit( void){
 int readincmdline( int, char **, MS_field *, MS_video *, MS_stream *, unsigned long *, unsigned long *);
 int mainloop( MS_stream *, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
-int keyreleasevent( SDL_Event, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
+int keyreleasevent( SDL_Event, MS_diff *);
 int swap_flag( MS_field, int, int, MS_mstr *);
 int pointerpressevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
 int pointerreleasevent( SDL_Event, MS_stream, MS_video, MS_field, ComandStream *, MS_mstr *, __uint64_t, __uint64_t);
@@ -282,7 +282,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
         }
         break;
       case SDL_KEYUP:
-        if( ( err = keyreleasevent( event, *minefield, GW -> mfvid, diff, minefield -> uncovque, minefield -> mine)) > 0){
+        if( ( err = keyreleasevent( event, diff)) > 0){
           nextframe = tutime;
         }
         if( diff -> x || diff -> y){
@@ -396,14 +396,11 @@ keypressevent( SDL_Event event,
 
 
 int
-keyreleasevent( SDL_Event event, MS_field minefield, MS_video mfvid, MS_diff *diff, ComandStream *uncovque, MS_mstr *mine){
+keyreleasevent( SDL_Event event,
+                MS_diff *diff){
   int ret = 0;
   unsigned e =  event.key.keysym.sym;
-  ( void) mine;
-  ( void) uncovque;
-  ( void) minefield;
-  ( void) mfvid;
-    
+      
   if( e == SDLK_h || e == SDLK_LEFT){
     diff -> x += 3;
     diff -> x = diff -> x < 0? 0: diff -> x;
