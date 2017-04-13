@@ -10,7 +10,7 @@
 
 __uint8_t uncover_element( MS_field, MS_pos, MS_mstr *);
 __uint8_t setmine_element( __uint8_t *, MS_mstr *);
-INLINE int addelement( ComandStream *, MS_field, signed long, signed long);
+INLINE int addelement( MS_field *, signed long, signed long);
 
 
 MS_field *
@@ -122,23 +122,23 @@ MF_Free( MS_field *minefield){
 }
 
 INLINE int
-addelement( ComandStream *uncovque, MS_field minefield, signed long x, signed long y){
-  
+addelement( MS_field *minefield, signed long x, signed long y){
+  int ret = 0;
   /* check that ECOVER is true, to not uncover the same element twice, and also skip if EFLAG is true
    */
-  if( ( *acse( minefield, x, y) & ECOVER) && ( *acse( minefield, x, y) & EFLAG) ^ EFLAG){
-    MS_pos *pos = ( MS_pos *)CS_Fetch( uncovque);
+  if( ( *acse( *minefield, x, y) & ECOVER) && ( *acse( *minefield, x, y) & EFLAG) ^ EFLAG){
+    MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
     if likely( pos != NULL){
-      ( *pos).x = ( x + minefield.width ) % minefield.width;
-      ( *pos).y = ( y + minefield.height) % minefield.height;
-      *acse( minefield, x, y) &= ~ECOVER;
-      CS_Push( uncovque, pos);
-      return 0;
+      pos -> x = mol_( ( x + minefield -> width ), minefield -> width , minefield -> width_divobj );
+      pos -> y = mol_( ( y + minefield -> height), minefield -> height, minefield -> height_divobj);
+      *acse( *minefield, x, y) &= ~ECOVER;
+      CS_Push( minefield -> uncovque, pos);
+    }else{
+      ret = -2;
     }
-    return -2;
   }
   
-  return 0;
+  return ret;
 }
 
 
@@ -153,16 +153,16 @@ uncov( MS_field minefield, ComandStream *uncovque, MS_mstr *mine){
     /* check if elemnt has no suronding mines and if that is the case continue whit uncovering the neigburing elemnts
      */
     if( ( uncover_element( minefield, *element, mine) & ECOUNT) == 0){
-      if unlikely( addelement( uncovque, minefield, ( *element).x + 1, ( *element).y + 1) == -2) ret = -2;
-      if unlikely( addelement( uncovque, minefield, ( *element).x - 1, ( *element).y + 1) == -2) ret = -2;
-      if unlikely( addelement( uncovque, minefield, ( *element).x    , ( *element).y + 1) == -2) ret = -2;
+      if unlikely( addelement( &minefield, ( *element).x + 1, ( *element).y + 1) == -2) ret = -2;
+      if unlikely( addelement( &minefield, ( *element).x - 1, ( *element).y + 1) == -2) ret = -2;
+      if unlikely( addelement( &minefield, ( *element).x    , ( *element).y + 1) == -2) ret = -2;
       
-      if unlikely( addelement( uncovque, minefield, ( *element).x + 1, ( *element).y - 1) == -2) ret = -2;
-      if unlikely( addelement( uncovque, minefield, ( *element).x - 1, ( *element).y - 1) == -2) ret = -2;
-      if unlikely( addelement( uncovque, minefield, ( *element).x    , ( *element).y - 1) == -2) ret = -2;
+      if unlikely( addelement( &minefield, ( *element).x + 1, ( *element).y - 1) == -2) ret = -2;
+      if unlikely( addelement( &minefield, ( *element).x - 1, ( *element).y - 1) == -2) ret = -2;
+      if unlikely( addelement( &minefield, ( *element).x    , ( *element).y - 1) == -2) ret = -2;
       
-      if unlikely( addelement( uncovque, minefield, ( *element).x + 1, ( *element).y    ) == -2) ret = -2;
-      if unlikely( addelement( uncovque, minefield, ( *element).x - 1, ( *element).y    ) == -2) ret = -2;
+      if unlikely( addelement( &minefield, ( *element).x + 1, ( *element).y    ) == -2) ret = -2;
+      if unlikely( addelement( &minefield, ( *element).x - 1, ( *element).y    ) == -2) ret = -2;
     }
     
     CS_Finish( uncovque, element);
@@ -243,7 +243,7 @@ uncov_elements( MS_field minefield, ComandStream *CS, MS_video vid, MS_mstr *min
     x = ( ( i % vid.width) + vid.xdiff) % minefield.width;
     y = ( ( i / vid.width) + vid.ydiff) % minefield.height;
   
-    if unlikely( addelement( CS, minefield, x, y) == -2) ret = -2;
+    if unlikely( addelement( &minefield, x, y) == -2) ret = -2;
   }
 
   if( CS -> push != CS -> releas){
