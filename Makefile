@@ -3,6 +3,10 @@ ifeq ($(CLANG), yes)
 CC = clang -std=c11
 endif
 
+ifeq ($(CLANGPP), yes)
+CC = clang++ -std=c++11
+endif
+
 ifeq ($(GCC), yes)
 CC = gcc -std=c11
 CXX = g++
@@ -30,13 +34,19 @@ ifeq ($(DEV), yes)
 CFLAGS += -Werror -DDEBUG
 endif
 
-CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security
+CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wlong-long
 CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
 
 ifeq ($(GPP), yes)
 CFLAGS += -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
+else
+CFLAGS += -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes
+endif
+
+ifeq ($(CLANGPP), yes)
+CFLAGS += -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo
 else
 CFLAGS += -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes
 endif
