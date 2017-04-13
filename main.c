@@ -25,7 +25,7 @@ quit( void){
 
 int readincmdline( int, char **, MS_field *, MS_video *, MS_stream *, unsigned long *, unsigned long *);
 int mainloop( MS_stream *, MS_field *, GraphicWraper *);
-int keypressevent( SDL_Event, MS_stream, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
+int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
 int keyreleasevent( SDL_Event, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
 int swap_flag( MS_field, int, int, MS_mstr *);
 int pointerpressevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
@@ -231,7 +231,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
   
   __uint64_t tutime, nextframe, gamestart, nexttu;
   
-  MS_diff diff;
+  MS_diff *diff = ( MS_diff *)malloc( sizeof( MS_diff));
   
   __uint32_t seed = MS_rand_seed();
   
@@ -239,8 +239,8 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
   
   int e = 0;
   
-  diff.x = 0;
-  diff.y = 0;
+  diff -> x = 0;
+  diff -> y = 0;
   
   tutime = getnanosec();
   gamestart = tutime;
@@ -277,15 +277,15 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       case SDL_QUIT:
         return 0;
       case SDL_KEYDOWN:
-        if( ( err = keypressevent( event, *mss, *minefield, GW -> mfvid, &diff, minefield -> uncovque, minefield -> mine)) > 0){
+        if( ( err = keypressevent( event, minefield, mss, GW -> mfvid, diff)) > 0){
           nextframe = tutime;
         }
         break;
       case SDL_KEYUP:
-        if( ( err = keyreleasevent( event, *minefield, GW -> mfvid, &diff, minefield -> uncovque, minefield -> mine)) > 0){
+        if( ( err = keyreleasevent( event, *minefield, GW -> mfvid, diff, minefield -> uncovque, minefield -> mine)) > 0){
           nextframe = tutime;
         }
-        if( diff.x || diff.y){
+        if( diff -> x || diff -> y){
           nextframe = tutime;
         }
         break;
@@ -314,8 +314,8 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       }
     }
     
-    if( nextframe <= tutime && ( ( nextframe == tutime) || ( diff.x || diff.y))){
-      if( window_scroll( GW, diff)){
+    if( nextframe <= tutime && ( ( nextframe == tutime) || ( diff -> x || diff -> y))){
+      if( window_scroll( GW, *diff)){
         nextframe += 1000000000 / 30;
       }
                   
@@ -340,26 +340,29 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
 
 
 int
-keypressevent( SDL_Event event, MS_stream mss, MS_field minefield, MS_video mfvid, MS_diff *diff, ComandStream *uncovque, MS_mstr *mine){
+keypressevent( SDL_Event event,
+               MS_field *minefield,
+               MS_stream *mss,
+               MS_video mfvid,
+               MS_diff *diff){
   int ret = 0;
   unsigned e =  event.key.keysym.sym;
-  ( void)mss;
-  
+    
   switch( e){
   case SDLK_ESCAPE:
     quit();
     return 0;
   case SDLK_F2:
-    if( mine -> uncoverd || mine -> flaged){
-      setminefield( &minefield, &mss, mfvid);
+    if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
+      setminefield( minefield, mss, mfvid);
       ret = 1;
     }
     break;
   case SDLK_F3:
-    if( mine -> uncoverd < ( mine -> noelements - mine -> flaged)){
-      ret = uncov_elements( minefield, uncovque, mfvid, mine);
+    if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
+      ret = uncov_elements( *minefield, minefield -> uncovque, mfvid, minefield -> mine);
     }
-    if unlikely( uncov( minefield, uncovque, mine)){
+    if unlikely( uncov( *minefield, minefield -> uncovque, minefield -> mine)){
       ret = -2;
     }
     break;
