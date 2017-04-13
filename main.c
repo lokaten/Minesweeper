@@ -227,6 +227,8 @@ main( int argv, char** argc){
 
 int
 mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
+  int ret = 0;
+  
   SDL_Event event;
   
   __uint64_t tutime, nextframe, gamestart, nexttu;
@@ -275,7 +277,8 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       
       switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
       case SDL_QUIT:
-        return 0;
+        ret = 0;
+        goto bail;
       case SDL_KEYDOWN:
         if( ( err = keypressevent( event, minefield, mss, GW -> mfvid, diff)) > 0){
           nextframe = tutime;
@@ -334,8 +337,12 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       }
     }
   }
+
+ bail:
   
-  return 1;
+  if( diff != NULL)free( diff);
+  
+  return ret;
 }
 
 
