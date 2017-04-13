@@ -454,16 +454,10 @@ pointerpressevent( SDL_Event event,
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
   case SDL_BUTTON_MIDDLE:
-    vid.xdiff = postion.x;
-    vid.ydiff = postion.y;
-    vid.width  = 1;
-    vid.height = 1;
+    vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
     
     if( event.button.button == SDL_BUTTON_MIDDLE){
-      vid.xdiff = ( minefield -> width  + vid.xdiff - 1) % minefield -> width;
-      vid.ydiff = ( minefield -> height + vid.ydiff - 1) % minefield -> height;
-      vid.width  = 3;
-      vid.height = 3;
+      vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
     }
     
     ret = uncov_elements( *minefield, minefield -> uncovque, vid, minefield -> mine);
@@ -507,16 +501,10 @@ pointerreleasevent( SDL_Event event,
       break;
     }
     
-    vid.xdiff = postion.x;
-    vid.ydiff = postion.y;
-    vid.width  = 1;
-    vid.height = 1;
+    vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
     
     if( event.button.button == SDL_BUTTON_MIDDLE){
-      vid.xdiff = ( minefield -> width  + vid.xdiff - 1) % minefield -> width;
-      vid.ydiff = ( minefield -> height + vid.ydiff - 1) % minefield -> height;
-      vid.width  = 3;
-      vid.height = 3;
+      vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
     }
     
     if( minefield -> mine -> set == 0){
@@ -574,19 +562,14 @@ pointermoveevent( SDL_Event event,
   pps = prv_pos.x + prv_pos.y * minefield -> width;
   
   if( pos != pps){
+    
     if( event.motion.state & SDL_BUTTON_LMASK){
-      vid.xdiff = postion.x;
-      vid.ydiff = postion.y;
-      vid.width  = 1;
-      vid.height = 1;
+      vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
       ret += uncov_elements( *minefield, minefield -> uncovque, vid, minefield -> mine);
     }
     
     if( event.motion.state & SDL_BUTTON_MMASK){
-      vid.xdiff = ( minefield -> width  + postion.x - 1) % minefield -> width;
-      vid.ydiff = ( minefield -> height + postion.y - 1) % minefield -> height;
-      vid.width  = 3;
-      vid.height = 3;
+      vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
       ret += uncov_elements( *minefield, minefield -> uncovque, vid, minefield -> mine);
     }
     

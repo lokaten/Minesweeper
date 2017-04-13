@@ -59,10 +59,10 @@ typedef struct{
   unsigned long realwidth;
   unsigned long height;
   unsigned long width;
-  unsigned long realxdiff;
-  unsigned long realydiff;
-  unsigned long xdiff;
-  unsigned long ydiff;
+  signed long realxdiff;
+  signed long realydiff;
+  signed long xdiff;
+  signed long ydiff;
 }MS_video;
 
 
