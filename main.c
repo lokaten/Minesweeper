@@ -90,7 +90,7 @@ readincmdline( int argv,
     { OPTSW_CPY, "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &mfvid                     , &field_advanced },
     { OPTSW_CPY, "Mimic windows minesweeper expert mode"  , "expert"         , 'e', &mfvid                     , &field_expert   },
 #ifdef DEBUG
-    { OPTSW_CPY, ""                                       , "benchmark"      , 'B', &mfvid                     , &field_benchmark},
+    { OPTSW_CPY, ""                                       , "benchmark"      , 'B', benchmark                  , &opt_true},
 #endif
     { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                       , NULL},
     { OPTSW_CPY, "Print generic help mesage"              , "help"           , 'h', &( helpopt                ), &opt_true},
@@ -369,7 +369,7 @@ keypressevent( SDL_Event event,
     if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
       ret = uncov_elements( *minefield, minefield -> uncovque, mfvid, minefield -> mine);
     }
-    if unlikely( uncov( *minefield, minefield -> uncovque, minefield -> mine)){
+    if unlikely( uncov( minefield)){
       ret = -2;
     }
     break;
@@ -521,7 +521,7 @@ pointerreleasevent( SDL_Event event,
     
     ret += uncov_elements( *minefield, minefield -> uncovque, vid, minefield -> mine);
     
-    if unlikely( uncov( *minefield, minefield -> uncovque, minefield -> mine)){
+    if unlikely( uncov( minefield)){
       ret = -2;
     }
     
@@ -530,7 +530,7 @@ pointerreleasevent( SDL_Event event,
       MS_print( mss -> out, "\r\t\t\t Mine!!               \n");
       uncov_elements( *minefield, minefield -> uncovque, mfvid, minefield -> mine);
       
-      if unlikely( uncov( *minefield, minefield -> uncovque, minefield -> mine)){
+      if unlikely( uncov( minefield)){
 	ret = -2;
       }
     }

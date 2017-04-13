@@ -144,28 +144,29 @@ addelement( MS_field *minefield, signed long x, signed long y){
 
 
 int
-uncov( MS_field minefield, ComandStream *uncovque, MS_mstr *mine){
+uncov( MS_field *minefield){
   int ret = 0;
   MS_pos *element;
   
-  while likely( ( element = ( MS_pos *)CS_Releas( uncovque)) != NULL){
+  while likely( ( element = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
       
     /* check if elemnt has no suronding mines and if that is the case continue whit uncovering the neigburing elemnts
      */
-    if( ( uncover_element( minefield, *element, mine) & ECOUNT) == 0){
-      if unlikely( addelement( &minefield, ( *element).x + 1, ( *element).y + 1) == -2) ret = -2;
-      if unlikely( addelement( &minefield, ( *element).x - 1, ( *element).y + 1) == -2) ret = -2;
-      if unlikely( addelement( &minefield, ( *element).x    , ( *element).y + 1) == -2) ret = -2;
+    if( ( uncover_element( *minefield, *element, minefield -> mine) & ECOUNT) == 0){
       
-      if unlikely( addelement( &minefield, ( *element).x + 1, ( *element).y - 1) == -2) ret = -2;
-      if unlikely( addelement( &minefield, ( *element).x - 1, ( *element).y - 1) == -2) ret = -2;
-      if unlikely( addelement( &minefield, ( *element).x    , ( *element).y - 1) == -2) ret = -2;
+      ret = addelement( minefield, element -> x + 1, element -> y + 1);
+      ret = addelement( minefield, element -> x - 1, element -> y + 1);
+      ret = addelement( minefield, element -> x    , element -> y + 1);
       
-      if unlikely( addelement( &minefield, ( *element).x + 1, ( *element).y    ) == -2) ret = -2;
-      if unlikely( addelement( &minefield, ( *element).x - 1, ( *element).y    ) == -2) ret = -2;
+      ret = addelement( minefield, element -> x + 1, element -> y - 1);
+      ret = addelement( minefield, element -> x - 1, element -> y - 1);
+      ret = addelement( minefield, element -> x    , element -> y - 1);
+      
+      ret = addelement( minefield, element -> x + 1, element -> y    );
+      ret = addelement( minefield, element -> x - 1, element -> y    );
     }
     
-    CS_Finish( uncovque, element);
+    CS_Finish( minefield -> uncovque, element);
   }
       
   return ret;

@@ -62,7 +62,7 @@ extern "C" {
   MS_field *MF_Create( MS_field);
   void setminefield( MS_field *, MS_stream *, MS_video);
   void MF_Free( MS_field *);
-  int uncov( MS_field, ComandStream *, MS_mstr *);
+  int uncov( MS_field *);
   int uncov_elements( MS_field, ComandStream *, MS_video, MS_mstr *);
   
 #ifdef __cplusplus
