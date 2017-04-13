@@ -23,6 +23,7 @@ extern "C" {
   
   typedef struct{
     __uint8_t *data;
+    char *title;
     ComandStream *uncovque;
     MS_mstr *mine;
     unsigned long width;

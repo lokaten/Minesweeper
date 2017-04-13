@@ -41,12 +41,12 @@ readincmdline( int argv,
                MS_stream *mss,
                unsigned long *no_resize,
                unsigned long *benchmark){
-
-  MS_field field_custom    = { .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0};
-  MS_field field_beginner  = { .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0};
-  MS_field field_advanced  = { .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0};
-  MS_field field_expert    = { .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0};
-  MS_field field_benchmark = { .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0};
+  
+  MS_field field_custom    = { .title = "custom"   , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0};
+  MS_field field_beginner  = { .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0};
+  MS_field field_advanced  = { .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0};
+  MS_field field_expert    = { .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0};
+  MS_field field_benchmark = { .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0};
     
   unsigned long helpopt = 0;
   
@@ -103,11 +103,8 @@ readincmdline( int argv,
 #endif
     { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                       , NULL}};
       
-  video -> width  = 0;
-  video -> height = 0;
-  video -> realwidth  = 0;
-  video -> realheight = 0;
-  
+  *video = ( MS_video){ .width = 0, .height = 0, .realwidth = 0, .realheight = 0};
+    
   if( procopt( mss, opt, argv, argc)){
     if( !vquiet) MS_print( stderr, "\rWRong or broken input, pleas refer to --help\n");
     helpopt = 2;
@@ -137,19 +134,7 @@ readincmdline( int argv,
     MS_print( mss -> err, "\rMore mines then elments!\n");
     helpopt = 2;
   }
-    
-  if( ( !mfvid -> global) && ( mfvid -> width == 9 && mfvid -> height == 9 && mfvid -> level == 10)){
-    MS_print( mss -> out, "\rMode: beginner \n");
-  }
-  
-  if( ( !mfvid -> global) && ( mfvid -> width == 16 && mfvid -> height == 16 && mfvid -> level == 40)){
-    MS_print( mss -> out, "\rMode: advanced \n");
-  }
-
-  if( ( !mfvid -> global) && ( mfvid -> width == 30 && mfvid -> height == 16 && mfvid -> level == 99)){
-    MS_print( mss -> out, "\rMode: expert \n");
-  }
-    
+      
   if( helpopt){
     if( helpopt == 2){
       if( !force){
@@ -166,6 +151,8 @@ readincmdline( int argv,
   MS_print( mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
   
   *minefield = *mfvid;
+
+  MS_print( mss -> out, "\rMode: %s\n", mfvid -> title);
   
   MS_print( mss -> deb, "\rwidth: %lu   ", minefield -> width);
   MS_print( mss -> deb, "\r\t\theight: %lu   ", minefield -> height);
