@@ -66,8 +66,6 @@ readincmdline( int argv,
   
   mfvid = &field_custom;
   
-  /* put all comand line option in an array ( C99?) 
-   */
   MS_options opt[ OPT_MAX] = {
     { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                       , NULL},
 #ifdef DEBUG
