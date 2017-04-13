@@ -58,7 +58,7 @@ extern "C" {
 #endif
   
   void setzero( MS_field, MS_mstr *, MS_video);
-  MS_field *MF_Create( MS_stream *, MS_field, MS_video);
+  MS_field *MF_Create( MS_field);
   void setminefield( MS_field *, MS_stream *, MS_video);
   void MF_Free( MS_field *);
   int uncov( MS_field, ComandStream *, MS_mstr *);

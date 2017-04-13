@@ -33,6 +33,12 @@ int pointerreleasevent( SDL_Event, MS_stream, MS_video, MS_field, ComandStream *
 int pointermoveevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
 void printtime( FILE *, unsigned long);
 
+
+const MS_field field_beginner  = { .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0};
+const MS_field field_advanced  = { .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0};
+const MS_field field_expert    = { .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0};
+const MS_field field_benchmark = { .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0};
+
 int
 readincmdline( int argv,
                char **argc,
@@ -95,17 +101,7 @@ readincmdline( int argv,
     { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                   }};
   
   
-  mss -> err = stderr;
-  mss -> out = stdout;
-  mss -> deb = NULL;
-  
-  
-  mfvid -> width  = 9;
-  mfvid -> height = 9;
-    
-  mfvid -> level  = 10;
-  mfvid -> global = 0;
-  mfvid -> reseed = 0;
+  *mfvid = field_beginner;
   
   video -> width  = 0;
   video -> height = 0;
@@ -113,66 +109,30 @@ readincmdline( int argv,
   video -> realheight = 0;
   
   if( procopt( mss, opt, argv, argc)){
-    if( !vquiet) MS_print( mss -> err, "\rWRong or broken input, pleas refer to --help\n");
+    if( !vquiet) MS_print( stderr, "\rWRong or broken input, pleas refer to --help\n");
     helpopt = 2;
   }
   
+  mss -> out = !quiet && !vquiet? stdout: NULL;
+  mss -> err =           !vquiet? stderr: NULL;
+  mss -> deb = debug  && !vquiet? stdout: NULL;
   
-  if( !debug){
-    mss -> deb = NULL;
-  }
-  
-  if( vquiet){
-    mss -> out = NULL;
-    mss -> err = NULL;
-  }else{
-    if( debug){
-      mss -> deb = stdout;
-    }
-  }
-  
-  
-  if( quiet){
-    mss -> out = NULL;
-  }
-
   if( beginner){
-    if( advanced || expert){
-      MS_print( mss -> err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
-      helpopt = 2;
-    }
-    mfvid -> width  =  9;
-    mfvid -> height =  9;
-    mfvid -> level  = 10;
+    *mfvid = field_beginner;
   }
   
   if( advanced){
-    if( beginner || expert){
-      MS_print( mss -> err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
-      helpopt = 2;
-    }
-    mfvid -> width  = 16;
-    mfvid -> height = 16;
-    mfvid -> level  = 40;
+    *mfvid = field_advanced;
   }
   
   if( expert){
-    if( beginner || advanced){
-      MS_print( mss -> err, "\rOpptions --expert, --beginner and --advanced are not compatible with each other.\n");
-      helpopt = 2;
-    }
-    mfvid -> width  = 30;
-    mfvid -> height = 16;
-    mfvid -> level  = 99;
+    *mfvid = field_expert;
   }
     
   if( *benchmark){
-    mfvid -> width      = 3200;
-    mfvid -> height     = 1800;
-    mfvid -> level      = 1;
+    *mfvid = field_benchmark;
     video -> width      = 1;
     video -> height     = 1;
-    *no_resize = 1;
   }
   
   video -> width  = video -> width ? video -> width : mfvid -> width;
@@ -186,33 +146,33 @@ readincmdline( int argv,
   
   if( mfvid -> level >= ( mfvid -> width * mfvid -> height)){
     mfvid -> level = ( mfvid -> width * mfvid -> height + 1) / 3;
-    MS_print( mss -> err, "\rMore mine then elments!\n", mfvid -> level);
+    MS_print( mss -> err, "\rMore mines then elments!\n");
     helpopt = 2;
   }
     
-  if( ( !mfvid -> global && !force) && ( mfvid -> width == 9 && mfvid -> height == 9 && mfvid -> level == 10)){
+  if( ( !mfvid -> global) && ( mfvid -> width == 9 && mfvid -> height == 9 && mfvid -> level == 10)){
     MS_print( mss -> out, "\rMode: beginner \n");
   }else{
     if( beginner){
-      MS_print( mss -> err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
+      MS_print( mss -> err, "\rThe \"Mode\" options are not comatibel with eche other or \"Minefield\" options\n");
       helpopt = 2;
     }
   }
   
-  if( ( !mfvid -> global && !force) && ( mfvid -> width == 16 && mfvid -> height == 16 && mfvid -> level == 40)){
+  if( ( !mfvid -> global) && ( mfvid -> width == 16 && mfvid -> height == 16 && mfvid -> level == 40)){
     MS_print( mss -> out, "\rMode: advanced \n");
   }else{
     if( advanced){
-      MS_print( mss -> err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
+      MS_print( mss -> err, "\rThe \"Mode\" options are not comatibel with eche other or \"Minefield\" options\n");
       helpopt = 2;
     }
   }
 
-  if( ( !mfvid -> global && !force) && ( mfvid -> width == 30 && mfvid -> height == 16 && mfvid -> level == 99)){
+  if( ( !mfvid -> global) && ( mfvid -> width == 30 && mfvid -> height == 16 && mfvid -> level == 99)){
     MS_print( mss -> out, "\rMode: expert \n");
   }else{
     if( expert){
-      MS_print( mss -> err, "\rThe \"Minefield\" options are not compatible with the \"Mode\" options.\n");
+      MS_print( mss -> err, "\rThe \"Mode\" options are not comatibel with eche other or \"Minefield\" options\n");
       helpopt = 2;
     }
   }
@@ -280,7 +240,9 @@ main( int argv, char** argc){
     GW -> mfvid.realwidth  = mfvid.width  * GW -> ewidth;
     GW -> mfvid.realheight = mfvid.height * GW -> eheight;
     
-    minefield = MF_Create( mss, mfvid, GW -> mfvid);
+    minefield = MF_Create( mfvid);
+    
+    setminefield( minefield, mss, GW -> mfvid);
   }
   
   ret = mainloop( mss, minefield, GW);
@@ -397,13 +359,9 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
         nextframe += 1000000000 / 30;
       }
                   
-      if unlikely( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))){
-        MS_print( mss -> err, "\rIn expliciv error: %lu of %lu, %lu of %lu \n", minefield -> mine -> mines, minefield -> mine -> level, minefield -> mine -> set, minefield -> mine -> noelements);
-      }
+      assert( !( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))));
       
-      if unlikely( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)){
-        MS_print( mss -> err, "\rmine count fall short, curetn count: %lu of %lu \n", minefield -> mine -> mines, minefield -> mine -> level);
-      }
+      assert( !( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)));
       
       if unlikely( draw( GW, *minefield) == -3){
         MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t inval data \n");

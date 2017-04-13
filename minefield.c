@@ -14,17 +14,19 @@ INLINE int addelement( ComandStream *, MS_field, signed long, signed long);
 
 
 MS_field *
-MF_Create( MS_stream *mss, MS_field mfvid, MS_video video){
+MF_Create( MS_field mfvid){
   MS_field *minefield = ( MS_field *)malloc( sizeof( MS_field));
   
   if( minefield == NULL){
-    return NULL;
+    goto fault;
   }
   
   minefield -> mine = ( MS_mstr *)malloc( sizeof( MS_mstr));
   
   if( minefield -> mine == NULL){
-    return NULL;
+    free( minefield);
+    minefield = NULL;
+    goto fault;
   }
   
   minefield -> uncovque = CS_Create( sizeof( MS_pos));
@@ -49,18 +51,19 @@ MF_Create( MS_stream *mss, MS_field mfvid, MS_video video){
   minefield -> height_divobj = gen_divobj( minefield -> height);
   
   minefield -> data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield -> width * minefield -> height);
+    
+  if( minefield -> data == NULL){
+    free( minefield -> mine);
+    free( minefield);
+    minefield = NULL;
+    goto fault;
+  }
   
   if( !minefield -> global){
     memset( minefield -> data, ESET, minefield -> width * minefield -> height);
   }
   
-  if( minefield -> data == NULL){
-    MS_print( mss -> err, "\rlimet-mem \n");
-    exit( 1);
-  }
-  
-  setminefield( minefield, mss, video);
-    
+ fault:
   return minefield;
 }
 
