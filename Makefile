@@ -47,8 +47,6 @@ endif
 
 ifeq ($(CLANGPP), yes)
 CFLAGS += -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo
-else
-CFLAGS += -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes
 endif
 
 PFLAGS =
