@@ -15,6 +15,8 @@ extern "C" {
     OPTSW_LU  = 2,
     OPTSW_X   = 3,
     OPTSW_GRP = 4,
+    OPTSW_CPY = 5,
+    OPTSW_RAW = 6,
   }opttype;
   
   
@@ -23,7 +25,8 @@ extern "C" {
     char *discript;
     char *name;
     char chr;
-    unsigned long *data;
+    void *data;
+    void *value;
   }MS_options;
   
 #define OPT_MAX 200

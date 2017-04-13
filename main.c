@@ -23,7 +23,7 @@ quit( void){
 }
 
 
-int readincmdline( int, char **, MS_field *, MS_video *, MS_stream *, unsigned long *, unsigned long *);
+int readincmdline( int, char **, MS_field **, MS_video *, MS_stream *, unsigned long *, unsigned long *);
 int mainloop( MS_stream *, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_stream, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
 int keyreleasevent( SDL_Event, MS_field, MS_video, MS_diff *, ComandStream *, MS_mstr *);
@@ -33,21 +33,22 @@ int pointerreleasevent( SDL_Event, MS_stream, MS_video, MS_field, ComandStream *
 int pointermoveevent( SDL_Event, GraphicWraper *,MS_video, MS_field, ComandStream *, MS_mstr *);
 void printtime( FILE *, unsigned long);
 
+MS_field field_custom    = { .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0};
+MS_field field_beginner  = { .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0};
+MS_field field_advanced  = { .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0};
+MS_field field_expert    = { .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0};
+MS_field field_benchmark = { .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0};
 
-const MS_field field_beginner  = { .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0};
-const MS_field field_advanced  = { .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0};
-const MS_field field_expert    = { .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0};
-const MS_field field_benchmark = { .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0};
 
 int
 readincmdline( int argv,
                char **argc,
-               MS_field *mfvid,
+               MS_field **minefield,
                MS_video *video,
                MS_stream *mss,
                unsigned long *no_resize,
                unsigned long *benchmark){
-  
+    
   unsigned long expert = 0;
   unsigned long advanced = 0;
   unsigned long beginner = 0;
@@ -63,46 +64,47 @@ readincmdline( int argv,
   unsigned long debug = 0;
   unsigned long force  = 0;
   
+  MS_field *mfvid = *minefield;
+
+  *minefield = &field_custom;
+  
   /* put all comand line option in an array ( C99?) 
    */
   MS_options opt[ OPT_MAX] = {
-    { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                   },
+    { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                       , NULL},
 #ifdef DEBUG
-    { OPTSW_BO , "ignore validation of options"           , "force"          , 'f', &( force              )},
+    { OPTSW_BO , "ignore validation of options"           , "force"          , 'f', &( force                  ), NULL},
 #endif
-    { OPTSW_GRP, ""                                       , "Minefield"      , 0  , NULL                   },
-    { OPTSW_LU , "Element wide minefield"                 , "width"          , 0  , &( mfvid -> width     )},
-    { OPTSW_LU , "Element high minefield"                 , "height"         , 0  , &( mfvid -> height    )},
-    { OPTSW_LU , "Number of mines"                        , "level"          , 0  , &( mfvid -> level     )},
+    { OPTSW_GRP, ""                                       , "Minefield"      , 0  , NULL                       , NULL},
+    { OPTSW_LU , "Element wide minefield"                 , "width"          , 0  , &( ( *minefield) -> width ), NULL},
+    { OPTSW_LU , "Element high minefield"                 , "height"         , 0  , &( ( *minefield) -> height), NULL},
+    { OPTSW_LU , "Number of mines"                        , "level"          , 0  , &( ( *minefield) -> level ), NULL},
 #ifdef DEBUG
-    { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"           , 0  , &( mfvid -> reseed    )},
+    { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"           , 0  , &( ( *minefield) -> reseed), NULL},
 #endif
-    { OPTSW_BO , ""                                       , "global"         , 'g', &( mfvid -> global    )},
-    { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                   },
-    { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( video -> realwidth )},
-    { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( video -> realheight)},
-    { OPTSW_LU , "Pixel wide Element"                     , "element-width"  , 0  , &( xscale             )},
-    { OPTSW_LU , "Pixel high Element"                     , "element-height" , 0  , &( yscale             )},
-    { OPTSW_BO , "Resize don't work well with all system" , "no-resize"      , 0  , ( no_resize           )},
-    { OPTSW_GRP, ""                                       , "Mode"           , 0  , NULL                   },
-    { OPTSW_BO , "Mimic windows minesweeper beginner mode", "beginner"       , 'b', &( beginner           )},
-    { OPTSW_BO , "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &( advanced           )},
-    { OPTSW_BO , "Mimic windows minesweeper expert mode"  , "expert"         , 'e', &( expert             )},
+    { OPTSW_BO , ""                                       , "global"         , 'g', &( ( *minefield) -> global), NULL},
+    { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                       , NULL},
+    { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( video -> realwidth     ), NULL},
+    { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( video -> realheight    ), NULL},
+    { OPTSW_LU , "Pixel wide Element"                     , "element-width"  , 0  , &( xscale                 ), NULL},
+    { OPTSW_LU , "Pixel high Element"                     , "element-height" , 0  , &( yscale                 ), NULL},
+    { OPTSW_BO , "Resize don't work well with all system" , "no-resize"      , 0  , ( no_resize               ), NULL},
+    { OPTSW_GRP, ""                                       , "Mode"           , 0  , NULL                       , NULL},
+    { OPTSW_CPY, "Mimic windows minesweeper beginner mode", "beginner"       , 'b', minefield                  , &field_beginner},
+    { OPTSW_CPY, "Mimic windows minesweeper advanced mode", "advanced"       , 'a', minefield                  , &field_advanced},
+    { OPTSW_CPY, "Mimic windows minesweeper expert mode"  , "expert"         , 'e', minefield                  , &field_expert  },
 #ifdef DEBUG
-    { OPTSW_BO , ""                                       , "benchmark"      , 'B',  benchmark             },
+    { OPTSW_BO , ""                                       , "benchmark"      , 'B',  benchmark                 , NULL},
 #endif
-    { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                   },
-    { OPTSW_BO , "Print generic help mesage"              , "help"           , 'h', &( helpopt            )},
-    { OPTSW_BO , "Supres reguler output"                  , "quiet"          , 'q', &( quiet              )},
-    { OPTSW_BO , "Supres all output"                      , "very-quiet"     , 'Q', &( vquiet             )},
+    { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                       , NULL},
+    { OPTSW_BO , "Print generic help mesage"              , "help"           , 'h', &( helpopt                ), NULL},
+    { OPTSW_BO , "Supres reguler output"                  , "quiet"          , 'q', &( quiet                  ), NULL},
+    { OPTSW_BO , "Supres all output"                      , "very-quiet"     , 'Q', &( vquiet                 ), NULL},
 #ifdef DEBUG
-    { OPTSW_BO , "Debug data"                             , "debug"          , 'd', &( debug              )},
+    { OPTSW_BO , "Debug data"                             , "debug"          , 'd', &( debug                  ), NULL},
 #endif
-    { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                   }};
-  
-  
-  *mfvid = field_beginner;
-  
+    { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                       , NULL}};
+      
   video -> width  = 0;
   video -> height = 0;
   video -> realwidth  = 0;
@@ -113,22 +115,12 @@ readincmdline( int argv,
     helpopt = 2;
   }
   
+  mfvid = *minefield;
+  
   mss -> out = !quiet && !vquiet? stdout: NULL;
   mss -> err =           !vquiet? stderr: NULL;
   mss -> deb = debug  && !vquiet? stdout: NULL;
-  
-  if( beginner){
-    *mfvid = field_beginner;
-  }
-  
-  if( advanced){
-    *mfvid = field_advanced;
-  }
-  
-  if( expert){
-    *mfvid = field_expert;
-  }
-    
+      
   if( *benchmark){
     *mfvid = field_benchmark;
     video -> width      = 1;
@@ -192,9 +184,9 @@ readincmdline( int argv,
   MS_print( mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
   MS_print( mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
   
-  MS_print( mss -> deb, "\rwidth: %lu   ", mfvid -> width);
-  MS_print( mss -> deb, "\r\t\theight: %lu   ", mfvid -> height);
-  MS_print( mss -> deb, "\r\t\t\t\tlevel: %lu   \n", mfvid -> level);
+  MS_print( mss -> deb, "\rwidth: %lu   ", ( *minefield) -> width);
+  MS_print( mss -> deb, "\r\t\theight: %lu   ", ( *minefield) -> height);
+  MS_print( mss -> deb, "\r\t\t\t\tlevel: %lu   \n", ( *minefield) -> level);
     
   return 0;
 }
@@ -207,14 +199,14 @@ main( int argv, char** argc){
   MS_stream *mss = ( MS_stream *)malloc( sizeof( MS_stream));
     
   {
-    MS_field mfvid;
+    MS_field **mfvid = ( MS_field **)malloc( sizeof( MS_field *));
     MS_video video;
         
     unsigned long no_resize = 0;
     unsigned long benchmark = 0;
     
-    readincmdline( argv, argc, &mfvid, &video, mss, &no_resize, &benchmark);
-    
+    readincmdline( argv, argc, mfvid, &video, mss, &no_resize, &benchmark);
+        
     GW = GW_Create( video, no_resize);
     
     if( GW == NULL){
@@ -230,18 +222,18 @@ main( int argv, char** argc){
     }
 #endif
     
-    GW -> global = mfvid.global;
+    GW -> global = ( *mfvid) -> global;
     
-    GW -> mfvid.width  = mfvid.width;
-    GW -> mfvid.height = mfvid.height;
+    GW -> mfvid.width  = ( *mfvid) -> width;
+    GW -> mfvid.height = ( *mfvid) -> height;
     GW -> mfvid.xdiff  = 0;
     GW -> mfvid.ydiff  = 0;
     
-    GW -> mfvid.realwidth  = mfvid.width  * GW -> ewidth;
-    GW -> mfvid.realheight = mfvid.height * GW -> eheight;
+    GW -> mfvid.realwidth  = ( *mfvid) -> width  * GW -> ewidth;
+    GW -> mfvid.realheight = ( *mfvid) -> height * GW -> eheight;
     
-    minefield = MF_Create( mfvid);
-    
+    minefield = MF_Create( **mfvid);
+        
     setminefield( minefield, mss, GW -> mfvid);
   }
   

@@ -24,7 +24,7 @@ procopt( MS_stream *mss, MS_options *opt, unsigned argc, char **argv){
             switch( opt[ j].optsw){
             case OPTSW_LU:
               if( ++i < argc){
-                *( opt[ j].data) = strtoul( argv[ i], &lr, 10);
+                *( unsigned long *)( opt[ j].data) = strtoul( argv[ i], &lr, 10);
                 if( *lr != 0 || ( errno != 0)){
                   ret = -1;
                 }
@@ -32,14 +32,20 @@ procopt( MS_stream *mss, MS_options *opt, unsigned argc, char **argv){
               break;
             case OPTSW_X:
               if( ++i < argc){
-                *( opt[ j].data) = strtoul( argv[ i], &lr, 16);
+                *( unsigned long *)( opt[ j].data) = strtoul( argv[ i], &lr, 16);
                 if( *lr != 0 || ( errno != 0)){
                   ret = -1;
                 }
               }
               break;
             case OPTSW_BO:
-              *( opt[ j].data) = TRUE;
+              *( unsigned long *)( opt[ j].data) = TRUE;
+              break;
+            case OPTSW_CPY:
+              *( void **)( opt[ j].data) = ( void *)( opt[ j].value);
+              break;
+            case OPTSW_RAW:
+              *( void **)( opt[ j].data) = ( void *)argv[ i];
               break;
 	    default:
 	      ret = -1;
@@ -67,14 +73,14 @@ procopt( MS_stream *mss, MS_options *opt, unsigned argc, char **argv){
               switch( opt[ j].optsw){
               case OPTSW_LU:
                 if( ( i + 1) < argc){
-                  *( opt[ j].data) = strtoul( argv[ i + 1], &lr, 10);
+                  *( unsigned long *)( opt[ j].data) = strtoul( argv[ i + 1], &lr, 10);
                   if( *lr != 0 || ( errno != 0)){
                     ret = -1;
                   }
                 }
                 break;
               case OPTSW_BO:
-                *( opt[ j].data) = TRUE;
+                *( unsigned long *)( opt[ j].data) = TRUE;
                 break;
 	      default:
 		ret = -1;

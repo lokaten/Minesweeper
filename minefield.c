@@ -51,7 +51,7 @@ MF_Create( MS_field mfvid){
   minefield -> height_divobj = gen_divobj( minefield -> height);
   
   minefield -> data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield -> width * minefield -> height);
-    
+  
   if( minefield -> data == NULL){
     free( minefield -> mine);
     free( minefield);
