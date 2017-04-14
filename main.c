@@ -197,8 +197,8 @@ main( int argv, char** argc){
     GW -> mfvid.xdiff  = 0;
     GW -> mfvid.ydiff  = 0;
     
-    GW -> mfvid.realwidth  = mfvid -> width  * GW -> ewidth;
-    GW -> mfvid.realheight = mfvid -> height * GW -> eheight;
+    GW -> mfvid.realwidth  = ( GW -> mfvid.width  * GW -> real.realwidth ) / GW -> real.width ;
+    GW -> mfvid.realheight = ( GW -> mfvid.height * GW -> real.realheight) / GW -> real.height;
     
     minefield = MF_Create( *mfvid);
         

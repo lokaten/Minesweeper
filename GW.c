@@ -18,18 +18,18 @@ int
 window_scroll( GraphicWraper *GW, MS_diff diff){
   int ret = 0;
   if( !GW -> global){
-    diff.x = ( signed long)GW -> logical.realxdiff > diff.x? diff.x: ( signed long)GW -> logical.realxdiff;
-    diff.y = ( signed long)GW -> logical.realydiff > diff.y? diff.y: ( signed long)GW -> logical.realydiff;
-    diff.x = ( GW -> logical.realxdiff + GW -> logical.realwidth  - diff.x) < ( GW -> mfvid.realwidth ) ? diff.x: -( signed long)( GW -> mfvid.realwidth  - ( GW -> logical.realxdiff + GW -> logical.realwidth ));
-    diff.y = ( GW -> logical.realydiff + GW -> logical.realheight - diff.y) < ( GW -> mfvid.realheight) ? diff.y: -( signed long)( GW -> mfvid.realheight - ( GW -> logical.realydiff + GW -> logical.realheight));
+    diff.x = ( signed long)GW -> real.realxdiff > diff.x? diff.x: ( signed long)GW -> real.realxdiff;
+    diff.y = ( signed long)GW -> real.realydiff > diff.y? diff.y: ( signed long)GW -> real.realydiff;
+    diff.x = ( GW -> real.realxdiff + GW -> real.realwidth  - diff.x) < ( GW -> mfvid.realwidth ) ? diff.x: -( signed long)( GW -> mfvid.realwidth  - ( GW -> real.realxdiff + GW -> real.realwidth ));
+    diff.y = ( GW -> real.realydiff + GW -> real.realheight - diff.y) < ( GW -> mfvid.realheight) ? diff.y: -( signed long)( GW -> mfvid.realheight - ( GW -> real.realydiff + GW -> real.realheight));
   }
   
   if( ( diff.x) || ( diff.y)){
-    GW -> logical.realxdiff = ( GW -> logical.realxdiff + GW -> mfvid.realwidth  - diff.x) % GW -> mfvid.realwidth;
-    GW -> logical.realydiff = ( GW -> logical.realydiff + GW -> mfvid.realheight - diff.y) % GW -> mfvid.realheight;
+    GW -> real.realxdiff = ( GW -> real.realxdiff + GW -> mfvid.realwidth  - diff.x) % GW -> mfvid.realwidth;
+    GW -> real.realydiff = ( GW -> real.realydiff + GW -> mfvid.realheight - diff.y) % GW -> mfvid.realheight;
     
-    GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff) / GW -> logical.realwidth;
-    GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff) / GW -> logical.realheight;
+    GW -> real.xdiff = ( GW -> real.width  * GW -> real.realxdiff + 1) / GW -> real.realwidth;
+    GW -> real.ydiff = ( GW -> real.height * GW -> real.realydiff + 1) / GW -> real.realheight;
     ret = 1;
   }
   
@@ -97,24 +97,25 @@ draw( GraphicWraper *GW, MS_field minefield){
   unsigned long i;
   SDL_Texture *tile;
   
-  MS_video video = GW -> logical;
+  GW -> logical.realxdiff = ( GW -> logical.realwidth  * GW -> real.realxdiff + 1) / GW -> real.realwidth ;
+  GW -> logical.realydiff = ( GW -> logical.realheight * GW -> real.realydiff + 1) / GW -> real.realheight;
   
-  video.width  += 1;
-  video.height += 1;
+  GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff + 1) / GW -> logical.realwidth;
+  GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff + 1) / GW -> logical.realheight;
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
     
   SDL_RenderClear( GW -> renderer);
   
-  i = video.width * video.height;
+  i = GW -> logical.width * GW -> logical.height;
   
   while( i--){
     
-    element.x = ( video.xdiff + ( i % video.width)) % minefield.width;
-    element.y = ( video.ydiff + ( i / video.width)) % minefield.height;
+    element.x = ( GW -> logical.xdiff + ( i % GW -> logical.width)) % GW -> mfvid.width;
+    element.y = ( GW -> logical.ydiff + ( i / GW -> logical.width)) % GW -> mfvid.height;
     
-    elementsh.x = ( i % video.width);
-    elementsh.y = ( i / video.width);
+    elementsh.x = ( i % GW -> logical.width);
+    elementsh.y = ( i / GW -> logical.width);
     
     tile = drawelement( GW, minefield.data[ element.x + element.y * minefield.width]);
 
@@ -137,10 +138,10 @@ draw( GraphicWraper *GW, MS_field minefield){
 
   SDL_SetRenderTarget( GW -> renderer, NULL);
   
-  srect.x = ( GW -> logical.realxdiff % GW -> ewidth );
-  srect.y = ( GW -> logical.realydiff % GW -> eheight);
-  srect.w = GW -> logical.realwidth;
-  srect.h = GW -> logical.realheight;
+  srect.x = ( ( GW -> logical.realwidth  * GW -> real.realxdiff + 1) / GW -> real.realwidth ) % GW -> ewidth ;
+  srect.y = ( ( GW -> logical.realheight * GW -> real.realydiff + 1) / GW -> real.realheight) % GW -> eheight;
+  srect.w = GW -> real.width  * GW -> ewidth ;
+  srect.h = GW -> real.height * GW -> eheight;
   drect.x = 0;
   drect.y = 0;
   drect.w = GW -> real.realwidth;
@@ -204,15 +205,18 @@ GW_Create( MS_video rel, unsigned long no_resize){
   
   GW -> ewidth  = 15;
   GW -> eheight = 15;
-    
+
+  GW -> logical.width  += 1;
+  GW -> logical.height += 1;
+  
   GW -> logical.realwidth  = GW -> logical.width  * GW -> ewidth;
   GW -> logical.realheight = GW -> logical.height * GW -> eheight;
   
-  GW -> logical.xdiff = 0;
-  GW -> logical.ydiff = 0;
+  GW -> real.xdiff = 0;
+  GW -> real.ydiff = 0;
   
-  GW -> logical.realxdiff = 0;
-  GW -> logical.realydiff = 0;
+  GW -> real.realxdiff = 0;
+  GW -> real.realydiff = 0;
   
   if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)){
     goto fault;
@@ -236,7 +240,7 @@ GW_Create( MS_video rel, unsigned long no_resize){
     SDL_SetWindowResizable( GW ->  window, SDL_TRUE);
   }
   
-  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> logical.realwidth + GW -> ewidth, GW -> logical.realheight + GW -> eheight);
+  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> logical.realwidth, GW -> logical.realheight);
   
   {
     SDL_Rect rec;
