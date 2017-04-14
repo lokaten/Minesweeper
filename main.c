@@ -235,12 +235,10 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
   
   MS_diff *diff = ( MS_diff *)malloc( sizeof( MS_diff));
   
-  __uint32_t seed = MS_rand_seed();
+  unsigned long seed = MS_rand_seed();
   
-  int err = 0;
-  
-  int e = 0;
-  
+  int err = 0, e;
+    
   diff -> x = 0;
   diff -> y = 0;
   
@@ -253,9 +251,53 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
     
     if( nexttu > tutime){
       e = SDL_WaitEventTimeout( &event, ( nexttu - tutime) / 1000000);
+      
       tutime = getnanosec();
       if( !minefield -> mine -> uncoverd){
-	gamestart = tutime;
+        gamestart = tutime;
+      }
+      
+      if( e){
+        switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
+        case SDL_QUIT:
+          ret = 0;
+          goto bail;
+        case SDL_KEYDOWN:
+          if( ( err = keypressevent( event, minefield, mss, GW -> mfvid, diff)) > 0){
+            nextframe = tutime;
+          }
+          break;
+        case SDL_KEYUP:
+          if( ( err = keyreleasevent( event, diff)) > 0){
+            nextframe = tutime;
+          }
+          if( diff -> x || diff -> y){
+            nextframe = tutime;
+          }
+          break;
+        case SDL_MOUSEBUTTONDOWN:
+          if( ( err = pointerpressevent( event, minefield, GW -> real)) > 0){
+            nextframe = tutime;
+          }
+          break;
+        case SDL_MOUSEBUTTONUP:
+          if( ( err = pointerreleasevent( event, minefield, mss, GW -> real, tutime, gamestart)) > 0){
+            nextframe = tutime;
+          }
+          break;
+        case SDL_MOUSEMOTION:
+          if( ( err = pointermoveevent( event, minefield, GW -> real)) > 0){
+            nextframe = tutime;
+          }
+          break;
+        default:
+          break;
+        }
+      
+        if unlikely( err == -2){
+          MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t alloc limet!     ");
+          err = 0;
+        }
       }
     }else{
       if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
@@ -266,69 +308,29 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       
       printtime( mss -> out, ( tutime - gamestart) / 1000000);
       
+      nexttu = getnanosec();
+      
       /* to make sure the time looks like it updatet consistanly we randomaize
        * the time we wait betwen updating it, with max time betwen update beigen 150ms
        */
       nexttu += 50000000lu + ( ( ( __uint64_t)( seed = MS_rand( seed)) * 100000000lu) / MS_RAND_MAX);
     }
     
-    if( e){
-      err = 0;
-      
-      switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
-      case SDL_QUIT:
-        ret = 0;
-        goto bail;
-      case SDL_KEYDOWN:
-        if( ( err = keypressevent( event, minefield, mss, GW -> mfvid, diff)) > 0){
-          nextframe = tutime;
-        }
-        break;
-      case SDL_KEYUP:
-        if( ( err = keyreleasevent( event, diff)) > 0){
-          nextframe = tutime;
-        }
-        if( diff -> x || diff -> y){
-          nextframe = tutime;
-        }
-        break;
-      case SDL_MOUSEBUTTONDOWN:
-        if( ( err = pointerpressevent( event, minefield, GW -> real)) > 0){
-          nextframe = tutime;
-        }
-        break;
-      case SDL_MOUSEBUTTONUP:
-        if( ( err = pointerreleasevent( event, minefield, mss, GW -> real, tutime, gamestart)) > 0){
-          nextframe = tutime;
-        }
-        nextframe = tutime;
-        break;
-      case SDL_MOUSEMOTION:
-        if( ( err = pointermoveevent( event, minefield, GW -> real)) > 0){
-          nextframe = tutime;
-        }
-        break;
-      default:
-        break;
-      }
-      
-      if unlikely( err == -2){
-        MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t alloc limet!     \n");
-      }
-    }
     
-    if( nextframe <= tutime && ( ( nextframe == tutime) || ( diff -> x || diff -> y))){
+    if( ( nextframe == tutime) || ( ( nextframe < tutime) && ( diff -> x || diff -> y))){
       if( window_scroll( GW, *diff)){
         nextframe += 1000000000 / 30;
       }
-                  
+      
       assert( !( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))));
       
       assert( !( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)));
       
       if unlikely( draw( GW, *minefield) == -3){
-        MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t inval data \n");
+        MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t inval data   ");
       }
+
+      nexttu = getnanosec();
       
       if( mss -> deb != NULL){
         __uint64_t mytime = getnanosec() - tutime;
@@ -470,7 +472,7 @@ pointerpressevent( SDL_Event event,
     ret = uncov_elements( *minefield, minefield -> uncovque, vid, minefield -> mine);
     break;
   case SDL_BUTTON_RIGHT:
-    swap_flag( minefield, postion.x, postion.y);
+    ret = swap_flag( minefield, postion.x, postion.y);
     break;
   default:
     break;
