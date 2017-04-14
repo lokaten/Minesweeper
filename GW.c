@@ -143,8 +143,8 @@ draw( GraphicWraper *GW, MS_field minefield){
   srect.h = GW -> logical.realheight;
   drect.x = 0;
   drect.y = 0;
-  drect.w = GW -> logical.realwidth;
-  drect.h = GW -> logical.realheight;
+  drect.w = GW -> real.realwidth;
+  drect.h = GW -> real.realheight;
     
   SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
   
@@ -228,7 +228,6 @@ GW_Create( MS_video rel, unsigned long no_resize){
   }
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-  SDL_RenderSetLogicalSize( GW -> renderer, GW -> logical.realwidth, GW -> logical.realheight);
   SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
   
   if( no_resize){

@@ -293,18 +293,18 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
         }
         break;
       case SDL_MOUSEBUTTONDOWN:
-        if( ( err = pointerpressevent( event, minefield, GW -> logical)) > 0){
+        if( ( err = pointerpressevent( event, minefield, GW -> real)) > 0){
           nextframe = tutime;
         }
         break;
       case SDL_MOUSEBUTTONUP:
-        if( ( err = pointerreleasevent( event, minefield, mss, GW -> logical, tutime, gamestart)) > 0){
+        if( ( err = pointerreleasevent( event, minefield, mss, GW -> real, tutime, gamestart)) > 0){
           nextframe = tutime;
         }
         nextframe = tutime;
         break;
       case SDL_MOUSEMOTION:
-        if( ( err = pointermoveevent( event, minefield, GW -> logical)) > 0){
+        if( ( err = pointermoveevent( event, minefield, GW -> real)) > 0){
           nextframe = tutime;
         }
         break;
