@@ -28,8 +28,8 @@ window_scroll( GraphicWraper *GW, MS_diff diff){
     GW -> real.realxdiff = ( GW -> real.realxdiff + GW -> mfvid.realwidth  - diff.x) % GW -> mfvid.realwidth;
     GW -> real.realydiff = ( GW -> real.realydiff + GW -> mfvid.realheight - diff.y) % GW -> mfvid.realheight;
     
-    GW -> real.xdiff = ( GW -> real.width  * GW -> real.realxdiff + 1) / GW -> real.realwidth;
-    GW -> real.ydiff = ( GW -> real.height * GW -> real.realydiff + 1) / GW -> real.realheight;
+    GW -> real.xdiff = ( GW -> real.width  * GW -> real.realxdiff) / GW -> real.realwidth;
+    GW -> real.ydiff = ( GW -> real.height * GW -> real.realydiff) / GW -> real.realheight;
     ret = 1;
   }
   
@@ -97,11 +97,11 @@ draw( GraphicWraper *GW, MS_field minefield){
   unsigned long i;
   SDL_Texture *tile;
   
-  GW -> logical.realxdiff = ( GW -> logical.realwidth  * GW -> real.realxdiff + 1) / GW -> real.realwidth ;
-  GW -> logical.realydiff = ( GW -> logical.realheight * GW -> real.realydiff + 1) / GW -> real.realheight;
+  GW -> logical.realxdiff = ( GW -> logical.realwidth  * GW -> real.realxdiff) / GW -> real.realwidth ;
+  GW -> logical.realydiff = ( GW -> logical.realheight * GW -> real.realydiff) / GW -> real.realheight;
   
-  GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff + 1) / GW -> logical.realwidth;
-  GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff + 1) / GW -> logical.realheight;
+  GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff) / GW -> logical.realwidth;
+  GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff) / GW -> logical.realheight;
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
     
