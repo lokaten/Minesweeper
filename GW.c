@@ -112,10 +112,10 @@ draw( GraphicWraper *GW, MS_field minefield){
     
     element.x = ( video.xdiff + ( i % video.width)) % minefield.width;
     element.y = ( video.ydiff + ( i / video.width)) % minefield.height;
-
-    elementsh.x = ( ( video.width  + ( ( minefield.width  + ( element.x) - video.xdiff) % minefield.width )) % video.width );
-    elementsh.y = ( ( video.height + ( ( minefield.height + ( element.y) - video.ydiff) % minefield.height)) % video.height);
-        
+    
+    elementsh.x = ( i % video.width);
+    elementsh.y = ( i / video.width);
+    
     tile = drawelement( GW, minefield.data[ element.x + element.y * minefield.width]);
 
     if( tile == NULL){
