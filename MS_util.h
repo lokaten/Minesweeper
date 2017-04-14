@@ -134,7 +134,7 @@ LOCALE_( div_)( unsigned long b, unsigned long a, unsigned long divobj){
   assert( ret == b / a);
   return ret;
 }
-#define div_ LOCALE_( mol_)
+#define div_ LOCALE_( div_)
 
 /*
  * return a "random" number...
