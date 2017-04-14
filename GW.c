@@ -96,13 +96,15 @@ draw( GraphicWraper *GW, MS_field minefield){
   SDL_Rect srect, drect;
   unsigned long i;
   SDL_Texture *tile;
-
+  
   MS_video video = GW -> logical;
-
-  SDL_SetRenderTarget( GW -> renderer, GW -> target);
   
   video.width  += 1;
   video.height += 1;
+  
+  SDL_SetRenderTarget( GW -> renderer, GW -> target);
+    
+  SDL_RenderClear( GW -> renderer);
   
   i = video.width * video.height;
   
@@ -118,31 +120,33 @@ draw( GraphicWraper *GW, MS_field minefield){
 
     if( tile == NULL){
       ret = -3;
-      break;
+      continue;
     }
     
     srect.x = 0;
     srect.y = 0;
     srect.w = GW -> ewidth;
     srect.h = GW -> eheight;
-    drect.x = elementsh.x * GW -> ewidth  - ( video.realxdiff % GW -> ewidth );
-    drect.y = elementsh.y * GW -> eheight - ( video.realydiff % GW -> eheight);
+    drect.x = elementsh.x * GW -> ewidth ;
+    drect.y = elementsh.y * GW -> eheight;
     drect.w = GW -> ewidth;
     drect.h = GW -> eheight;
     
     SDL_RenderCopy( GW -> renderer, tile, &srect, &drect);
   }
 
-  SDL_SetRenderTarget( GW ->  renderer, NULL);
-
+  SDL_SetRenderTarget( GW -> renderer, NULL);
+  
+  srect.x = ( GW -> logical.realxdiff % GW -> ewidth );
+  srect.y = ( GW -> logical.realydiff % GW -> eheight);
   srect.w = GW -> logical.realwidth;
   srect.h = GW -> logical.realheight;
   drect.x = 0;
   drect.y = 0;
   drect.w = GW -> logical.realwidth;
   drect.h = GW -> logical.realheight;
-  
-  SDL_RenderCopy( GW -> renderer, GW -> target, &srect, &drect);
+    
+  SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
   
   SDL_RenderPresent( GW -> renderer);
       
@@ -200,7 +204,7 @@ GW_Create( MS_video rel, unsigned long no_resize){
   
   GW -> ewidth  = 15;
   GW -> eheight = 15;
-  
+    
   GW -> logical.realwidth  = GW -> logical.width  * GW -> ewidth;
   GW -> logical.realheight = GW -> logical.height * GW -> eheight;
   
@@ -225,6 +229,7 @@ GW_Create( MS_video rel, unsigned long no_resize){
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
   SDL_RenderSetLogicalSize( GW -> renderer, GW -> logical.realwidth, GW -> logical.realheight);
+  SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
   
   if( no_resize){
     SDL_SetWindowResizable( GW ->  window, SDL_FALSE);
@@ -232,7 +237,7 @@ GW_Create( MS_video rel, unsigned long no_resize){
     SDL_SetWindowResizable( GW ->  window, SDL_TRUE);
   }
   
-  SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> logical.realwidth, GW -> logical.realheight);
+  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> logical.realwidth + GW -> ewidth, GW -> logical.realheight + GW -> eheight);
   
   {
     SDL_Rect rec;
