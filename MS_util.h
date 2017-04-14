@@ -103,27 +103,36 @@ INLINE int LOCALE_( print)( FILE *, const char *, ...);
 INLINE __uint64_t LOCALE_( getmicrosec)( void);
 INLINE __uint64_t LOCALE_( getnanosec)( void);
 
+/* divsion is slow, make sure we don't do it more then we have to*/
+
+/* genrate a divobj from the divaider */
 INLINE unsigned long
 LOCALE_( gen_divobj)( unsigned long a){
-  assert( a < ( 1lu << 33));
+  assert( a < ( 1lu << 32));
   return ( 8589934591lu + a) / a;
 }
 #define gen_divobj LOCALE_( gen_divobj)
-  
+
+/* divobj = gen_divobj( a)
+ * ( b % a) => 
+ */
 INLINE unsigned long
 LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
-  assert( b < ( 1lu << 31));
-  assert( divobj == ( 8589934591lu + a) / a);
-  return ( ( ( ( b * divobj) & 8589934591lu) * a) >> 33);
+  unsigned long ret = ( ( ( ( b * divobj) & 8589934591lu) * a) >> 33);
+  assert( ret == b % a);
+  return ret;
 }
 #define mol_ LOCALE_( mol_)
 
+/* divobj = gen_divobj( a)
+ * ( b / a) =>
+ */
 INLINE unsigned long
 LOCALE_( div_)( unsigned long b, unsigned long a, unsigned long divobj){
-  ( void)a;
-  assert( b < ( 1lu << 31));
-  assert( divobj == ( 8589934591lu + a) / a);
-  return ( b * ( divobj >> 1)) >> 32;
+  unsigned long ret = ( b * ( divobj >> 1)) >> 32;
+  ( void)a; /* we only take in a for the assert */
+  assert( ret == b / a);
+  return ret;
 }
 #define div_ LOCALE_( mol_)
 
