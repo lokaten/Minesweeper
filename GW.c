@@ -25,7 +25,7 @@ window_scroll( GraphicWraper *GW, MS_diff diff){
   }
   
   if( ( diff.x) || ( diff.y)){
-    GW -> real.realxdiff = ( GW -> real.realxdiff + GW -> mfvid.realwidth  - diff.x) % GW -> mfvid.realwidth;
+    GW -> real.realxdiff = ( GW -> real.realxdiff + GW -> mfvid.realwidth  - diff.x) % GW -> mfvid.realwidth ;
     GW -> real.realydiff = ( GW -> real.realydiff + GW -> mfvid.realheight - diff.y) % GW -> mfvid.realheight;
     
     GW -> real.xdiff = ( GW -> real.width  * GW -> real.realxdiff) / GW -> real.realwidth;
@@ -99,19 +99,20 @@ draw( GraphicWraper *GW, MS_field minefield){
   
   GW -> logical.realxdiff = ( GW -> logical.realwidth  * GW -> real.realxdiff) / GW -> real.realwidth ;
   GW -> logical.realydiff = ( GW -> logical.realheight * GW -> real.realydiff) / GW -> real.realheight;
+
+  GW -> logical.realxdiff -= GW -> logical.realxdiff % GW -> logical.realwidth ;
+  GW -> logical.realydiff -= GW -> logical.realydiff % GW -> logical.realheight;
   
   GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff) / GW -> logical.realwidth;
   GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff) / GW -> logical.realheight;
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
     
-  SDL_RenderClear( GW -> renderer);
-  
   i = GW -> logical.width * GW -> logical.height;
   
   while( i--){
     
-    element.x = ( GW -> logical.xdiff + ( i % GW -> logical.width)) % GW -> mfvid.width;
+    element.x = ( GW -> logical.xdiff + ( i % GW -> logical.width)) % GW -> mfvid.width ;
     element.y = ( GW -> logical.ydiff + ( i / GW -> logical.width)) % GW -> mfvid.height;
     
     elementsh.x = ( i % GW -> logical.width);
@@ -138,16 +139,46 @@ draw( GraphicWraper *GW, MS_field minefield){
 
   SDL_SetRenderTarget( GW -> renderer, NULL);
   
-  srect.x = ( ( GW -> logical.realwidth  * GW -> real.realxdiff + 1) / GW -> real.realwidth ) % GW -> ewidth ;
-  srect.y = ( ( GW -> logical.realheight * GW -> real.realydiff + 1) / GW -> real.realheight) % GW -> eheight;
-  srect.w = GW -> real.width  * GW -> ewidth ;
-  srect.h = GW -> real.height * GW -> eheight;
-  drect.x = 0;
-  drect.y = 0;
-  drect.w = GW -> real.realwidth;
-  drect.h = GW -> real.realheight;
+  {
+    unsigned long ax, ay, adx, ady, bx, by, bdx, bdy, cx, cy, cdx, cdy;
     
-  SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
+    SDL_RenderClear( GW -> renderer);  
+    
+    ax = ( ( GW -> logical.realwidth  * GW -> real.realxdiff) / GW -> real.realwidth ) % GW -> logical.realwidth ;
+    ay = ( ( GW -> logical.realheight * GW -> real.realydiff) / GW -> real.realheight) % GW -> logical.realheight;
+    adx = ( ax * GW -> real.realwidth ) / GW -> logical.realwidth ;
+    ady = ( ay * GW -> real.realheight) / GW -> logical.realheight;
+    
+    bx = GW -> logical.realwidth  - ax;
+    by = GW -> logical.realheight - ay;
+    bdx = GW -> real.realwidth  - adx;
+    bdy = GW -> real.realheight - ady;
+    
+    cx = 0;
+    cy = 0;
+    cdx = 0;
+    cdy = 0;
+    
+    srect = ( SDL_Rect){ .x = ax , .y = ay , .w = bx , .h = by };
+    drect = ( SDL_Rect){ .x = cdx, .y = cdy, .w = bdx, .h = bdy};
+    
+    SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
+    
+    srect = ( SDL_Rect){ .x = cx , .y = cy , .w = ax , .h = ay };
+    drect = ( SDL_Rect){ .x = bdx, .y = bdy, .w = adx, .h = ady};
+    
+    SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
+    
+    srect = ( SDL_Rect){ .x = cx , .y = ay , .w = ax , .h = by };
+    drect = ( SDL_Rect){ .x = bdx, .y = cdy, .w = adx, .h = bdy};
+    
+    SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
+    
+    srect = ( SDL_Rect){ .x = ax , .y = cy , .w = bx , .h = ay };
+    drect = ( SDL_Rect){ .x = cdx, .y = bdy, .w = bdx, .h = ady};
+    
+    SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
+  }
   
   SDL_RenderPresent( GW -> renderer);
       
@@ -205,9 +236,6 @@ GW_Create( MS_video rel, unsigned long no_resize){
   
   GW -> ewidth  = 15;
   GW -> eheight = 15;
-
-  GW -> logical.width  += 1;
-  GW -> logical.height += 1;
   
   GW -> logical.realwidth  = GW -> logical.width  * GW -> ewidth;
   GW -> logical.realheight = GW -> logical.height * GW -> eheight;

@@ -77,8 +77,8 @@ readincmdline( int argv,
     { OPTSW_LU , "Number of mines"                        , "level"          , 0  , &( field_custom.level     ), NULL},
 #ifdef DEBUG
     { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"           , 0  , &( field_custom.reseed    ), NULL},
-#endif
     { OPTSW_CPY, ""                                       , "global"         , 'g', &( field_custom.global    ), &opt_true},
+#endif
     { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                       , NULL},
     { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( video -> realwidth     ), NULL},
     { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( video -> realheight    ), NULL},
