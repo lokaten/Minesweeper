@@ -100,8 +100,8 @@ draw( GraphicWraper *GW, MS_field minefield){
   GW -> logical.realxdiff = ( GW -> logical.realwidth  * GW -> real.realxdiff) / GW -> real.realwidth ;
   GW -> logical.realydiff = ( GW -> logical.realheight * GW -> real.realydiff) / GW -> real.realheight;
 
-  GW -> logical.realxdiff -= GW -> logical.realxdiff % GW -> logical.realwidth ;
-  GW -> logical.realydiff -= GW -> logical.realydiff % GW -> logical.realheight;
+  GW -> logical.realxdiff -= GW -> logical.realxdiff % GW -> logical.realwidth  + GW -> ewidth;
+  GW -> logical.realydiff -= GW -> logical.realydiff % GW -> logical.realheight + GW -> eheight;
   
   GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff) / GW -> logical.realwidth;
   GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff) / GW -> logical.realheight;
@@ -112,18 +112,20 @@ draw( GraphicWraper *GW, MS_field minefield){
   
   while( i--){
     
-    element.x = ( GW -> logical.xdiff + ( i % GW -> logical.width)) % GW -> mfvid.width ;
-    element.y = ( GW -> logical.ydiff + ( i / GW -> logical.width)) % GW -> mfvid.height;
-    
-    elementsh.x = ( i % GW -> logical.width);
-    elementsh.y = ( i / GW -> logical.width);
-    
-    tile = drawelement( GW, minefield.data[ element.x + element.y * minefield.width]);
-
-    if( tile == NULL){
-      ret = -3;
-      continue;
+    {
+      element.x = ( GW -> real.xdiff + i % GW -> logical.width);
+      element.y = ( GW -> real.ydiff + i / GW -> logical.width);
+      
+      tile = drawelement( GW, *acse( minefield, element.x, element.y));
+      
+      if( tile == NULL){
+        ret = -3;
+        continue;
+      }
     }
+    
+    elementsh.x = ( element.x + 1) % GW -> logical.width ;
+    elementsh.y = ( element.y + 1) % GW -> logical.height;
     
     srect.x = 0;
     srect.y = 0;
@@ -140,42 +142,39 @@ draw( GraphicWraper *GW, MS_field minefield){
   SDL_SetRenderTarget( GW -> renderer, NULL);
   
   {
-    unsigned long ax, ay, adx, ady, bx, by, bdx, bdy, cx, cy, cdx, cdy;
+    unsigned long ax, ay, bx, by, adx, ady, bdx, bdy, cx, cy;
     
     SDL_RenderClear( GW -> renderer);  
     
     ax = ( ( GW -> logical.realwidth  * GW -> real.realxdiff) / GW -> real.realwidth ) % GW -> logical.realwidth ;
     ay = ( ( GW -> logical.realheight * GW -> real.realydiff) / GW -> real.realheight) % GW -> logical.realheight;
-    adx = ( ax * GW -> real.realwidth ) / GW -> logical.realwidth ;
-    ady = ( ay * GW -> real.realheight) / GW -> logical.realheight;
+    bx = ax + GW -> ewidth;
+    by = ay + GW -> eheight;
+    cx = GW -> logical.realwidth  - bx;
+    cy = GW -> logical.realheight - by;
     
-    bx = GW -> logical.realwidth  - ax;
-    by = GW -> logical.realheight - ay;
+    adx = ( ax * GW -> real.realwidth ) / ( ax + cx);
+    ady = ( ay * GW -> real.realheight) / ( ay + cy);
     bdx = GW -> real.realwidth  - adx;
     bdy = GW -> real.realheight - ady;
     
-    cx = 0;
-    cy = 0;
-    cdx = 0;
-    cdy = 0;
-    
-    srect = ( SDL_Rect){ .x = ax , .y = ay , .w = bx , .h = by };
-    drect = ( SDL_Rect){ .x = cdx, .y = cdy, .w = bdx, .h = bdy};
+    srect = ( SDL_Rect){ .x = bx , .y = by , .w = cx , .h = cy };
+    drect = ( SDL_Rect){ .x = 0  , .y = 0  , .w = bdx, .h = bdy};
     
     SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
     
-    srect = ( SDL_Rect){ .x = cx , .y = cy , .w = ax , .h = ay };
+    srect = ( SDL_Rect){ .x = 0  , .y = 0  , .w = ax , .h = ay };
     drect = ( SDL_Rect){ .x = bdx, .y = bdy, .w = adx, .h = ady};
     
     SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
     
-    srect = ( SDL_Rect){ .x = cx , .y = ay , .w = ax , .h = by };
-    drect = ( SDL_Rect){ .x = bdx, .y = cdy, .w = adx, .h = bdy};
+    srect = ( SDL_Rect){ .x = 0  , .y = by , .w = ax , .h = cy };
+    drect = ( SDL_Rect){ .x = bdx, .y = 0  , .w = adx, .h = bdy};
     
     SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
     
-    srect = ( SDL_Rect){ .x = ax , .y = cy , .w = bx , .h = ay };
-    drect = ( SDL_Rect){ .x = cdx, .y = bdy, .w = bdx, .h = ady};
+    srect = ( SDL_Rect){ .x = bx , .y = 0  , .w = cx , .h = ay };
+    drect = ( SDL_Rect){ .x = 0  , .y = bdy, .w = bdx, .h = ady};
     
     SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
   }
@@ -236,6 +235,9 @@ GW_Create( MS_video rel, unsigned long no_resize){
   
   GW -> ewidth  = 15;
   GW -> eheight = 15;
+  
+  GW -> logical.width  += 1;
+  GW -> logical.height += 1;
   
   GW -> logical.realwidth  = GW -> logical.width  * GW -> ewidth;
   GW -> logical.realheight = GW -> logical.height * GW -> eheight;
