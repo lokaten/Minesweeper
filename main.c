@@ -47,23 +47,18 @@ readincmdline( int argv,
   MS_field field_advanced  = { .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0};
   MS_field field_expert    = { .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0};
   MS_field field_benchmark = { .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0};
-    
+  
   unsigned long xscale = 15;
   unsigned long yscale = 15;
-  
-  unsigned long quiet = 0;
-  unsigned long vquiet = 0;
   
   unsigned long debug = 0;
   unsigned long force  = 0;
   
-  MS_field *mfvid;
+  MS_field *mfvid = &field_custom;
   
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
-  
-  mfvid = &field_custom;
-  
+    
   MS_options opt[ OPT_MAX] = {
     { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                       , NULL},
 #ifdef DEBUG
@@ -109,7 +104,7 @@ readincmdline( int argv,
   
   mss -> out = mss -> err? mss -> out: NULL;
   
-  *video = ( MS_video){ .width = 1,  .height = 1};
+  *video = mfvid == &field_benchmark? ( MS_video){ .width = 1,  .height = 1}: *video;
   
   video -> width  = video -> width ? video -> width : mfvid -> width;
   video -> height = video -> height? video -> height: mfvid -> height;
