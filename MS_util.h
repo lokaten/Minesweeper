@@ -98,7 +98,11 @@ typedef struct{
 INLINE unsigned long LOCALE_( gen_divobj)( unsigned long);
 INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
 INLINE unsigned long LOCALE_( div_)( unsigned long, unsigned long, unsigned long);
-INLINE __uint32_t LOCALE_( MS_rand)( unsigned long);
+/* protype of named parmenter function daclaration, migth be useful in other cases*/
+typedef struct{ unsigned long seed;}MS_rand_args;
+INLINE __uint32_t LOCALE_( MS_rand)( MS_rand_args);
+#define MS_rand( exp) LOCALE_( MS_rand)( ( MS_rand_args){ exp})
+
 INLINE unsigned long LOCALE_( rand_seed)( void);
 INLINE int LOCALE_( print)( FILE *, const char *, ...);
 INLINE __uint64_t LOCALE_( getmicrosec)( void);
@@ -157,10 +161,9 @@ LOCALE_( div_)( unsigned long b, unsigned long a, unsigned long divobj){
  * it's farliy easy to caluculate the "secret" numbers.
  */
 INLINE __uint32_t
-LOCALE_( MS_rand)( unsigned long seed){
-  return ( ( ( ( __uint64_t)seed + 2654435405lu) * 2654435909lu) & 4294967295lu);
+LOCALE_( MS_rand)( MS_rand_args args){
+  return ( ( ( ( __uint64_t)args.seed + 2654435405lu) * 2654435909lu) & 4294967295lu);
 }
-#define MS_rand LOCALE_( MS_rand)
 
 
 /*
