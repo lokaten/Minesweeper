@@ -70,6 +70,7 @@ typedef struct{
   FILE *err;
   FILE *out;
   FILE *deb;
+  FILE *hlp;
 }MS_stream;
   
 /*ENUT     0b00101111*/

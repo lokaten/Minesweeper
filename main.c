@@ -48,8 +48,6 @@ readincmdline( int argv,
   MS_field field_expert    = { .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0};
   MS_field field_benchmark = { .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0};
     
-  unsigned long helpopt = 0;
-  
   unsigned long xscale = 15;
   unsigned long yscale = 15;
   
@@ -90,33 +88,28 @@ readincmdline( int argv,
     { OPTSW_CPY, "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &mfvid                     , &field_advanced },
     { OPTSW_CPY, "Mimic windows minesweeper expert mode"  , "expert"         , 'e', &mfvid                     , &field_expert   },
 #ifdef DEBUG
-    { OPTSW_CPY, ""                                       , "benchmark"      , 'B', benchmark                  , &opt_true},
+    { OPTSW_CPY, ""                                       , "benchmark"      , 'B', &mfvid                     , &field_benchmark},
 #endif
     { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                       , NULL},
-    { OPTSW_CPY, "Print generic help mesage"              , "help"           , 'h', &( helpopt                ), &opt_true},
-    { OPTSW_CPY, "Supres reguler output"                  , "quiet"          , 'q', &( quiet                  ), &opt_true},
-    { OPTSW_CPY, "Supres all output"                      , "very-quiet"     , 'Q', &( vquiet                 ), &opt_true},
+    { OPTSW_CPY, "Print generic help mesage"              , "help"           , 'h', &( mss -> hlp             ), stdout},
+    { OPTSW_CPY, "Supres reguler output"                  , "quiet"          , 'q', &( mss -> out             ), NULL},
+    { OPTSW_CPY, "Supres all output"                      , "very-quiet"     , 'Q', &( mss -> err             ), NULL},
 #ifdef DEBUG
-    { OPTSW_CPY, "Debug data"                             , "debug"          , 'd', &( debug                  ), &opt_true},
+    { OPTSW_CPY, "Debug data"                             , "debug"          , 'd', &( mss -> deb             ), stdout},
 #endif
     { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                       , NULL}};
       
   *video = ( MS_video){ .width = 0, .height = 0, .realwidth = 0, .realheight = 0};
-    
+  
+  *mss = ( MS_stream){ .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL};
+  
   if( procopt( mss, opt, argv, argc)){
-    if( !vquiet) MS_print( stderr, "\rWRong or broken input, pleas refer to --help\n");
-    helpopt = 2;
+    MS_print( mss -> err, "\rWRong or broken input, pleas refer to --help\n");
   }
-    
-  mss -> out = !quiet && !vquiet? stdout: NULL;
-  mss -> err =           !vquiet? stderr: NULL;
-  mss -> deb = debug  && !vquiet? stdout: NULL;
-      
-  if( *benchmark){
-    *mfvid = field_benchmark;
-    video -> width      = 1;
-    video -> height     = 1;
-  }
+  
+  mss -> out = mss -> err? mss -> out: NULL;
+  
+  *video = ( MS_video){ .width = 1,  .height = 1};
   
   video -> width  = video -> width ? video -> width : mfvid -> width;
   video -> height = video -> height? video -> height: mfvid -> height;
@@ -130,24 +123,17 @@ readincmdline( int argv,
   if( mfvid -> level >= ( mfvid -> width * mfvid -> height)){
     mfvid -> level = ( mfvid -> width * mfvid -> height + 1) / 3;
     MS_print( mss -> err, "\rMore mines then elments!\n");
-    helpopt = 2;
   }
-      
-  if( helpopt){
-    if( helpopt == 2){
-      if( !force){
-        help( mss -> out, opt);
-        exit( 1);
-      }
-    }else{
-      help( mss -> out, opt);
-      exit( 0);
-    }
+
+  if( mss -> hlp){
+    help( mss -> hlp, opt);
+    exit( 0);
   }
   
   MS_print( mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
   MS_print( mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
-  
+
+  *benchmark = mfvid == &field_benchmark;
   *minefield = *mfvid;
 
   MS_print( mss -> out, "\rMode: %s\n", mfvid -> title);
