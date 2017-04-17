@@ -78,6 +78,7 @@ procopt( MS_stream *mss, MS_options *opt, unsigned argc, char **argv){
                 break;
               case OPTSW_CPY:
                 *( void **)( opt[ j].data) = ( void *)( opt[ j].value);
+                break;
               default:
 		ret = -1;
               }
