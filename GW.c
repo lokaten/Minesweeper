@@ -262,6 +262,7 @@ GW_Create( MS_video rel, unsigned long no_resize){
   }
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+  SDL_RenderSetLogicalSize( GW -> renderer, GW -> real.realwidth, GW -> real.realheight);
   SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
   
   if( no_resize){
