@@ -15,7 +15,7 @@ INLINE int addelement( MS_field *, signed long, signed long);
 
 MS_field *
 MF_Init( MS_field *minefield){
-  MS_field *ret= NULL;
+  MS_field *ret = NULL;
   
   if( minefield == NULL){
     goto fault;
