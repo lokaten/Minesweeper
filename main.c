@@ -187,7 +187,7 @@ main( const int argv, const char** argc){
     root -> GW -> mfvid.realwidth  = ( root -> GW -> mfvid.width  * root -> GW -> real.realwidth ) / root -> GW -> real.width ;
     root -> GW -> mfvid.realheight = ( root -> GW -> mfvid.height * root -> GW -> real.realheight) / root -> GW -> real.height;
     
-    if( MF_Init( root -> minefield) == NULL){
+    if( ( root -> minefield = MF_Init( root -> minefield)) == NULL){
       goto fault;
     }
         
