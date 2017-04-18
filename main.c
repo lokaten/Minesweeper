@@ -54,17 +54,11 @@ readincmdline( MS_root *root,
   unsigned long xscale = 15;
   unsigned long yscale = 15;
   
-  unsigned long debug = 0;
-  unsigned long force  = 0;
-
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
   
   MS_options opt[] = {
     { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                       , NULL},
-#ifdef DEBUG
-    { OPTSW_CPY, "ignore validation of options"           , "force"          , 'f', &( force                  ), &opt_true},
-#endif
     { OPTSW_GRP, ""                                       , "Minefield"      , 0  , NULL                       , NULL},
     { OPTSW_LU , "Element wide minefield"                 , "width"          , 0  , &( field_custom -> width  ), NULL},
     { OPTSW_LU , "Element high minefield"                 , "height"         , 0  , &( field_custom -> height ), NULL},
@@ -149,11 +143,11 @@ int
 main( const int argv, const char** argc){
   int ret = -1;
   MS_root *root = MS_CreateEmpty( MS_root);
-
+  
   root -> argv = &argv;
   root -> argc = &argc;
   root -> mss = MS_CreateEmpty( MS_stream);
-    
+  
   {
     MS_video video;
         
