@@ -223,15 +223,14 @@ drawelement( GraphicWraper *GW, __uint8_t element){
 
 
 GraphicWraper *
-GW_Create( MS_video rel, unsigned long no_resize){
-  GraphicWraper *GW = ( GraphicWraper *)malloc( sizeof( GraphicWraper));
+GW_Init( GraphicWraper *GW){
+  GraphicWraper *ret = NULL;
   
   if( GW == NULL){
     goto fault;
   }
   
-  GW -> real    = rel;
-  GW -> logical = rel;
+  GW -> logical = GW -> real;
   
   GW -> ewidth  = 15;
   GW -> eheight = 15;
@@ -265,7 +264,7 @@ GW_Create( MS_video rel, unsigned long no_resize){
   SDL_RenderSetLogicalSize( GW -> renderer, GW -> real.realwidth, GW -> real.realheight);
   SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
   
-  if( no_resize){
+  if( GW -> no_resize){
     SDL_SetWindowResizable( GW ->  window, SDL_FALSE);
   }else{
     SDL_SetWindowResizable( GW ->  window, SDL_TRUE);
@@ -304,14 +303,10 @@ GW_Create( MS_video rel, unsigned long no_resize){
   
   SDL_ShowWindow( GW -> window);
   
-  if( GW == NULL){
+  ret = GW;
   fault:
-    if( GW != NULL)free( GW);
-    GW = NULL;
-    SDL_Quit();
-  }
-  
-  return GW;
+  if( ret == NULL) GW_Free( GW);
+  return ret;
 }
 
 void

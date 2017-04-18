@@ -30,7 +30,7 @@ typedef struct{
   MS_stream *mss;
 }MS_root;
 
-int readincmdline( MS_root *, MS_video *, unsigned long *);
+int readincmdline( MS_root *);
 int mainloop( MS_stream *, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
 int keyreleasevent( SDL_Event, MS_diff *);
@@ -41,9 +41,7 @@ int pointermoveevent( SDL_Event, MS_field *, MS_video);
 void printtime( FILE *, unsigned long);
 
 int
-readincmdline( MS_root *root,
-               MS_video *video,
-               unsigned long *no_resize){
+readincmdline( MS_root *root){
   
   MS_field *field_custom    = MS_Create( MS_field, ( ( MS_field){ .title = "custom"   , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0}));
   MS_field *field_beginner  = MS_Create( MS_field, ( ( MS_field){ .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0}));
@@ -57,6 +55,8 @@ readincmdline( MS_root *root,
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
   
+  root -> GW = MS_CreateEmpty( GraphicWraper);
+  
   MS_options opt[] = {
     { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                       , NULL},
     { OPTSW_GRP, ""                                       , "Minefield"      , 0  , NULL                       , NULL},
@@ -67,12 +67,12 @@ readincmdline( MS_root *root,
     { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"           , 0  , &( field_custom -> reseed ), NULL},
     { OPTSW_CPY, ""                                       , "global"         , 'g', &( field_custom -> global ), &opt_true},
 #endif
-    { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                       , NULL},
-    { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( video -> realwidth     ), NULL},
-    { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( video -> realheight    ), NULL},
-    { OPTSW_LU , "Pixel wide Element"                     , "element-width"  , 0  , &( xscale                 ), NULL},
-    { OPTSW_LU , "Pixel high Element"                     , "element-height" , 0  , &( yscale                 ), NULL},
-    { OPTSW_CPY, "Resize don't work well with all system" , "no-resize"      , 'R', ( no_resize               ), &opt_true},
+    { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                             , NULL},
+    { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( root -> GW -> real.realwidth ), NULL},
+    { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( root -> GW -> real.realheight), NULL},
+    { OPTSW_LU , "Pixel wide Element"                     , "element-width"  , 0  , &( xscale                       ), NULL},
+    { OPTSW_LU , "Pixel high Element"                     , "element-height" , 0  , &( yscale                       ), NULL},
+    { OPTSW_CPY, "Resize don't work well with all system" , "no-resize"      , 'R', &( root -> GW -> no_resize      ), &opt_true},
     { OPTSW_GRP, ""                                       , "Mode"           , 0  , NULL                       , NULL},
     { OPTSW_CPY, "Mimic windows minesweeper beginner mode", "beginner"       , 'b', &root -> minefield         , field_beginner },
     { OPTSW_CPY, "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &root -> minefield         , field_advanced },
@@ -89,7 +89,7 @@ readincmdline( MS_root *root,
 #endif
     { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                       , NULL}};
       
-  *video = ( MS_video){ .width = 0, .height = 0, .realwidth = 0, .realheight = 0};
+  root -> GW -> real = ( MS_video){ .width = 0, .height = 0, .realwidth = 0, .realheight = 0};
   
   *root -> mss = ( MS_stream){ .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL};
   
@@ -101,16 +101,16 @@ readincmdline( MS_root *root,
   
   root -> mss -> out = root -> mss -> err? root -> mss -> out: NULL;
   
-  *video = root -> minefield == field_benchmark? ( MS_video){ .width = 1,  .height = 1}: *video;
+  root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .width = 1,  .height = 1}: root -> GW -> real;
   
-  video -> width  = video -> width ? video -> width : root -> minefield -> width;
-  video -> height = video -> height? video -> height: root -> minefield -> height;
+  root -> GW -> real.width  = root -> GW -> real.width ? root -> GW -> real.width : root -> minefield -> width;
+  root -> GW -> real.height = root -> GW -> real.height? root -> GW -> real.height: root -> minefield -> height;
   
-  video -> realwidth  = video -> realwidth ? video -> realwidth : video -> width  * xscale;
-  video -> realheight = video -> realheight? video -> realheight: video -> height * yscale;
+  root -> GW -> real.realwidth  = root -> GW -> real.realwidth ? root -> GW -> real.realwidth : root -> GW -> real.width  * xscale;
+  root -> GW -> real.realheight = root -> GW -> real.realheight? root -> GW -> real.realheight: root -> GW -> real.height * yscale;
   
-  video -> width  = video -> width  * xscale <= video -> realwidth ? video -> width : ( video -> realwidth  + ( xscale - 1)) / xscale;
-  video -> height = video -> height * yscale <= video -> realheight? video -> height: ( video -> realheight + ( yscale - 1)) / yscale;
+  root -> GW -> real.width  = root -> GW -> real.width  * xscale <= root -> GW -> real.realwidth ? root -> GW -> real.width : ( root -> GW -> real.realwidth  + ( xscale - 1)) / xscale;
+  root -> GW -> real.height = root -> GW -> real.height * yscale <= root -> GW -> real.realheight? root -> GW -> real.height: ( root -> GW -> real.realheight + ( yscale - 1)) / yscale;
   
   if( root -> minefield -> level >= ( root -> minefield -> width * root -> minefield -> height)){
     root -> minefield -> level = ( root -> minefield -> width * root -> minefield -> height + 1) / 3;
@@ -154,12 +154,10 @@ main( const int argv, const char** argc){
     unsigned long no_resize = 0;
     unsigned long benchmark = 0;
     
-    readincmdline( root, &video, &no_resize);
+    readincmdline( root);
     
-    root -> GW = GW_Create( video, no_resize);
-    
-    if( root -> GW == NULL){
-      exit( 1);
+    if( ( root -> GW = GW_Init( root -> GW)) == NULL){
+      goto fault;
     }
     
 #ifdef __cplusplus

@@ -30,6 +30,7 @@ extern "C" {
     MS_video logical;
     unsigned long ewidth;
     unsigned long eheight;
+    unsigned long no_resize;
     SDL_Texture *cover;
     SDL_Texture *clear;
     SDL_Texture *flag;
@@ -46,7 +47,7 @@ extern "C" {
 
 
   int drawtemp( GraphicWraper *, MS_video, __uint8_t);
-  GraphicWraper *GW_Create( MS_video, unsigned long);
+  GraphicWraper *GW_Init( GraphicWraper *);
   void GW_Free( GraphicWraper *);
   int window_scroll( GraphicWraper *, MS_diff);
   int draw( GraphicWraper *, MS_field);
