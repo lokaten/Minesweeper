@@ -9,9 +9,9 @@
 #include "OPT.h"
 
 int
-procopt( MS_stream *mss, MS_options *opt, unsigned argc, char **argv){
+procopt( MS_stream *mss, MS_options *opt, const int argc, const char **argv){
   int ret = 0;
-  unsigned long i = 0;
+  int i = 0;
   char *lr = NULL;
   
   while( ++i < argc){
@@ -42,7 +42,7 @@ procopt( MS_stream *mss, MS_options *opt, unsigned argc, char **argv){
               *( void **)( opt[ j].data) = ( void *)( opt[ j].value);
               break;
             case OPTSW_RAW:
-              *( void **)( opt[ j].data) = ( void *)argv[ i];
+              //*( void **)( opt[ j].data) = ( void *)argv[ i];
               break;
 	    default:
 	      ret = -1;

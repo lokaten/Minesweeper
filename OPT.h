@@ -30,7 +30,7 @@ extern "C" {
   
 #define OPT_MAX 200
   
-  int procopt( MS_stream *, MS_options *, unsigned, char **);
+  int procopt( MS_stream *, MS_options *, const int, const char **);
   int help( FILE *, MS_options *);
   
   

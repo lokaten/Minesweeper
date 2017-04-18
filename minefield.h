@@ -23,7 +23,7 @@ extern "C" {
   
   typedef struct{
     __uint8_t *data;
-    char *title;
+    const char *title;
     ComandStream *uncovque;
     MS_mstr *mine;
     unsigned long width;
@@ -51,7 +51,7 @@ extern "C" {
 #endif
   
   void setzero( MS_field, MS_mstr *, MS_video);
-  MS_field *MF_Create( MS_field);
+  MS_field *MF_Init( MS_field *);
   void setminefield( MS_field *, MS_stream *, MS_video);
   void MF_Free( MS_field *);
   int uncov( MS_field *);

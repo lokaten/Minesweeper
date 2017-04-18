@@ -14,33 +14,25 @@ INLINE int addelement( MS_field *, signed long, signed long);
 
 
 MS_field *
-MF_Create( MS_field mfvid){
-  MS_field *minefield = ( MS_field *)malloc( sizeof( MS_field));
+MF_Init( MS_field *minefield){
+  MS_field *ret= NULL;
   
   if( minefield == NULL){
     goto fault;
   }
   
-  minefield -> mine = ( MS_mstr *)malloc( sizeof( MS_mstr));
-  
-  if( minefield -> mine == NULL){
-    free( minefield);
-    minefield = NULL;
+  if( ( minefield -> mine = MS_CreateEmpty( MS_mstr))  == NULL){
     goto fault;
   }
   
-  minefield -> uncovque = CS_Create( sizeof( MS_pos));
+  if( ( minefield -> uncovque = CS_Create( sizeof( MS_pos))) == NULL){
+    goto fault;
+  }
   
-  minefield -> global = mfvid.global;
-  minefield -> level  = mfvid.level;
-  minefield -> reseed = mfvid.reseed;
+  minefield -> mine -> noelements = minefield -> width * minefield -> height;
   
-  minefield -> width  = mfvid.width;
-  minefield -> height = mfvid.height;
-  
-  minefield -> subwidth  = mfvid.width;
-  minefield -> subheight = mfvid.height;
-  minefield -> mine -> noelements = mfvid.width * mfvid.height;
+  minefield -> subwidth  = minefield -> width;
+  minefield -> subheight = minefield -> height;
   
   if( !minefield -> global){
     minefield -> width  += 1;
@@ -53,9 +45,6 @@ MF_Create( MS_field mfvid){
   minefield -> data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield -> width * minefield -> height);
   
   if( minefield -> data == NULL){
-    free( minefield -> mine);
-    free( minefield);
-    minefield = NULL;
     goto fault;
   }
   
@@ -63,8 +52,10 @@ MF_Create( MS_field mfvid){
     memset( minefield -> data, ESET, minefield -> width * minefield -> height);
   }
   
+  ret = minefield;
  fault:
-  return minefield;
+  if( ret == NULL)MF_Free( minefield);
+  return ret;
 }
 
 
@@ -113,9 +104,8 @@ setminefield( MS_field *minefield, MS_stream *mss, MS_video video){
 void
 MF_Free( MS_field *minefield){
   if( minefield != NULL){
-    free( minefield -> data);
-
-    free( minefield -> mine);
+    if( minefield -> data != NULL) free( minefield -> data);
+    if( minefield -> mine != NULL)free( minefield -> mine);
     
     CS_Free( minefield -> uncovque);
   }
