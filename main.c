@@ -30,7 +30,7 @@ typedef struct{
   MS_stream *mss;
 }MS_root;
 
-int readincmdline( MS_root *, MS_video *, unsigned long *, unsigned long *);
+int readincmdline( MS_root *, MS_video *, unsigned long *);
 int mainloop( MS_stream *, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
 int keyreleasevent( SDL_Event, MS_diff *);
@@ -43,8 +43,7 @@ void printtime( FILE *, unsigned long);
 int
 readincmdline( MS_root *root,
                MS_video *video,
-               unsigned long *no_resize,
-               unsigned long *benchmark){
+               unsigned long *no_resize){
   
   MS_field *field_custom    = MS_Create( MS_field, ( ( MS_field){ .title = "custom"   , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0}));
   MS_field *field_beginner  = MS_Create( MS_field, ( ( MS_field){ .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0}));
@@ -161,7 +160,7 @@ main( const int argv, const char** argc){
     unsigned long no_resize = 0;
     unsigned long benchmark = 0;
     
-    readincmdline( root, &video, &no_resize, &benchmark);
+    readincmdline( root, &video, &no_resize);
     
     root -> GW = GW_Create( video, no_resize);
     
@@ -171,7 +170,7 @@ main( const int argv, const char** argc){
     
 #ifdef __cplusplus
 #else
-    if( benchmark){
+    if( root -> minefield -> title == ( const char *)"benchmark"){
       SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
       SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONUP  , .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
       SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
@@ -192,10 +191,6 @@ main( const int argv, const char** argc){
       goto fault;
     }
         
-    MS_print( root -> mss -> deb, "\rwidth: %lu   ", root -> minefield -> width);
-    MS_print( root -> mss -> deb, "\r\t\theight: %lu   ", root -> minefield -> height);
-    MS_print( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
-    
     setminefield( root -> minefield, root -> mss, root -> GW -> mfvid);
   }
   
