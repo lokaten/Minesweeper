@@ -178,11 +178,9 @@ main( const int argv, const char** argc){
   
   GW_Free( root -> GW);
   
-  MS_print( root -> mss -> out, "\nBye!\n");
+  MS_print( root -> mss -> out, "\rBye!                                \n");
   
-  if( root -> mss -> out == NULL){
-    MS_print( root -> mss -> deb, "\n");
-  }
+  MS_print( stdout, "\r");
   
   free( root -> mss);
 
