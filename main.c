@@ -49,9 +49,6 @@ readincmdline( MS_root *root){
   MS_field *field_expert    = MS_Create( MS_field, ( ( MS_field){ .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0}));
   MS_field *field_benchmark = MS_Create( MS_field, ( ( MS_field){ .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0}));
   
-  unsigned long xscale = 15;
-  unsigned long yscale = 15;
-  
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
   
@@ -67,12 +64,12 @@ readincmdline( MS_root *root){
     { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"           , 0  , &( field_custom -> reseed ), NULL},
     { OPTSW_CPY, ""                                       , "global"         , 'g', &( field_custom -> global ), &opt_true},
 #endif
-    { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                             , NULL},
-    { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( root -> GW -> real.realwidth ), NULL},
-    { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( root -> GW -> real.realheight), NULL},
-    { OPTSW_LU , "Pixel wide Element"                     , "element-width"  , 0  , &( xscale                       ), NULL},
-    { OPTSW_LU , "Pixel high Element"                     , "element-height" , 0  , &( yscale                       ), NULL},
-    { OPTSW_CPY, "Resize don't work well with all system" , "no-resize"      , 'R', &( root -> GW -> no_resize      ), &opt_true},
+    { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                                 , NULL},
+    { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( root -> GW -> real.realwidth     ), NULL},
+    { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( root -> GW -> real.realheight    ), NULL},
+    { OPTSW_LU , "Pixel wide Element"                     , "element-width"  , 0  , &( root -> GW -> real.element_width ), NULL},
+    { OPTSW_LU , "Pixel high Element"                     , "element-height" , 0  , &( root -> GW -> real.element_height), NULL},
+    { OPTSW_CPY, "Resize don't work well with all system" , "no-resize"      , 'R', &( root -> GW -> no_resize          ), &opt_true},
     { OPTSW_GRP, ""                                       , "Mode"           , 0  , NULL                       , NULL},
     { OPTSW_CPY, "Mimic windows minesweeper beginner mode", "beginner"       , 'b', &root -> minefield         , field_beginner },
     { OPTSW_CPY, "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &root -> minefield         , field_advanced },
@@ -89,7 +86,7 @@ readincmdline( MS_root *root){
 #endif
     { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                       , NULL}};
       
-  root -> GW -> real = ( MS_video){ .width = 0, .height = 0, .realwidth = 0, .realheight = 0};
+  root -> GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
   
   *root -> mss = ( MS_stream){ .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL};
   
@@ -105,12 +102,6 @@ readincmdline( MS_root *root){
   
   root -> GW -> real.width  = root -> GW -> real.width ? root -> GW -> real.width : root -> minefield -> width;
   root -> GW -> real.height = root -> GW -> real.height? root -> GW -> real.height: root -> minefield -> height;
-  
-  root -> GW -> real.realwidth  = root -> GW -> real.realwidth ? root -> GW -> real.realwidth : root -> GW -> real.width  * xscale;
-  root -> GW -> real.realheight = root -> GW -> real.realheight? root -> GW -> real.realheight: root -> GW -> real.height * yscale;
-  
-  root -> GW -> real.width  = root -> GW -> real.width  * xscale <= root -> GW -> real.realwidth ? root -> GW -> real.width : ( root -> GW -> real.realwidth  + ( xscale - 1)) / xscale;
-  root -> GW -> real.height = root -> GW -> real.height * yscale <= root -> GW -> real.realheight? root -> GW -> real.height: ( root -> GW -> real.realheight + ( yscale - 1)) / yscale;
   
   if( root -> minefield -> level >= ( root -> minefield -> width * root -> minefield -> height)){
     root -> minefield -> level = ( root -> minefield -> width * root -> minefield -> height + 1) / 3;
@@ -173,9 +164,7 @@ main( const int argv, const char** argc){
     
     root -> GW -> mfvid.width  = root -> minefield -> width;
     root -> GW -> mfvid.height = root -> minefield -> height;
-    root -> GW -> mfvid.xdiff  = 0;
-    root -> GW -> mfvid.ydiff  = 0;
-    
+        
     root -> GW -> mfvid.realwidth  = ( root -> GW -> mfvid.width  * root -> GW -> real.realwidth ) / root -> GW -> real.width ;
     root -> GW -> mfvid.realheight = ( root -> GW -> mfvid.height * root -> GW -> real.realheight) / root -> GW -> real.height;
     

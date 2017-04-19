@@ -60,6 +60,8 @@ typedef struct{
   unsigned long realwidth;
   unsigned long height;
   unsigned long width;
+  unsigned long element_width;
+  unsigned long element_height;
   signed long realxdiff;
   signed long realydiff;
   signed long xdiff;

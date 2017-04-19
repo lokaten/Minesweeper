@@ -241,11 +241,11 @@ GW_Init( GraphicWraper *GW){
   GW -> logical.realwidth  = GW -> logical.width  * GW -> ewidth;
   GW -> logical.realheight = GW -> logical.height * GW -> eheight;
   
-  GW -> real.xdiff = 0;
-  GW -> real.ydiff = 0;
+  GW -> real.realwidth  = GW -> real.realwidth ? GW -> real.realwidth : GW -> real.width  * GW -> real.element_width;
+  GW -> real.realheight = GW -> real.realheight? GW -> real.realheight: GW -> real.height * GW -> real.element_height;
   
-  GW -> real.realxdiff = 0;
-  GW -> real.realydiff = 0;
+  GW -> real.width  = GW -> real.width  * GW -> real.element_width  <= GW -> real.realwidth ? GW -> real.width : ( GW -> real.realwidth ) / GW -> real.element_width;
+  GW -> real.height = GW -> real.height * GW -> real.element_height <= GW -> real.realheight? GW -> real.height: ( GW -> real.realheight) / GW -> real.element_height;
   
   if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)){
     goto fault;
