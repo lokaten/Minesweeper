@@ -99,13 +99,8 @@ ROOT_Init( MS_root *root){
     MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");
   }
   
-  if( root -> minefield == NULL){
-    goto fault;
-  }
-  
-  if( root -> mss == NULL){
-    goto fault;
-  }
+  if( root -> minefield == NULL) goto fault;
+  if( root -> mss       == NULL) goto fault;
   
   root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .width = 1,  .height = 1, .realwidth = 1, .realheight = 1}: root -> GW -> real;
   
