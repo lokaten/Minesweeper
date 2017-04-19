@@ -28,8 +28,6 @@ extern "C" {
     MS_video mfvid;
     MS_video real;
     MS_video logical;
-    unsigned long ewidth;
-    unsigned long eheight;
     unsigned long no_resize;
     SDL_Texture *cover;
     SDL_Texture *clear;

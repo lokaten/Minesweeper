@@ -100,8 +100,8 @@ draw( GraphicWraper *GW, MS_field minefield){
   GW -> logical.realxdiff = ( GW -> logical.realwidth  * GW -> real.realxdiff) / GW -> real.realwidth ;
   GW -> logical.realydiff = ( GW -> logical.realheight * GW -> real.realydiff) / GW -> real.realheight;
 
-  GW -> logical.realxdiff -= GW -> logical.realxdiff % GW -> logical.realwidth  + GW -> ewidth;
-  GW -> logical.realydiff -= GW -> logical.realydiff % GW -> logical.realheight + GW -> eheight;
+  GW -> logical.realxdiff -= GW -> logical.realxdiff % GW -> logical.realwidth  + GW -> logical.element_width;
+  GW -> logical.realydiff -= GW -> logical.realydiff % GW -> logical.realheight + GW -> logical.element_height;
   
   GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff) / GW -> logical.realwidth;
   GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff) / GW -> logical.realheight;
@@ -129,12 +129,12 @@ draw( GraphicWraper *GW, MS_field minefield){
     
     srect.x = 0;
     srect.y = 0;
-    srect.w = GW -> ewidth;
-    srect.h = GW -> eheight;
-    drect.x = elementsh.x * GW -> ewidth ;
-    drect.y = elementsh.y * GW -> eheight;
-    drect.w = GW -> ewidth;
-    drect.h = GW -> eheight;
+    srect.w = GW -> logical.element_width;
+    srect.h = GW -> logical.element_height;
+    drect.x = elementsh.x * GW -> logical.element_width ;
+    drect.y = elementsh.y * GW -> logical.element_height;
+    drect.w = GW -> logical.element_width;
+    drect.h = GW -> logical.element_height;
     
     SDL_RenderCopy( GW -> renderer, tile, &srect, &drect);
   }
@@ -148,8 +148,8 @@ draw( GraphicWraper *GW, MS_field minefield){
     
     ax = ( ( GW -> logical.realwidth  * GW -> real.realxdiff) / GW -> real.realwidth ) % GW -> logical.realwidth ;
     ay = ( ( GW -> logical.realheight * GW -> real.realydiff) / GW -> real.realheight) % GW -> logical.realheight;
-    bx = ax + GW -> ewidth;
-    by = ay + GW -> eheight;
+    bx = ax + GW -> logical.element_width;
+    by = ay + GW -> logical.element_height;
     cx = GW -> logical.realwidth  - bx;
     cy = GW -> logical.realheight - by;
     
@@ -232,14 +232,14 @@ GW_Init( GraphicWraper *GW){
   
   GW -> logical = GW -> real;
   
-  GW -> ewidth  = 15;
-  GW -> eheight = 15;
+  GW -> logical.element_width  = 15;
+  GW -> logical.element_height = 15;
   
   GW -> logical.width  += 1;
   GW -> logical.height += 1;
   
-  GW -> logical.realwidth  = GW -> logical.width  * GW -> ewidth;
-  GW -> logical.realheight = GW -> logical.height * GW -> eheight;
+  GW -> logical.realwidth  = GW -> logical.width  * GW -> logical.element_width;
+  GW -> logical.realheight = GW -> logical.height * GW -> logical.element_height;
   
   GW -> real.realwidth  = GW -> real.realwidth ? GW -> real.realwidth : GW -> real.width  * GW -> real.element_width;
   GW -> real.realheight = GW -> real.realheight? GW -> real.realheight: GW -> real.height * GW -> real.element_height;
@@ -276,8 +276,8 @@ GW_Init( GraphicWraper *GW){
     SDL_Rect rec;
     rec.x = 0;
     rec.y = 0;
-    rec.h = GW -> ewidth;
-    rec.w = GW -> eheight;
+    rec.h = GW -> logical.element_width;
+    rec.w = GW -> logical.element_height;
     
     MS_OpenImage( &GW -> clear, GW -> renderer, &rec, "nola.png",  0xeeeeee);
     MS_OpenImage( &GW -> one  , GW -> renderer, &rec, "etta.png",  0x0000ff);
