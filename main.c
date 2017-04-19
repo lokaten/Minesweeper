@@ -196,21 +196,18 @@ main( const int argv, const char** argc){
 
 int
 mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
-  int ret = 0;
+  int ret = -1;
   
   SDL_Event event;
   
   __uint64_t tutime, nextframe, gamestart, nexttu;
   
-  MS_diff *diff = ( MS_diff *)malloc( sizeof( MS_diff));
+  MS_diff *diff = MS_CreateEmpty( MS_diff);
   
   unsigned long seed = MS_rand_seed();
   
-  int err = 0, e;
+  int e;
     
-  diff -> x = 0;
-  diff -> y = 0;
-  
   tutime = getnanosec();
   gamestart = tutime;
   nextframe = tutime;
@@ -232,12 +229,12 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
           ret = 0;
           goto bail;
         case SDL_KEYDOWN:
-          if( ( err = keypressevent( event, minefield, mss, GW -> mfvid, diff)) > 0){
+          if( ( ret = keypressevent( event, minefield, mss, GW -> mfvid, diff)) > 0){
             nextframe = tutime;
           }
           break;
         case SDL_KEYUP:
-          if( ( err = keyreleasevent( event, diff)) > 0){
+          if( ( ret = keyreleasevent( event, diff)) > 0){
             nextframe = tutime;
           }
           if( diff -> x || diff -> y){
@@ -245,17 +242,17 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
           }
           break;
         case SDL_MOUSEBUTTONDOWN:
-          if( ( err = pointerpressevent( event, minefield, GW -> real)) > 0){
+          if( ( ret = pointerpressevent( event, minefield, GW -> real)) > 0){
             nextframe = tutime;
           }
           break;
         case SDL_MOUSEBUTTONUP:
-          if( ( err = pointerreleasevent( event, minefield, mss, GW -> real, tutime, gamestart)) > 0){
+          if( ( ret = pointerreleasevent( event, minefield, mss, GW -> real, tutime, gamestart)) > 0){
             nextframe = tutime;
           }
           break;
         case SDL_MOUSEMOTION:
-          if( ( err = pointermoveevent( event, minefield, GW -> real)) > 0){
+          if( ( ret = pointermoveevent( event, minefield, GW -> real)) > 0){
             nextframe = tutime;
           }
           break;
@@ -263,9 +260,8 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
           break;
         }
       
-        if unlikely( err == -2){
-          MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t alloc limet!     ");
-          err = 0;
+        if unlikely( ret < -1){
+          goto bail;
         }
       }
     }else{
@@ -308,8 +304,9 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       }
     }
   }
-
+  
  bail:
+  if( ret == -2) MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t alloc limet!     ");
   
   if( diff != NULL)free( diff);
   
