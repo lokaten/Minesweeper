@@ -137,6 +137,8 @@ LOCALE_( gen_divobj)( unsigned long a){
 INLINE unsigned long
 LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
   unsigned long ret = ( ( ( ( b * divobj) & 8589934591lu) * a) >> 33);
+  //signficantly slower, but more corect version
+  //unsigned long ret = b >= a? a > 2? ( ( ( b * divobj) & 8589934591lu) * a) >> 33: ( b & ( a - 1)): b;
   assert( ret == b % a);
   return ret;
 }
