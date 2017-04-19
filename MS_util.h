@@ -98,7 +98,7 @@ typedef struct{
 
 #ifdef LOCALE_
 
-  INLINE void *LOCALE_( MS_Create)( size_t, void *);
+INLINE void *LOCALE_( MS_Create)( size_t, void *);
 INLINE unsigned long LOCALE_( gen_divobj)( unsigned long);
 INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
 INLINE unsigned long LOCALE_( div_)( unsigned long, unsigned long, unsigned long);
@@ -137,6 +137,8 @@ LOCALE_( gen_divobj)( unsigned long a){
 INLINE unsigned long
 LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
   unsigned long ret = ( ( ( ( b * divobj) & 8589934591lu) * a) >> 33);
+  //signficantly slower, but more corect version
+  //unsigned long ret = b >= a?( b < ( 1lu << 31)? ( ( ( ( b * divobj) & 8589934591lu) * a) >> 33): b - a): b;
   assert( ret == b % a);
   return ret;
 }
