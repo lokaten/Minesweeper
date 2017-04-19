@@ -143,7 +143,6 @@ main( const int argv, const char** argc){
   
   root -> argv = &argv;
   root -> argc = &argc;
-  root -> mss = MS_CreateEmpty( MS_stream);
   
   {
     MS_video video;
