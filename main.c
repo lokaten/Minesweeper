@@ -98,16 +98,18 @@ readincmdline( MS_root *root){
   
   root -> mss -> out = root -> mss -> err? root -> mss -> out: NULL;
   
-  root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .width = 1,  .height = 1}: root -> GW -> real;
+  root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .width = 1,  .height = 1, .realwidth = 1, .realheight = 1}: root -> GW -> real;
   
-  root -> GW -> real.width  = root -> GW -> real.width ? root -> GW -> real.width : root -> minefield -> width;
-  root -> GW -> real.height = root -> GW -> real.height? root -> GW -> real.height: root -> minefield -> height;
+  root -> GW -> global = root -> minefield -> global;
+  
+  root -> GW -> mfvid.width  = root -> minefield -> width;
+  root -> GW -> mfvid.height = root -> minefield -> height;
   
   if( root -> minefield -> level >= ( root -> minefield -> width * root -> minefield -> height)){
     root -> minefield -> level = ( root -> minefield -> width * root -> minefield -> height + 1) / 3;
     MS_print( root -> mss -> err, "\rMore mines then elments!\n");
   }
-
+  
   if( root -> mss -> hlp){
     help( root -> mss -> hlp, opt);
     exit( 0);
@@ -160,18 +162,10 @@ main( const int argv, const char** argc){
     }
 #endif
     
-    root -> GW -> global = root -> minefield -> global;
-    
-    root -> GW -> mfvid.width  = root -> minefield -> width;
-    root -> GW -> mfvid.height = root -> minefield -> height;
-        
-    root -> GW -> mfvid.realwidth  = ( root -> GW -> mfvid.width  * root -> GW -> real.realwidth ) / root -> GW -> real.width ;
-    root -> GW -> mfvid.realheight = ( root -> GW -> mfvid.height * root -> GW -> real.realheight) / root -> GW -> real.height;
-    
     if( ( root -> minefield = MF_Init( root -> minefield)) == NULL){
       goto fault;
     }
-        
+    
     setminefield( root -> minefield, root -> mss, root -> GW -> mfvid);
   }
   
@@ -304,7 +298,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       if unlikely( draw( GW, *minefield) == -3){
         MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t inval data   ");
       }
-
+      
       nexttu = getnanosec();
       
       if( mss -> deb != NULL){

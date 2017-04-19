@@ -99,7 +99,7 @@ draw( GraphicWraper *GW, MS_field minefield){
   
   GW -> logical.realxdiff = ( GW -> logical.realwidth  * GW -> real.realxdiff) / GW -> real.realwidth ;
   GW -> logical.realydiff = ( GW -> logical.realheight * GW -> real.realydiff) / GW -> real.realheight;
-
+  
   GW -> logical.realxdiff -= GW -> logical.realxdiff % GW -> logical.realwidth  + GW -> logical.element_width;
   GW -> logical.realydiff -= GW -> logical.realydiff % GW -> logical.realheight + GW -> logical.element_height;
   
@@ -107,7 +107,7 @@ draw( GraphicWraper *GW, MS_field minefield){
   GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff) / GW -> logical.realheight;
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
-    
+  
   i = GW -> logical.width * GW -> logical.height;
   
   while( i--){
@@ -230,6 +230,15 @@ GW_Init( GraphicWraper *GW){
     goto fault;
   }
   
+  GW -> real.width  = GW -> real.width ? GW -> real.width : GW -> mfvid.width;
+  GW -> real.height = GW -> real.height? GW -> real.height: GW -> mfvid.height;
+  
+  GW -> real.realwidth  = GW -> real.realwidth ? GW -> real.realwidth : GW -> real.width  * GW -> real.element_width;
+  GW -> real.realheight = GW -> real.realheight? GW -> real.realheight: GW -> real.height * GW -> real.element_height;
+  
+  GW -> real.width  = ( ( GW -> real.width  * GW -> real.element_width ) <= GW -> real.realwidth )? GW -> real.width : ( GW -> real.realwidth ) / GW -> real.element_width;
+  GW -> real.height = ( ( GW -> real.height * GW -> real.element_height) <= GW -> real.realheight)? GW -> real.height: ( GW -> real.realheight) / GW -> real.element_height;
+  
   GW -> logical = GW -> real;
   
   GW -> logical.element_width  = 15;
@@ -241,11 +250,8 @@ GW_Init( GraphicWraper *GW){
   GW -> logical.realwidth  = GW -> logical.width  * GW -> logical.element_width;
   GW -> logical.realheight = GW -> logical.height * GW -> logical.element_height;
   
-  GW -> real.realwidth  = GW -> real.realwidth ? GW -> real.realwidth : GW -> real.width  * GW -> real.element_width;
-  GW -> real.realheight = GW -> real.realheight? GW -> real.realheight: GW -> real.height * GW -> real.element_height;
-  
-  GW -> real.width  = GW -> real.width  * GW -> real.element_width  <= GW -> real.realwidth ? GW -> real.width : ( GW -> real.realwidth ) / GW -> real.element_width;
-  GW -> real.height = GW -> real.height * GW -> real.element_height <= GW -> real.realheight? GW -> real.height: ( GW -> real.realheight) / GW -> real.element_height;
+  GW -> mfvid.realwidth  = ( GW -> mfvid.width  * GW -> real.realwidth ) / GW -> real.width ;
+  GW -> mfvid.realheight = ( GW -> mfvid.height * GW -> real.realheight) / GW -> real.height;
   
   if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)){
     goto fault;
