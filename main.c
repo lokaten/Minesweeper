@@ -49,6 +49,9 @@ readincmdline( MS_root *root){
   MS_field *field_expert    = MS_Create( MS_field, ( ( MS_field){ .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0}));
   MS_field *field_benchmark = MS_Create( MS_field, ( ( MS_field){ .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0}));
   
+  MS_stream *very_quiet = MS_Create( MS_stream, ( ( MS_stream){ .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL}));
+  MS_stream *def_out    = MS_Create( MS_stream, ( ( MS_stream){ .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL}));
+  
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
   
@@ -78,25 +81,23 @@ readincmdline( MS_root *root){
     { OPTSW_CPY, ""                                       , "benchmark"      , 'B', &root -> minefield         , field_benchmark},
 #endif
     { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                       , NULL},
-    { OPTSW_CPY, "Print generic help mesage"              , "help"           , 'h', &root -> mss -> hlp        , stdout},
-    { OPTSW_CPY, "Supres reguler output"                  , "quiet"          , 'q', &root -> mss -> out        , NULL},
-    { OPTSW_CPY, "Supres all output"                      , "very-quiet"     , 'Q', &root -> mss -> err        , NULL},
+    { OPTSW_CPY, "Print generic help mesage"              , "help"           , 'h', &( def_out -> hlp         ), stdout},
+    { OPTSW_CPY, "Supres reguler output"                  , "quiet"          , 'q', &( def_out -> out         ), NULL},
+    { OPTSW_CPY, "Supres all output"                      , "very-quiet"     , 'Q', &root -> mss               , very_quiet},
 #ifdef DEBUG
-    { OPTSW_CPY, "Debug data"                             , "debug"          , 'd', &root -> mss -> deb        , stdout},
+    { OPTSW_CPY, "Debug data"                             , "debug"          , 'd', &( def_out -> deb         ), stdout},
 #endif
     { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                       , NULL}};
       
   root -> GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
   
-  *root -> mss = ( MS_stream){ .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL};
+  root -> mss = def_out;
   
   root -> minefield = field_custom;
   
   if( procopt( root -> mss, opt, *root -> argv, *root -> argc)){
     MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");
   }
-  
-  root -> mss -> out = root -> mss -> err? root -> mss -> out: NULL;
   
   root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .width = 1,  .height = 1, .realwidth = 1, .realheight = 1}: root -> GW -> real;
   
@@ -128,6 +129,9 @@ readincmdline( MS_root *root){
   if( root -> minefield != field_advanced ) free( field_advanced );
   if( root -> minefield != field_expert   ) free( field_expert   );
   if( root -> minefield != field_benchmark) free( field_benchmark);
+
+  if( root -> mss != very_quiet) free( very_quiet);
+  if( root -> mss != def_out   ) free( def_out   );
   
   return 0;
 }
