@@ -30,7 +30,7 @@ typedef struct{
   MS_stream *mss;
 }MS_root;
 
-int readincmdline( MS_root *);
+MS_root *ROOT_Init( MS_root *);
 int mainloop( MS_stream *, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
 int keyreleasevent( SDL_Event, MS_diff *);
@@ -40,8 +40,9 @@ int pointerreleasevent( SDL_Event, MS_field *, MS_stream *, MS_video, __uint64_t
 int pointermoveevent( SDL_Event, MS_field *, MS_video);
 void printtime( FILE *, unsigned long);
 
-int
-readincmdline( MS_root *root){
+MS_root *
+ROOT_Init( MS_root *root){
+  MS_root *ret = NULL;
   
   MS_field *field_custom    = MS_Create( MS_field, ( ( MS_field){ .title = "custom"   , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0}));
   MS_field *field_beginner  = MS_Create( MS_field, ( ( MS_field){ .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0}));
@@ -55,7 +56,10 @@ readincmdline( MS_root *root){
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
   
-  root -> GW = MS_CreateEmpty( GraphicWraper);
+  if(   root                                                == NULL) goto fault;
+  if( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto fault;
+  if( ( root -> mss       = def_out                       ) == NULL) goto fault;
+  if( ( root -> minefield = field_custom                  ) == NULL) goto fault;
   
   MS_options opt[] = {
     { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                       , NULL},
@@ -88,15 +92,19 @@ readincmdline( MS_root *root){
     { OPTSW_CPY, "Debug data"                             , "debug"          , 'd', &( def_out -> deb         ), stdout},
 #endif
     { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                       , NULL}};
-      
+  
   root -> GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
-  
-  root -> mss = def_out;
-  
-  root -> minefield = field_custom;
   
   if( procopt( root -> mss, opt, *root -> argv, *root -> argc)){
     MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");
+  }
+  
+  if( root -> minefield == NULL){
+    goto fault;
+  }
+  
+  if( root -> mss == NULL){
+    goto fault;
   }
   
   root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .width = 1,  .height = 1, .realwidth = 1, .realheight = 1}: root -> GW -> real;
@@ -125,6 +133,8 @@ readincmdline( MS_root *root){
   MS_print( root -> mss -> deb, "\r\t\theight: %lu   ", root -> minefield -> height);
   MS_print( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
 
+  ret = root;
+ fault:
   if( root -> minefield != field_beginner ) free( field_beginner );
   if( root -> minefield != field_advanced ) free( field_advanced );
   if( root -> minefield != field_expert   ) free( field_expert   );
@@ -133,7 +143,7 @@ readincmdline( MS_root *root){
   if( root -> mss != very_quiet) free( very_quiet);
   if( root -> mss != def_out   ) free( def_out   );
   
-  return 0;
+  return ret;
 }
 
 int
@@ -150,11 +160,9 @@ main( const int argv, const char** argc){
     unsigned long no_resize = 0;
     unsigned long benchmark = 0;
     
-    readincmdline( root);
-    
-    if( ( root -> GW = GW_Init( root -> GW)) == NULL){
-      goto fault;
-    }
+    if( ( root              = ROOT_Init( root             )) == NULL) goto fault;
+    if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto fault;
+    if( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto fault;
     
 #ifdef __cplusplus
 #else
@@ -164,10 +172,6 @@ main( const int argv, const char** argc){
       SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
     }
 #endif
-    
-    if( ( root -> minefield = MF_Init( root -> minefield)) == NULL){
-      goto fault;
-    }
     
     setminefield( root -> minefield, root -> mss, root -> GW -> mfvid);
   }
