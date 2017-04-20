@@ -54,7 +54,7 @@ int
 draw( GraphicWraper *GW, MS_field minefield){
   int ret = 0;
   MS_pos element, elementsh;
-  SDL_Rect srect, drect;
+  SDL_Rect drect;
   unsigned long i;
   SDL_Texture *tile;
   
@@ -88,22 +88,19 @@ draw( GraphicWraper *GW, MS_field minefield){
     elementsh.x = ( element.x + 1) % GW -> logical.width ;
     elementsh.y = ( element.y + 1) % GW -> logical.height;
     
-    srect.x = 0;
-    srect.y = 0;
-    srect.w = GW -> logical.element_width;
-    srect.h = GW -> logical.element_height;
     drect.x = elementsh.x * GW -> logical.element_width ;
     drect.y = elementsh.y * GW -> logical.element_height;
     drect.w = GW -> logical.element_width;
     drect.h = GW -> logical.element_height;
     
-    SDL_RenderCopy( GW -> renderer, tile, &srect, &drect);
+    SDL_RenderCopy( GW -> renderer, tile, NULL, &drect);
   }
 
   SDL_SetRenderTarget( GW -> renderer, NULL);
   
   {
     unsigned long ax, ay, bx, by, adx, ady, bdx, bdy, cx, cy;
+    SDL_Rect srect;
     
     SDL_RenderClear( GW -> renderer);  
     
