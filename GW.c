@@ -239,28 +239,19 @@ GW_Init( GraphicWraper *GW){
   
   GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> logical.realwidth, GW -> logical.realheight);
   
-  {
-    SDL_Rect rec;
-    rec.x = 0;
-    rec.y = 0;
-    rec.h = GW -> logical.element_width;
-    rec.w = GW -> logical.element_height;
-    
-    
-    GW -> clear = MS_OpenImage( GW -> renderer, "nola.png",  0xeeeeee);
-    GW -> one   = MS_OpenImage( GW -> renderer, "etta.png",  0x0000ff);
-    GW -> two   = MS_OpenImage( GW -> renderer, "tvaa.png",  0x00ff00);
-    GW -> three = MS_OpenImage( GW -> renderer, "trea.png",  0xff0000);
-    GW -> four  = MS_OpenImage( GW -> renderer, "fyra.png",  0xcccc00);
-    GW -> five  = MS_OpenImage( GW -> renderer, "fema.png",  0xbb0044);
-    GW -> six   = MS_OpenImage( GW -> renderer, "sexa.png",  0x00ffff);
-    GW -> seven = MS_OpenImage( GW -> renderer, "sjua.png",  0xbbbbbb);
-    GW -> eight = MS_OpenImage( GW -> renderer, "ataa.png",  0x666666);
-    
-    GW -> mine  = MS_OpenImage( GW -> renderer, "mina.png",  0xffaa77);
-    GW -> cover = MS_OpenImage( GW -> renderer, "plata.png", 0x888888);
-    GW -> flag  = MS_OpenImage( GW -> renderer, "flaga.png", 0xffff00);
-  }
+  GW -> clear = MS_OpenImage( GW -> renderer, "nola.png",  0xeeeeee);
+  GW -> one   = MS_OpenImage( GW -> renderer, "etta.png",  0x0000ff);
+  GW -> two   = MS_OpenImage( GW -> renderer, "tvaa.png",  0x00ff00);
+  GW -> three = MS_OpenImage( GW -> renderer, "trea.png",  0xff0000);
+  GW -> four  = MS_OpenImage( GW -> renderer, "fyra.png",  0xcccc00);
+  GW -> five  = MS_OpenImage( GW -> renderer, "fema.png",  0xbb0044);
+  GW -> six   = MS_OpenImage( GW -> renderer, "sexa.png",  0x00ffff);
+  GW -> seven = MS_OpenImage( GW -> renderer, "sjua.png",  0xbbbbbb);
+  GW -> eight = MS_OpenImage( GW -> renderer, "ataa.png",  0x666666);
+  
+  GW -> mine  = MS_OpenImage( GW -> renderer, "mina.png",  0xffaa77);
+  GW -> cover = MS_OpenImage( GW -> renderer, "plata.png", 0x888888);
+  GW -> flag  = MS_OpenImage( GW -> renderer, "flaga.png", 0xffff00);
   
   SDL_EventState( SDL_JOYAXISMOTION, SDL_IGNORE);
   SDL_EventState( SDL_JOYBALLMOTION, SDL_IGNORE);
