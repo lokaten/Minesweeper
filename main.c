@@ -31,6 +31,7 @@ typedef struct{
 }MS_root;
 
 MS_root *ROOT_Init( MS_root *);
+void ROOT_Free( MS_root *);
 int mainloop( MS_stream *, MS_field *, GraphicWraper *);
 int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
 int keyreleasevent( SDL_Event, MS_diff *);
@@ -127,19 +128,33 @@ ROOT_Init( MS_root *root){
   MS_print( root -> mss -> deb, "\rwidth: %lu   ", root -> minefield -> width);
   MS_print( root -> mss -> deb, "\r\t\theight: %lu   ", root -> minefield -> height);
   MS_print( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
-
+  
   ret = root;
  fault:
   if( root -> minefield != field_beginner ) free( field_beginner );
   if( root -> minefield != field_advanced ) free( field_advanced );
   if( root -> minefield != field_expert   ) free( field_expert   );
   if( root -> minefield != field_benchmark) free( field_benchmark);
-
+  
   if( root -> mss != very_quiet) free( very_quiet);
   if( root -> mss != def_out   ) free( def_out   );
   
+  if( root != ret) ROOT_Free( root);
+  
   return ret;
 }
+
+
+void
+ROOT_Free( MS_root *root){
+  if( root != NULL){
+    if( root -> minefield != NULL) MF_Free( root -> minefield);
+    if( root -> GW        != NULL) GW_Free( root -> GW);
+    if( root -> mss       != NULL) free( root -> mss);
+    free( root);
+  }
+}
+
 
 int
 main( const int argv, const char** argc){
@@ -149,45 +164,28 @@ main( const int argv, const char** argc){
   root -> argv = &argv;
   root -> argc = &argc;
   
-  {
-    MS_video video;
-        
-    unsigned long no_resize = 0;
-    unsigned long benchmark = 0;
-    
-    if( ( root              = ROOT_Init( root             )) == NULL) goto fault;
-    if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto fault;
-    if( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto fault;
-    
+  if( ( root              = ROOT_Init( root             )) == NULL) goto fault;
+  if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto fault;
+  if( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto fault;
+  
 #ifdef __cplusplus
 #else
-    if( root -> minefield -> title == ( const char *)"benchmark"){
-      SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
-      SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONUP  , .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
-      SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
-    }
-#endif
-    
-    setminefield( root -> minefield, root -> mss, root -> GW -> mfvid);
+  if( root -> minefield -> title == ( const char *)"benchmark"){
+    SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
+    SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONUP  , .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
+    SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
   }
+#endif
+  
+  setminefield( root -> minefield, root -> mss, root -> GW -> mfvid);
   
   ret = mainloop( root -> mss, root -> minefield, root -> GW);
 
- fault:
-  MF_Free( root -> minefield);
-  
-  GW_Free( root -> GW);
-  
   MS_print( root -> mss -> out, "\rBye!                                \n");
-  
+ fault:
+  ROOT_Free( root);
   MS_print( stdout, "\r");
-  
-  free( root -> mss);
-
-  free( root);
-  
   exit( ret);
-  
   return ret;
 }
 
