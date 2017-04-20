@@ -102,7 +102,7 @@ ROOT_Init( MS_root *root){
   if( root -> minefield == NULL) goto fault;
   if( root -> mss       == NULL) goto fault;
   
-  root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .width = 1,  .height = 1, .realwidth = 1, .realheight = 1}: root -> GW -> real;
+  root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .element_width = 1,  .element_height = 1, .realwidth = 1, .realheight = 1}: root -> GW -> real;
   
   root -> GW -> global = root -> minefield -> global;
   
