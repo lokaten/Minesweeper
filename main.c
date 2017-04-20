@@ -259,10 +259,8 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
         default:
           break;
         }
-      
-        if unlikely( ret < -1){
-          goto bail;
-        }
+        
+        assert( ret >= -1);
       }
     }else{
       if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
@@ -291,9 +289,9 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       
       assert( !( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)));
       
-      if unlikely( draw( GW, *minefield) == -3){
-        MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t inval data   ");
-      }
+      ret = draw( GW, *minefield);
+      
+      assert( ret >= -1);
       
       nexttu = getnanosec();
       
@@ -306,8 +304,6 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
   }
   
  bail:
-  if( ret == -2) MS_print( mss -> err, "\r\t\t\t\t\t\t\t\t\t alloc limet!     ");
-  
   if( diff != NULL)free( diff);
   
   return ret;
