@@ -220,40 +220,16 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       
       if( e){
         switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
-        case SDL_QUIT:
-          ret = 0;
-          goto bail;
-        case SDL_KEYDOWN:
-          if( ( ret = keypressevent( event, minefield, mss, GW -> mfvid, diff)) > 0){
-            nextframe = tutime;
-          }
-          break;
-        case SDL_KEYUP:
-          if( ( ret = keyreleasevent( event, diff)) > 0){
-            nextframe = tutime;
-          }
-          if( diff -> x || diff -> y){
-            nextframe = tutime;
-          }
-          break;
-        case SDL_MOUSEBUTTONDOWN:
-          if( ( ret = pointerpressevent( event, minefield, GW -> real)) > 0){
-            nextframe = tutime;
-          }
-          break;
-        case SDL_MOUSEBUTTONUP:
-          if( ( ret = pointerreleasevent( event, minefield, mss, GW -> real, tutime, gamestart)) > 0){
-            nextframe = tutime;
-          }
-          break;
-        case SDL_MOUSEMOTION:
-          if( ( ret = pointermoveevent( event, minefield, GW -> real)) > 0){
-            nextframe = tutime;
-          }
-          break;
-        default:
-          break;
+        case SDL_QUIT: ret = 0; goto bail;
+        case SDL_KEYDOWN:         ret = keypressevent(     event, minefield, mss, GW -> mfvid, diff); break;
+        case SDL_KEYUP:           ret = keyreleasevent(    event, diff); break;
+        case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent( event, minefield, GW -> real); break;
+        case SDL_MOUSEBUTTONUP:   ret = pointerreleasevent( event, minefield, mss, GW -> real, tutime, gamestart); break;
+        case SDL_MOUSEMOTION:     ret = pointermoveevent( event, minefield, GW -> real); break;
+        default: break;
         }
+        
+        if( ret > 0) nextframe = tutime;
         
         assert( ret >= -1);
       }
