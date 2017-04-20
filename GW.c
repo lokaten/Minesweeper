@@ -141,7 +141,9 @@ draw( GraphicWraper *GW, MS_field minefield){
   }
   
   SDL_RenderPresent( GW -> renderer);
-      
+  
+  SDL_ShowWindow( GW -> window);
+  
   return ret;
 }
 
@@ -260,10 +262,8 @@ GW_Init( GraphicWraper *GW){
   SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
   SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
   
-  SDL_ShowWindow( GW -> window);
-  
   ret = GW;
-  fault:
+ fault:
   if( ret == NULL) GW_Free( GW);
   return ret;
 }
