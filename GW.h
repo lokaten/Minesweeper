@@ -27,7 +27,6 @@ extern "C" {
     unsigned long global;
     MS_video mfvid;
     MS_video real;
-    MS_video logical;
     unsigned long no_resize;
     SDL_Texture *cover;
     SDL_Texture *clear;

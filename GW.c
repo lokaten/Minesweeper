@@ -9,6 +9,7 @@
 
 
 SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *, __uint32_t);
+int MS_BlitTex( SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
 SDL_Texture *drawelement( GraphicWraper *, __uint8_t);
 void MS_scale( SDL_Surface *, SDL_Surface *, signed long, signed long, unsigned long, unsigned long);
 
@@ -27,8 +28,8 @@ window_scroll( GraphicWraper *GW, MS_diff diff){
     GW -> real.realxdiff = ( GW -> real.realxdiff + GW -> mfvid.realwidth  - diff.x) % GW -> mfvid.realwidth ;
     GW -> real.realydiff = ( GW -> real.realydiff + GW -> mfvid.realheight - diff.y) % GW -> mfvid.realheight;
     
-    GW -> real.xdiff = ( GW -> real.width  * GW -> real.realxdiff) / GW -> real.realwidth;
-    GW -> real.ydiff = ( GW -> real.height * GW -> real.realydiff) / GW -> real.realheight;
+    GW -> real.xdiff = GW -> real.realxdiff / GW -> real.element_width;
+    GW -> real.ydiff = GW -> real.realydiff / GW -> real.element_height;
     ret = 1;
   }
   
@@ -49,33 +50,33 @@ MS_OpenImage( SDL_Renderer *render, const char *str, __uint32_t c){
   return ret;
 }
 
+int
+MS_BlitTex( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, int h, int sx, int sy){
+  int ret = -1;
+  ret = SDL_RenderCopyEx( renderer, tile, &( SDL_Rect){ .x = sx, .y = sy, .w = w, .h = h}, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
+  return ret;
+}
+
 
 int
 draw( GraphicWraper *GW, MS_field minefield){
   int ret = 0;
-  MS_pos element, elementsh;
-  SDL_Rect drect;
+  MS_pos element;
   unsigned long i;
   SDL_Texture *tile;
-  
-  GW -> logical.realxdiff = ( GW -> logical.realwidth  * GW -> real.realxdiff) / GW -> real.realwidth ;
-  GW -> logical.realydiff = ( GW -> logical.realheight * GW -> real.realydiff) / GW -> real.realheight;
-  
-  GW -> logical.realxdiff -= GW -> logical.realxdiff % GW -> logical.realwidth  + GW -> logical.element_width;
-  GW -> logical.realydiff -= GW -> logical.realydiff % GW -> logical.realheight + GW -> logical.element_height;
-  
-  GW -> logical.xdiff = ( GW -> logical.width  * GW -> logical.realxdiff) / GW -> logical.realwidth;
-  GW -> logical.ydiff = ( GW -> logical.height * GW -> logical.realydiff) / GW -> logical.realheight;
-  
+
+  int w = GW -> real.realwidth  / GW -> real.element_width  + 1;
+  int h = GW -> real.realheight / GW -> real.element_height + 1;
+
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
   
-  i = GW -> logical.width * GW -> logical.height;
+  i = w * h;
   
   while( i--){
     
     {
-      element.x = ( GW -> real.xdiff + i % GW -> logical.width);
-      element.y = ( GW -> real.ydiff + i / GW -> logical.width);
+      element.x = ( GW -> real.xdiff + i % w);
+      element.y = ( GW -> real.ydiff + i / w);
       
       tile = drawelement( GW, *acse( minefield, element.x, element.y));
       
@@ -85,57 +86,20 @@ draw( GraphicWraper *GW, MS_field minefield){
       }
     }
     
-    elementsh.x = ( element.x + 1) % GW -> logical.width ;
-    elementsh.y = ( element.y + 1) % GW -> logical.height;
-    
-    drect.x = elementsh.x * GW -> logical.element_width ;
-    drect.y = elementsh.y * GW -> logical.element_height;
-    drect.w = GW -> logical.element_width;
-    drect.h = GW -> logical.element_height;
-    
-    SDL_RenderCopy( GW -> renderer, tile, NULL, &drect);
+    MS_BlitTex( GW -> renderer, tile,
+                i % w * GW -> real.element_width  - GW -> real.realxdiff % GW -> real.element_width,
+                i / w * GW -> real.element_height - GW -> real.realydiff % GW -> real.element_height,
+                GW -> real.element_width,
+                GW -> real.element_height,
+                0, 0);
   }
-
+  
   SDL_SetRenderTarget( GW -> renderer, NULL);
   
-  {
-    unsigned long ax, ay, bx, by, adx, ady, bdx, bdy, cx, cy;
-    SDL_Rect srect;
-    
-    SDL_RenderClear( GW -> renderer);  
-    
-    ax = ( ( GW -> logical.realwidth  * GW -> real.realxdiff) / GW -> real.realwidth ) % GW -> logical.realwidth ;
-    ay = ( ( GW -> logical.realheight * GW -> real.realydiff) / GW -> real.realheight) % GW -> logical.realheight;
-    bx = ax + GW -> logical.element_width;
-    by = ay + GW -> logical.element_height;
-    cx = GW -> logical.realwidth  - bx;
-    cy = GW -> logical.realheight - by;
-    
-    adx = ( ax * GW -> real.realwidth ) / ( ax + cx);
-    ady = ( ay * GW -> real.realheight) / ( ay + cy);
-    bdx = GW -> real.realwidth  - adx;
-    bdy = GW -> real.realheight - ady;
-    
-    srect = ( SDL_Rect){ .x = bx , .y = by , .w = cx , .h = cy };
-    drect = ( SDL_Rect){ .x = 0  , .y = 0  , .w = bdx, .h = bdy};
-    
-    SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
-    
-    srect = ( SDL_Rect){ .x = 0  , .y = 0  , .w = ax , .h = ay };
-    drect = ( SDL_Rect){ .x = bdx, .y = bdy, .w = adx, .h = ady};
-    
-    SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
-    
-    srect = ( SDL_Rect){ .x = 0  , .y = by , .w = ax , .h = cy };
-    drect = ( SDL_Rect){ .x = bdx, .y = 0  , .w = adx, .h = bdy};
-    
-    SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
-    
-    srect = ( SDL_Rect){ .x = bx , .y = 0  , .w = cx , .h = ay };
-    drect = ( SDL_Rect){ .x = 0  , .y = bdy, .w = bdx, .h = ady};
-    
-    SDL_RenderCopyEx( GW -> renderer, GW -> target, &srect, &drect, 0, NULL, SDL_FLIP_NONE);
-  }
+  int ax = GW -> real.realxdiff % GW -> real.realwidth, ay = GW -> real.realydiff % GW -> real.realheight, cx = GW -> real.realwidth - ax, cy = GW -> real.realheight - ay;
+  
+  MS_BlitTex( GW -> renderer, GW -> target, 0 , 0 , ax, ay, cx, cy);
+  MS_BlitTex( GW -> renderer, GW -> target, ax, ay, cx, cy, 0 , 0 );
   
   SDL_RenderPresent( GW -> renderer);
   
@@ -190,28 +154,14 @@ GW_Init( GraphicWraper *GW){
     goto fault;
   }
   
-  GW -> real.width  = GW -> real.width ? GW -> real.width : GW -> mfvid.width;
-  GW -> real.height = GW -> real.height? GW -> real.height: GW -> mfvid.height;
+  GW -> real.realwidth  = GW -> real.realwidth ? GW -> real.realwidth : GW -> mfvid.width  * GW -> real.element_width;
+  GW -> real.realheight = GW -> real.realheight? GW -> real.realheight: GW -> mfvid.height * GW -> real.element_height;
   
-  GW -> real.realwidth  = GW -> real.realwidth ? GW -> real.realwidth : GW -> real.width  * GW -> real.element_width;
-  GW -> real.realheight = GW -> real.realheight? GW -> real.realheight: GW -> real.height * GW -> real.element_height;
+  GW -> real.width  = ( GW -> real.realwidth ) / GW -> real.element_width ;
+  GW -> real.height = ( GW -> real.realheight) / GW -> real.element_height;
   
-  GW -> real.width  = ( ( GW -> real.width  * GW -> real.element_width ) <= GW -> real.realwidth )? GW -> real.width : ( GW -> real.realwidth ) / GW -> real.element_width;
-  GW -> real.height = ( ( GW -> real.height * GW -> real.element_height) <= GW -> real.realheight)? GW -> real.height: ( GW -> real.realheight) / GW -> real.element_height;
-  
-  GW -> logical = GW -> real;
-  
-  GW -> logical.element_width  = 15;
-  GW -> logical.element_height = 15;
-  
-  GW -> logical.width  += 1;
-  GW -> logical.height += 1;
-  
-  GW -> logical.realwidth  = GW -> logical.width  * GW -> logical.element_width;
-  GW -> logical.realheight = GW -> logical.height * GW -> logical.element_height;
-  
-  GW -> mfvid.realwidth  = ( GW -> mfvid.width  * GW -> real.realwidth ) / GW -> real.width ;
-  GW -> mfvid.realheight = ( GW -> mfvid.height * GW -> real.realheight) / GW -> real.height;
+  GW -> mfvid.realwidth  = GW -> mfvid.width  * GW -> real.element_width;
+  GW -> mfvid.realheight = GW -> mfvid.height * GW -> real.element_height;
   
   if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)){
     goto fault;
@@ -236,7 +186,7 @@ GW_Init( GraphicWraper *GW){
     SDL_SetWindowResizable( GW ->  window, SDL_TRUE);
   }
   
-  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> logical.realwidth, GW -> logical.realheight);
+  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> real.realwidth, GW -> real.realheight);
   
   GW -> clear = MS_OpenImage( GW -> renderer, "nola.png",  0xeeeeee);
   GW -> one   = MS_OpenImage( GW -> renderer, "etta.png",  0x0000ff);
