@@ -159,10 +159,7 @@ ROOT_Free( MS_root *root){
 int
 main( const int argv, const char** argc){
   int ret = -1;
-  MS_root *root = MS_CreateEmpty( MS_root);
-  
-  root -> argv = &argv;
-  root -> argc = &argc;
+  MS_root *root = MS_Create( MS_root, ( ( MS_root){ .argv = &argv, .argc = &argc}));
   
   if( ( root              = ROOT_Init( root             )) == NULL) goto fault;
   if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto fault;
