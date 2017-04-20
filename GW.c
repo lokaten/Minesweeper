@@ -42,7 +42,8 @@ MS_OpenImage( SDL_Renderer *render, const char *str, __uint32_t c){
   SDL_Texture *ret = NULL;
   SDL_Texture *tex = NULL;
   SDL_Surface *img = NULL;
-  if unlikely(   str                                               == NULL) goto bail;
+  assert( render != NULL);
+  assert(    str != NULL);
   if unlikely( ( img = IMG_Load( str                            )) == NULL) goto bail;
   if unlikely( ( tex = SDL_CreateTextureFromSurface( render, img)) == NULL) goto bail;
   ret = tex;
