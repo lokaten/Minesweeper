@@ -131,13 +131,13 @@ ROOT_Init( MS_root *root){
   
   ret = root;
  fault:
-  if( root -> minefield != field_beginner ) free( field_beginner );
-  if( root -> minefield != field_advanced ) free( field_advanced );
-  if( root -> minefield != field_expert   ) free( field_expert   );
-  if( root -> minefield != field_benchmark) free( field_benchmark);
+  if( root -> minefield != field_beginner ) MS_Free( field_beginner );
+  if( root -> minefield != field_advanced ) MS_Free( field_advanced );
+  if( root -> minefield != field_expert   ) MS_Free( field_expert   );
+  if( root -> minefield != field_benchmark) MS_Free( field_benchmark);
   
-  if( root -> mss != very_quiet) free( very_quiet);
-  if( root -> mss != def_out   ) free( def_out   );
+  if( root -> mss != very_quiet) MS_Free( very_quiet);
+  if( root -> mss != def_out   ) MS_Free( def_out   );
   
   if( root != ret) ROOT_Free( root);
   
@@ -148,10 +148,10 @@ ROOT_Init( MS_root *root){
 void
 ROOT_Free( MS_root *root){
   if( root != NULL){
-    if( root -> minefield != NULL) MF_Free( root -> minefield);
-    if( root -> GW        != NULL) GW_Free( root -> GW);
-    if( root -> mss       != NULL) free( root -> mss);
-    free( root);
+    MF_Free( root -> minefield);
+    GW_Free( root -> GW);
+    MS_Free( root -> mss);
+    MS_Free( root);
   }
 }
 
@@ -221,11 +221,11 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       if( e){
         switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
         case SDL_QUIT: ret = 0; goto bail;
-        case SDL_KEYDOWN:         ret = keypressevent(     event, minefield, mss, GW -> mfvid, diff); break;
-        case SDL_KEYUP:           ret = keyreleasevent(    event, diff); break;
-        case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent( event, minefield, GW -> real); break;
+        case SDL_KEYDOWN:         ret = keypressevent(      event, minefield, mss, GW -> mfvid, diff); break;
+        case SDL_KEYUP:           ret = keyreleasevent(     event,                              diff); break;
+        case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent(  event, minefield,      GW -> real); break;
         case SDL_MOUSEBUTTONUP:   ret = pointerreleasevent( event, minefield, mss, GW -> real, tutime, gamestart); break;
-        case SDL_MOUSEMOTION:     ret = pointermoveevent( event, minefield, GW -> real); break;
+        case SDL_MOUSEMOTION:     ret = pointermoveevent(   event, minefield,      GW -> real); break;
         default: break;
         }
         
@@ -274,6 +274,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
     }
   }
   
+  ret = -1;
  bail:
   if( diff != NULL)free( diff);
   
