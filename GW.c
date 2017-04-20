@@ -8,7 +8,7 @@
 #include "GW.h"
 
 
-SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *, __uint32_t);
+SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
 int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
 int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
 SDL_Texture *drawelement( GraphicWraper *, __uint8_t);
@@ -38,18 +38,16 @@ window_scroll( GraphicWraper *GW, MS_diff diff){
 }
 
 SDL_Texture *
-MS_OpenImage( SDL_Renderer *render, const char *str, __uint32_t c){
-  SDL_Texture *ret = NULL;
+MS_OpenImage( SDL_Renderer *render, const char *str){
   SDL_Texture *tex = NULL;
   SDL_Surface *img = NULL;
   assert( render != NULL);
   assert(    str != NULL);
   if unlikely( ( img = IMG_Load( str                            )) == NULL) goto bail;
   if unlikely( ( tex = SDL_CreateTextureFromSurface( render, img)) == NULL) goto bail;
-  ret = tex;
  bail:
   if( img != NULL) SDL_free( img);
-  return ret;
+  return tex;
 }
 
 int
@@ -200,19 +198,19 @@ GW_Init( GraphicWraper *GW){
   
   GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> real.realwidth, GW -> real.realheight);
   
-  GW -> clear = MS_OpenImage( GW -> renderer, "nola.png",  0xeeeeee);
-  GW -> one   = MS_OpenImage( GW -> renderer, "etta.png",  0x0000ff);
-  GW -> two   = MS_OpenImage( GW -> renderer, "tvaa.png",  0x00ff00);
-  GW -> three = MS_OpenImage( GW -> renderer, "trea.png",  0xff0000);
-  GW -> four  = MS_OpenImage( GW -> renderer, "fyra.png",  0xcccc00);
-  GW -> five  = MS_OpenImage( GW -> renderer, "fema.png",  0xbb0044);
-  GW -> six   = MS_OpenImage( GW -> renderer, "sexa.png",  0x00ffff);
-  GW -> seven = MS_OpenImage( GW -> renderer, "sjua.png",  0xbbbbbb);
-  GW -> eight = MS_OpenImage( GW -> renderer, "ataa.png",  0x666666);
+  GW -> clear = MS_OpenImage( GW -> renderer, "nola.png");
+  GW -> one   = MS_OpenImage( GW -> renderer, "etta.png");
+  GW -> two   = MS_OpenImage( GW -> renderer, "tvaa.png");
+  GW -> three = MS_OpenImage( GW -> renderer, "trea.png");
+  GW -> four  = MS_OpenImage( GW -> renderer, "fyra.png");
+  GW -> five  = MS_OpenImage( GW -> renderer, "fema.png");
+  GW -> six   = MS_OpenImage( GW -> renderer, "sexa.png");
+  GW -> seven = MS_OpenImage( GW -> renderer, "sjua.png");
+  GW -> eight = MS_OpenImage( GW -> renderer, "ataa.png");
   
-  GW -> mine  = MS_OpenImage( GW -> renderer, "mina.png",  0xffaa77);
-  GW -> cover = MS_OpenImage( GW -> renderer, "plata.png", 0x888888);
-  GW -> flag  = MS_OpenImage( GW -> renderer, "flaga.png", 0xffff00);
+  GW -> mine  = MS_OpenImage( GW -> renderer, "mina.png");
+  GW -> cover = MS_OpenImage( GW -> renderer, "plata.png");
+  GW -> flag  = MS_OpenImage( GW -> renderer, "flaga.png");
   
   SDL_EventState( SDL_JOYAXISMOTION, SDL_IGNORE);
   SDL_EventState( SDL_JOYBALLMOTION, SDL_IGNORE);
