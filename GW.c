@@ -8,8 +8,7 @@
 #include "GW.h"
 
 
-int MS_OpenImage( SDL_Texture **, SDL_Renderer *, SDL_Rect *, char *, __uint32_t);
-int MS_BlitSurface( SDL_Surface *, SDL_Surface *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long);
+SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *, __uint32_t);
 SDL_Texture *drawelement( GraphicWraper *, __uint8_t);
 void MS_scale( SDL_Surface *, SDL_Surface *, signed long, signed long, unsigned long, unsigned long);
 
@@ -36,58 +35,20 @@ window_scroll( GraphicWraper *GW, MS_diff diff){
   return ret;
 }
 
-int MS_OpenImage( SDL_Texture **tdst, SDL_Renderer *render, SDL_Rect *rec, char *str, __uint32_t c){
-  int ret = 0;
-  SDL_Surface *img, *dst;
-  if unlikely( str != NULL){
-    img = IMG_Load( str);
-  }else{
-    img = NULL;
-  }
-  dst = SDL_CreateRGBSurface( FALSE, rec -> w, rec -> h, 24, 0xff0000, 0xff00, 0xff, 0x0);
-  if unlikely( dst == NULL){
-    ret = -4;
-  }else{
-    SDL_FillRect( dst, rec, c);
-    if unlikely( img == NULL){
-      ret =  -3;
-    }
-    if( img != NULL) MS_BlitSurface( img, dst, rec -> x, rec -> y, 0, 0, rec -> w, rec -> h);
-    *tdst = SDL_CreateTextureFromSurface( render, dst);
-    if( img != NULL) SDL_free( img);
-    if( dst != NULL) SDL_free( dst);
-  }
+SDL_Texture *
+MS_OpenImage( SDL_Renderer *render, const char *str, __uint32_t c){
+  SDL_Texture *ret = NULL;
+  SDL_Texture *tex = NULL;
+  SDL_Surface *img = NULL;
+  if unlikely(   str                                               == NULL) goto bail;
+  if unlikely( ( img = IMG_Load( str                            )) == NULL) goto bail;
+  if unlikely( ( tex = SDL_CreateTextureFromSurface( render, img)) == NULL) goto bail;
+  ret = tex;
+ bail:
+  if( img != NULL) SDL_free( img);
   return ret;
 }
 
-/* 
- * copys a squer from sufer src at loction sx,sy to sufer dst at location dx,dy of size w,h
- */
-int
-MS_BlitSurface( SDL_Surface *src, SDL_Surface *dst, unsigned long dx, unsigned long dy, unsigned long sx, unsigned long sy, unsigned long w, unsigned long h){
-  int ret = 0;
-  SDL_Rect srect, drect;
-    
-  srect.x = sx;
-  srect.y = sy;
-  srect.w = w;
-  srect.h = h;
-  drect.x = dx;
-  drect.y = dy;
-  drect.h = h;
-  drect.w = w;
-  
-  if likely( dst != NULL){
-    if likely( src != NULL){
-      SDL_BlitSurface( src, &srect, dst, &drect);
-      ret = 0;
-    }else{
-      SDL_FillRect( dst, &drect, 0x0);
-      ret = -3;
-    }
-  }
-  return ret;
-}
 
 int
 draw( GraphicWraper *GW, MS_field minefield){
@@ -285,19 +246,20 @@ GW_Init( GraphicWraper *GW){
     rec.h = GW -> logical.element_width;
     rec.w = GW -> logical.element_height;
     
-    MS_OpenImage( &GW -> clear, GW -> renderer, &rec, "nola.png",  0xeeeeee);
-    MS_OpenImage( &GW -> one  , GW -> renderer, &rec, "etta.png",  0x0000ff);
-    MS_OpenImage( &GW -> two  , GW -> renderer, &rec, "tvaa.png",  0x00ff00);
-    MS_OpenImage( &GW -> three, GW -> renderer, &rec, "trea.png",  0xff0000);
-    MS_OpenImage( &GW -> four , GW -> renderer, &rec, "fyra.png",  0xcccc00);
-    MS_OpenImage( &GW -> five , GW -> renderer, &rec, "fema.png",  0xbb0044);
-    MS_OpenImage( &GW -> six  , GW -> renderer, &rec, "sexa.png",  0x00ffff);
-    MS_OpenImage( &GW -> seven, GW -> renderer, &rec, "sjua.png",  0xbbbbbb);
-    MS_OpenImage( &GW -> eight, GW -> renderer, &rec, "ataa.png",  0x666666);
     
-    MS_OpenImage( &GW -> mine , GW -> renderer, &rec, "mina.png",  0xffaa77);
-    MS_OpenImage( &GW -> cover, GW -> renderer, &rec, "plata.png", 0x888888);
-    MS_OpenImage( &GW -> flag , GW -> renderer, &rec, "flaga.png", 0xffff00);
+    GW -> clear = MS_OpenImage( GW -> renderer, "nola.png",  0xeeeeee);
+    GW -> one   = MS_OpenImage( GW -> renderer, "etta.png",  0x0000ff);
+    GW -> two   = MS_OpenImage( GW -> renderer, "tvaa.png",  0x00ff00);
+    GW -> three = MS_OpenImage( GW -> renderer, "trea.png",  0xff0000);
+    GW -> four  = MS_OpenImage( GW -> renderer, "fyra.png",  0xcccc00);
+    GW -> five  = MS_OpenImage( GW -> renderer, "fema.png",  0xbb0044);
+    GW -> six   = MS_OpenImage( GW -> renderer, "sexa.png",  0x00ffff);
+    GW -> seven = MS_OpenImage( GW -> renderer, "sjua.png",  0xbbbbbb);
+    GW -> eight = MS_OpenImage( GW -> renderer, "ataa.png",  0x666666);
+    
+    GW -> mine  = MS_OpenImage( GW -> renderer, "mina.png",  0xffaa77);
+    GW -> cover = MS_OpenImage( GW -> renderer, "plata.png", 0x888888);
+    GW -> flag  = MS_OpenImage( GW -> renderer, "flaga.png", 0xffff00);
   }
   
   SDL_EventState( SDL_JOYAXISMOTION, SDL_IGNORE);
