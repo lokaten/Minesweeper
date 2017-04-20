@@ -99,7 +99,7 @@ typedef struct{
 #ifdef LOCALE_
 
 INLINE void *LOCALE_( MS_Create)( size_t, void *);
-INLINE void LOCALE_( MS_Free)( void *);
+INLINE void *LOCALE_( MS_Free)( void *);
 INLINE unsigned long LOCALE_( gen_divobj)( unsigned long);
 INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
 INLINE unsigned long LOCALE_( div_)( unsigned long, unsigned long, unsigned long);
@@ -122,9 +122,10 @@ LOCALE_( MS_Create)( size_t alo_size, void *data){
 #define MS_Create( type, exp) ( type *)LOCALE_( MS_Create)( sizeof( type), ( void *)&( exp))
 #define MS_CreateEmpty( type) ( type *)LOCALE_( MS_Create)( sizeof( type), ( void *)&( ( type){0}))
 
-INLINE void
+INLINE void *
 LOCALE_( MS_Free)( void *ptr){
   if( ptr != NULL) free( ptr);
+  return NULL;
 }
 #define MS_Free( exp) LOCALE_( MS_Free)( ( void *)(exp))
 
