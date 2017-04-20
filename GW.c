@@ -9,7 +9,8 @@
 
 
 SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *, __uint32_t);
-int MS_BlitTex( SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
+int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
+int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
 SDL_Texture *drawelement( GraphicWraper *, __uint8_t);
 void MS_scale( SDL_Surface *, SDL_Surface *, signed long, signed long, unsigned long, unsigned long);
 
@@ -57,6 +58,13 @@ MS_BlitTex( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, in
   return ret;
 }
 
+int
+MS_BlitTile( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, int h){
+  int ret = -1;
+  ret = SDL_RenderCopyEx( renderer, tile, NULL, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
+  return ret;
+}
+
 
 int
 draw( GraphicWraper *GW, MS_field minefield){
@@ -86,12 +94,11 @@ draw( GraphicWraper *GW, MS_field minefield){
       }
     }
     
-    MS_BlitTex( GW -> renderer, tile,
-                i % w * GW -> real.element_width  - GW -> real.realxdiff % GW -> real.element_width,
-                i / w * GW -> real.element_height - GW -> real.realydiff % GW -> real.element_height,
-                GW -> real.element_width,
-                GW -> real.element_height,
-                0, 0);
+    MS_BlitTile( GW -> renderer, tile,
+                 i % w * GW -> real.element_width  - GW -> real.realxdiff % GW -> real.element_width,
+                 i / w * GW -> real.element_height - GW -> real.realydiff % GW -> real.element_height,
+                 GW -> real.element_width,
+                 GW -> real.element_height);
   }
   
   SDL_SetRenderTarget( GW -> renderer, NULL);
