@@ -122,14 +122,14 @@ ROOT_Init( MS_root *root){
     goto fault;
   }
   
-  MS_print( root -> mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
-  MS_print( root -> mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
+  DEBUG_PRINT( root -> mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
+  DEBUG_PRINT( root -> mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
   
   MS_print( root -> mss -> out, "\rMode: %s\n", root -> minefield -> title);
   
-  MS_print( root -> mss -> deb, "\rwidth: %lu   ", root -> minefield -> width);
-  MS_print( root -> mss -> deb, "\r\t\theight: %lu   ", root -> minefield -> height);
-  MS_print( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
+  DEBUG_PRINT( root -> mss -> deb, "\rwidth: %lu   ", root -> minefield -> width);
+  DEBUG_PRINT( root -> mss -> deb, "\r\t\theight: %lu   ", root -> minefield -> height);
+  DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
   
   ret = root;
  fault:
@@ -267,12 +267,13 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       assert( ret >= -1);
       
       nexttu = getnanosec();
-      
+#ifdef DEBUG
       if( mss -> deb != NULL){
         __uint64_t mytime = getnanosec() - tutime;
         
-        MS_print( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
+        DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
       }
+#endif
     }
   }
   

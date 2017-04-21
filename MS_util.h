@@ -237,6 +237,11 @@ LOCALE_( print)( FILE *stream, const char * format, ...){
   return ret;
 }
 #define MS_print LOCALE_( print)
+#ifdef DEBUG
+#define DEBUG_PRINT LOCALE_( print)
+#else
+#define DEBUG_PRINT( ...)
+#endif
 
 /*
  * get system time in microsecond...
