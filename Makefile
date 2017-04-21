@@ -3,13 +3,13 @@ ifeq ($(CLANG), yes)
 CC = clang -std=c11
 endif
 
-ifeq ($(CLANGPP), yes)
-CC = clang++ -std=c++11
-endif
-
 ifeq ($(GCC), yes)
 CC = gcc -std=c11
 CXX = g++
+endif
+
+ifeq ($(CLANGPP), yes)
+CC = clang++ -std=c++11
 endif
 
 ifeq ($(GPP), yes)
@@ -31,7 +31,11 @@ CFLAGS += -Wlogical-op
 endif
 
 ifeq ($(DEV), yes)
-CFLAGS += -Werror -DDEBUG
+CFLAGS += -Werror -DDEBUG -fstack-usage
+endif
+
+ifeq ($(NATIVE), yes)
+CC += -march=native
 endif
 
 CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wlong-long
@@ -68,7 +72,6 @@ endif
 else
 ifeq ($(PROFILE_USE),yes)
 PFLAGS += -fprofile-use
-GCDA += *.gcda
 ifeq ($(DEV), yes)
 else
 PFLAGS += -Wno-error=coverage-mismatch
@@ -88,7 +91,7 @@ LIBS = -lrt -lSDL2 -lSDL2_image
 all: $(TARGET)
 
 clean:
-	$(RM) *.o *~ $(TARGET) $(GCDA)
+	$(RM) *.o *.su *.gcda *~ $(TARGET)
 
 strip:
 	$(STRIP) $(TARGET)
