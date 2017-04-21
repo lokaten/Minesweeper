@@ -117,7 +117,9 @@ ROOT_Init( MS_root *root){
   
   if( root -> mss -> hlp){
     help( root -> mss -> hlp, opt);
-    exit( 0);
+    ret = root;
+    quit();
+    goto fault;
   }
   
   MS_print( root -> mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
