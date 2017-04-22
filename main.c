@@ -56,12 +56,13 @@ ROOT_Init( MS_root *root){
   
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
-  
+#ifdef __cplusplus
+#else
   if(   root                                                == NULL) goto fault;
   if( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto fault;
   if( ( root -> mss       = def_out                       ) == NULL) goto fault;
   if( ( root -> minefield = field_custom                  ) == NULL) goto fault;
-  
+#endif
   MS_options opt[] = {
     { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                       , NULL},
     { OPTSW_GRP, ""                                       , "Minefield"      , 0  , NULL                       , NULL},
@@ -167,14 +168,11 @@ main( const int argv, const char** argc){
   if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto fault;
   if( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto fault;
   
-#ifdef __cplusplus
-#else
   if( strstr( root -> minefield -> title, "benchmark")){
     SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
     SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONUP  , .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
     SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
   }
-#endif
   
   setminefield( root -> minefield, root -> mss, root -> GW -> mfvid);
   
