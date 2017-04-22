@@ -169,7 +169,7 @@ main( const int argv, const char** argc){
   
 #ifdef __cplusplus
 #else
-  if( root -> minefield -> title == ( const char *)"benchmark"){
+  if( strstr( root -> minefield -> title, "benchmark")){
     SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
     SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONUP  , .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
     SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
@@ -277,7 +277,6 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
     }
   }
   
-  ret = -1;
  bail:
   if( diff != NULL)free( diff);
   
