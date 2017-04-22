@@ -57,6 +57,10 @@ ROOT_Init( MS_root *root){
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
 #ifdef __cplusplus
+  if(   root                                                == NULL) exit( 0);
+  if( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) exit( 0);
+  if( ( root -> mss       = def_out                       ) == NULL) exit( 0);
+  if( ( root -> minefield = field_custom                  ) == NULL) exit( 0);
 #else
   if(   root                                                == NULL) goto fault;
   if( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto fault;
