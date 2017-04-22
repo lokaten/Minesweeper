@@ -50,7 +50,17 @@ extern "C" {
 #define assert( exp) ( void)( exp);
 #endif
 
+#ifdef SMALL
+typedef uint_least64_t u64;
+typedef uint_least32_t u32;
+typedef uint_least16_t u16;
+typedef uint_least8_t  u8;
 
+typedef int_least64_t  s64;
+typedef int_least32_t  s32;
+typedef int_least16_t  s16;
+typedef int_least8_t   s8;
+#else
 typedef uint_fast64_t u64;
 typedef uint_fast32_t u32;
 typedef uint_fast16_t u16;
@@ -60,6 +70,7 @@ typedef int_fast64_t  s64;
 typedef int_fast32_t  s32;
 typedef int_fast16_t  s16;
 typedef int_fast8_t   s8;
+#endif
 
 typedef struct{
   u16 x;

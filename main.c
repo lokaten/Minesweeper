@@ -92,7 +92,7 @@ ROOT_Init( MS_root *root){
 #ifdef DEBUG
     { OPTSW_CPY, "Debug data"                             , "debug"          , 'd', &( def_out -> deb         ), stdout},
 #endif
-    { OPTSW_NUL, "Last elemnt is a NULL termination"      , ""               , 0  , NULL                       , NULL}};
+    { OPTSW_NUL, ""/* Last elemnt is a NULL termination */, ""               , 0  , NULL                       , NULL}};
   
   root -> GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
   

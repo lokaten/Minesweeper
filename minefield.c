@@ -8,8 +8,8 @@
 #include "ComandStream.h"
 #include "minefield.h"
 
-__uint8_t uncover_element( MS_field, MS_pos, MS_mstr *);
-__uint8_t setmine_element( __uint8_t *, MS_mstr *);
+INLINE __uint8_t uncover_element( MS_field, MS_pos, MS_mstr *);
+INLINE __uint8_t setmine_element( __uint8_t *, MS_mstr *);
 INLINE int addelement( MS_field *, signed long, signed long);
 
 
@@ -162,7 +162,7 @@ uncov( MS_field *minefield){
   return ret;
 }
 
-__uint8_t
+INLINE __uint8_t
 uncover_element( MS_field minefield, MS_pos postion, MS_mstr *mine){
   
   /* chech that it hasnt been uncover yet, becuse elements are set to ECOVER | ECOUNT and ECOVER alaredy is down;
@@ -190,7 +190,7 @@ uncover_element( MS_field minefield, MS_pos postion, MS_mstr *mine){
 }
 
 
-__uint8_t
+INLINE __uint8_t
 setmine_element( __uint8_t *element, MS_mstr *mine){
   if( !( ( *element) & ESET)){
     __uint8_t u;  

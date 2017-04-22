@@ -21,7 +21,7 @@ CFLAGS = -Og -ggdb -DDEBUG
 endif
 
 ifeq ($(SMALL), yes)
-CFLAGS ?= -Os -DNDEBUG
+CFLAGS ?= -Os -DNDEBUG #-DSMALL
 endif
 
 CFLAGS ?= -Ofast -DNDEBUG
@@ -31,7 +31,7 @@ CFLAGS += -Wlogical-op
 endif
 
 ifeq ($(DEV), yes)
-CFLAGS += -Werror -DDEBUG -fstack-usage
+CFLAGS += -Werror -DDEBUG -fstack-usage -pg
 endif
 
 ifeq ($(NATIVE), yes)
@@ -60,8 +60,6 @@ LDFLAGS =
 ifeq ($(LTO),yes)
 LTO_FLAGS += -flto=1 -fuse-linker-plugin
 endif
-
-GCDA = 
 
 ifeq ($(PROFILE_GEN),yes)
 PFLAGS += -fprofile-generate
