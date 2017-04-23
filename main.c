@@ -429,8 +429,6 @@ pointerreleasevent( SDL_Event event,
   MS_pos postion, *el;
   MS_video vid;
   
-  MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = minefield -> subwidth, .height = minefield -> subheight};
-  
   postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
   postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
   
@@ -464,6 +462,8 @@ pointerreleasevent( SDL_Event event,
     }
     
     if unlikely( minefield -> mine -> hit){
+      MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = minefield -> subwidth, .height = minefield -> subheight};
+      
       printtime( mss -> out, ( tutime - gamestart) / 1000000);
       MS_print( mss -> out, "\r\t\t\t Mine!!               \n");
       uncov_elements( *minefield, minefield -> uncovque, mfvid, minefield -> mine);
