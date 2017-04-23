@@ -56,11 +56,12 @@ ROOT_Init( MS_root *root){
   
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
-
-  if(   root                                                == NULL) goto fault;
-  if( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto fault;
-  if( ( root -> mss       = def_out                       ) == NULL) goto fault;
-  if( ( root -> minefield = field_custom                  ) == NULL) goto fault;
+  
+  if(   root                                                == NULL) goto end;
+  if( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto end;
+  if( ( root -> mss       = def_out                       ) == NULL) goto end;
+  if( ( root -> minefield = field_custom                  ) == NULL) goto end;
+  
   {
     MS_options opt[] = {
       { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                       , NULL},
@@ -104,12 +105,12 @@ ROOT_Init( MS_root *root){
       help( root -> mss -> hlp, opt);
       ret = root;
       quit();
-      goto fault;
+      goto end;
     }
   }
   
-  if( root -> minefield == NULL) goto fault;
-  if( root -> mss       == NULL) goto fault;
+  if( root -> minefield == NULL) goto end;
+  if( root -> mss       == NULL) goto end;
   
   root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .element_width = 1,  .element_height = 1, .realwidth = 1, .realheight = 1}: root -> GW -> real;
   
@@ -134,7 +135,7 @@ ROOT_Init( MS_root *root){
   DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
   
   ret = root;
- fault:
+ end:
   if( root -> minefield != field_beginner ) MS_Free( field_beginner );
   if( root -> minefield != field_advanced ) MS_Free( field_advanced );
   if( root -> minefield != field_expert   ) MS_Free( field_expert   );
@@ -221,7 +222,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       
       if( e){
         switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
-        case SDL_QUIT: ret = 0; goto bail;
+        case SDL_QUIT: ret = 0; goto end;
         case SDL_KEYDOWN:         ret = keypressevent(      event, minefield, mss, GW -> mfvid, diff); break;
         case SDL_KEYUP:           ret = keyreleasevent(     event,                              diff); break;
         case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent(  event, minefield,      GW -> real); break;
@@ -276,7 +277,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
     }
   }
   
- bail:
+ end:
   if( diff != NULL)free( diff);
   
   return ret;

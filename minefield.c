@@ -18,16 +18,11 @@ MF_Init( MS_field *minefield){
   MS_field *ret = NULL;
   
   if( minefield == NULL){
-    goto fault;
+    goto end;
   }
   
-  if( ( minefield -> mine = MS_CreateEmpty( MS_mstr))  == NULL){
-    goto fault;
-  }
-  
-  if( ( minefield -> uncovque = CS_Create( sizeof( MS_pos))) == NULL){
-    goto fault;
-  }
+  if( ( minefield -> mine     = MS_CreateEmpty( MS_mstr   )) == NULL) goto end;
+  if( ( minefield -> uncovque = CS_Create( sizeof( MS_pos))) == NULL) goto end;
   
   minefield -> mine -> noelements = minefield -> width * minefield -> height;
   
@@ -44,16 +39,14 @@ MF_Init( MS_field *minefield){
   
   minefield -> data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield -> width * minefield -> height);
   
-  if( minefield -> data == NULL){
-    goto fault;
-  }
+  if( minefield -> data == NULL) goto end;
   
   if( !minefield -> global){
     memset( minefield -> data, ESET, minefield -> width * minefield -> height);
   }
   
   ret = minefield;
- fault:
+ end:
   if( ret == NULL)MF_Free( minefield);
   return ret;
 }
