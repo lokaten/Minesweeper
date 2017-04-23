@@ -125,10 +125,10 @@ LOCALE_( CS_Push)( ComandStream *CS, void *ptr){
     ( *CS).epush = 0;
   }
   
-  if likely( ( *CS).push == ptr){
-    ( *CS).push = ( *CS).push + ( *CS).size;
-    ++( *CS).epush;
-  }
+  assert( ptr == CS -> push);
+  
+  ( *CS).push = ( *CS).push + ( *CS).size;
+  ++( *CS).epush;
 }
 #define CS_Push LOCALE_( CS_Push)
 
@@ -141,7 +141,7 @@ LOCALE_( CS_Releas)( ComandStream *CS){
   void *ret = NULL;
   
   assert( CS != NULL);
-  if unlikely( ( *CS).push != ( *CS).releas){
+  if likely( ( *CS).push != ( *CS).releas){
     if unlikely( ( *CS).ereleas >= NC){
       ( *CS).blk_releas = *( char **)( ( *CS).blk_releas + ( *CS).blk_size);
       ( *CS).releas = ( *CS).blk_releas;
@@ -161,6 +161,7 @@ LOCALE_( CS_Releas)( ComandStream *CS){
 INLINE void
 LOCALE_( CS_Finish)( ComandStream *CS, void *ptr){
   assert( CS != NULL);
+  
   if unlikely( ( *CS).efinish >= NC){
     if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) != ( *CS).blk_finish){
       /*lock*/
@@ -174,10 +175,10 @@ LOCALE_( CS_Finish)( ComandStream *CS, void *ptr){
     ( *CS).efinish = 0;
   }
   
-  if likely( ( *CS).finish == ptr){
-    ( *CS).finish = ( *CS).finish + ( *CS).size;
-    ++( *CS).efinish;
-  }
+  assert( ptr == CS -> finish);
+  
+  ( *CS).finish = ( *CS).finish + ( *CS).size;
+  ++( *CS).efinish;
 }
 #define CS_Finish LOCALE_( CS_Finish)
 
