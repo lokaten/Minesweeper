@@ -139,7 +139,8 @@ INLINE __uint64_t LOCALE_( getnanosec)( void);
 INLINE void *
 LOCALE_( MS_Create)( size_t alo_size, void *data){
   void *ret = ( void *)malloc( alo_size);
-  memcpy( ret, data, alo_size);
+  assert( data != NULL);
+  if( ret != NULL) memcpy( ret, data, alo_size);
   return ret;
 }
 #define MS_Create( type, exp) ( type *)LOCALE_( MS_Create)( sizeof( type), ( void *)&( exp))
