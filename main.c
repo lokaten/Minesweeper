@@ -56,53 +56,56 @@ ROOT_Init( MS_root *root){
   
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
-#ifdef __cplusplus
-  if(   root                                                == NULL) exit( 0);
-  if( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) exit( 0);
-  if( ( root -> mss       = def_out                       ) == NULL) exit( 0);
-  if( ( root -> minefield = field_custom                  ) == NULL) exit( 0);
-#else
+
   if(   root                                                == NULL) goto fault;
   if( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto fault;
   if( ( root -> mss       = def_out                       ) == NULL) goto fault;
   if( ( root -> minefield = field_custom                  ) == NULL) goto fault;
-#endif
-  MS_options opt[] = {
-    { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                       , NULL},
-    { OPTSW_GRP, ""                                       , "Minefield"      , 0  , NULL                       , NULL},
-    { OPTSW_LU , "Element wide minefield"                 , "width"          , 0  , &( field_custom -> width  ), NULL},
-    { OPTSW_LU , "Element high minefield"                 , "height"         , 0  , &( field_custom -> height ), NULL},
-    { OPTSW_LU , "Number of mines"                        , "level"          , 0  , &( field_custom -> level  ), NULL},
+  {
+    MS_options opt[] = {
+      { OPTSW_GRP, ""                                       , "Options"        , 0  , NULL                       , NULL},
+      { OPTSW_GRP, ""                                       , "Minefield"      , 0  , NULL                       , NULL},
+      { OPTSW_LU , "Element wide minefield"                 , "width"          , 0  , &( field_custom -> width  ), NULL},
+      { OPTSW_LU , "Element high minefield"                 , "height"         , 0  , &( field_custom -> height ), NULL},
+      { OPTSW_LU , "Number of mines"                        , "level"          , 0  , &( field_custom -> level  ), NULL},
 #ifdef DEBUG
-    { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"           , 0  , &( field_custom -> reseed ), NULL},
-    { OPTSW_CPY, ""                                       , "global"         , 'g', &( field_custom -> global ), &opt_true},
+      { OPTSW_X  , "Generate Minefield based on this seed"  , "seed"           , 0  , &( field_custom -> reseed ), NULL},
+      { OPTSW_CPY, ""                                       , "global"         , 'g', &( field_custom -> global ), &opt_true},
 #endif
-    { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                                 , NULL},
-    { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( root -> GW -> real.realwidth     ), NULL},
-    { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( root -> GW -> real.realheight    ), NULL},
-    { OPTSW_LU , "Pixel wide Element"                     , "element-width"  , 0  , &( root -> GW -> real.element_width ), NULL},
-    { OPTSW_LU , "Pixel high Element"                     , "element-height" , 0  , &( root -> GW -> real.element_height), NULL},
-    { OPTSW_CPY, "Resize don't work well with all system" , "no-resize"      , 'R', &( root -> GW -> no_resize          ), &opt_true},
-    { OPTSW_GRP, ""                                       , "Mode"           , 0  , NULL                       , NULL},
-    { OPTSW_CPY, "Mimic windows minesweeper beginner mode", "beginner"       , 'b', &root -> minefield         , field_beginner },
-    { OPTSW_CPY, "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &root -> minefield         , field_advanced },
-    { OPTSW_CPY, "Mimic windows minesweeper expert mode"  , "expert"         , 'e', &root -> minefield         , field_expert   },
+      { OPTSW_GRP, ""                                       , "Video"          , 0  , NULL                                 , NULL},
+      { OPTSW_LU , "Pixel wide window"                      , "video-width"    , 0  , &( root -> GW -> real.realwidth     ), NULL},
+      { OPTSW_LU , "Pixel high window"                      , "video-height"   , 0  , &( root -> GW -> real.realheight    ), NULL},
+      { OPTSW_LU , "Pixel wide Element"                     , "element-width"  , 0  , &( root -> GW -> real.element_width ), NULL},
+      { OPTSW_LU , "Pixel high Element"                     , "element-height" , 0  , &( root -> GW -> real.element_height), NULL},
+      { OPTSW_CPY, "Resize don't work well with all system" , "no-resize"      , 'R', &( root -> GW -> no_resize          ), &opt_true},
+      { OPTSW_GRP, ""                                       , "Mode"           , 0  , NULL                       , NULL},
+      { OPTSW_CPY, "Mimic windows minesweeper beginner mode", "beginner"       , 'b', &root -> minefield         , field_beginner },
+      { OPTSW_CPY, "Mimic windows minesweeper advanced mode", "advanced"       , 'a', &root -> minefield         , field_advanced },
+      { OPTSW_CPY, "Mimic windows minesweeper expert mode"  , "expert"         , 'e', &root -> minefield         , field_expert   },
 #ifdef DEBUG
-    { OPTSW_CPY, ""                                       , "benchmark"      , 'B', &root -> minefield         , field_benchmark},
+      { OPTSW_CPY, ""                                       , "benchmark"      , 'B', &root -> minefield         , field_benchmark},
 #endif
-    { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                       , NULL},
-    { OPTSW_CPY, "Print generic help mesage"              , "help"           , 'h', &( def_out -> hlp         ), stdout},
-    { OPTSW_CPY, "Supres reguler output"                  , "quiet"          , 'q', &( def_out -> out         ), NULL},
-    { OPTSW_CPY, "Supres all output"                      , "very-quiet"     , 'Q', &root -> mss               , very_quiet},
+      { OPTSW_GRP, ""                                       , "Output"         , 0  , NULL                       , NULL},
+      { OPTSW_CPY, "Print generic help mesage"              , "help"           , 'h', &( def_out -> hlp         ), stdout},
+      { OPTSW_CPY, "Supres reguler output"                  , "quiet"          , 'q', &( def_out -> out         ), NULL},
+      { OPTSW_CPY, "Supres all output"                      , "very-quiet"     , 'Q', &root -> mss               , very_quiet},
 #ifdef DEBUG
-    { OPTSW_CPY, "Debug data"                             , "debug"          , 'd', &( def_out -> deb         ), stdout},
+      { OPTSW_CPY, "Debug data"                             , "debug"          , 'd', &( def_out -> deb         ), stdout},
 #endif
-    { OPTSW_NUL, ""/* Last elemnt is a NULL termination */, ""               , 0  , NULL                       , NULL}};
-  
-  root -> GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
-  
-  if( procopt( root -> mss, opt, *root -> argv, *root -> argc)){
-    MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");
+      { OPTSW_NUL, ""/* Last elemnt is a NULL termination */, ""               , 0  , NULL                       , NULL}};
+    
+    root -> GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
+    
+    if( procopt( root -> mss, opt, *root -> argv, *root -> argc)){
+      MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");
+    }
+    
+    if( root -> mss -> hlp){
+      help( root -> mss -> hlp, opt);
+      ret = root;
+      quit();
+      goto fault;
+    }
   }
   
   if( root -> minefield == NULL) goto fault;
@@ -120,12 +123,6 @@ ROOT_Init( MS_root *root){
     MS_print( root -> mss -> err, "\rMore mines then elments!\n");
   }
   
-  if( root -> mss -> hlp){
-    help( root -> mss -> hlp, opt);
-    ret = root;
-    quit();
-    goto fault;
-  }
   
   DEBUG_PRINT( root -> mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
   DEBUG_PRINT( root -> mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
