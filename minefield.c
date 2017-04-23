@@ -21,8 +21,8 @@ MF_Init( MS_field *minefield){
     goto end;
   }
   
-  if( ( minefield -> mine     = MS_CreateEmpty( MS_mstr   )) == NULL) goto end;
-  if( ( minefield -> uncovque = CS_Create( sizeof( MS_pos))) == NULL) goto end;
+  if( ( minefield -> mine     = MS_CreateEmpty( MS_mstr)) == NULL) goto end;
+  if( ( minefield -> uncovque = CS_Create(      MS_pos )) == NULL) goto end;
   
   minefield -> mine -> noelements = minefield -> width * minefield -> height;
   

@@ -43,49 +43,45 @@ _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 
 ComandStream *
 LOCALE_( CS_Create)( size_t size){
-  ComandStream *CS = ( ComandStream *)malloc( sizeof( ComandStream));
+  ComandStream *ret = NULL;
+  ComandStream *CS = MS_CreateEmpty( ComandStream);
   char *ptr;
   
-  if( CS == NULL){
-    return NULL;
-  }
+  if( CS == NULL) goto end;
   
-  ( *CS).blk_size = NC * size;
+  CS -> blk_size = NC * size;
+  
+  assert( CS -> blk_size);
+  
+  ptr = ( char *)malloc( CS -> blk_size + sizeof( char *));
+  
+  if( ptr == NULL) goto end;
+  
+  *( char **)( ptr + CS -> blk_size) = ptr;
     
-  if( !( *CS).blk_size){
-    free( CS);
-    return NULL;
-  }
+  CS -> size = size;
   
-  ptr = ( char *)malloc( ( *CS).blk_size + sizeof( char *));
-  
-  if( ptr == NULL){
-    free( CS);
-    return NULL;
-  }
-  
-  *( char **)( ptr + ( *CS).blk_size) = ptr;
+  CS -> blk_fetch  = ptr;
+  CS -> blk_push   = ptr;
+  CS -> blk_releas = ptr;
+  CS -> blk_finish = ptr;
     
-  ( *CS).size = size;
+  CS -> fetch  = ptr;
+  CS -> push   = ptr;
+  CS -> releas = ptr;
+  CS -> finish = ptr;
   
-  ( *CS).blk_fetch  = ptr;
-  ( *CS).blk_push   = ptr;
-  ( *CS).blk_releas = ptr;
-  ( *CS).blk_finish = ptr;
-    
-  ( *CS).fetch  = ptr;
-  ( *CS).push   = ptr;
-  ( *CS).releas = ptr;
-  ( *CS).finish = ptr;
+  CS -> efetch  = 0;
+  CS -> epush   = 0;
+  CS -> ereleas = 0;
+  CS -> efinish = 0;
 
-  ( *CS).efetch  = 0;
-  ( *CS).epush   = 0;
-  ( *CS).ereleas = 0;
-  ( *CS).efinish = 0;
-      
+  ret = CS;
+ end:
+  if( ret != CS) LOCALE_( CS_Free)( CS);
   return CS;
 }
-#define CS_Create LOCALE_( CS_Create)
+#define CS_Create( type) LOCALE_( CS_Create)( sizeof( type))
 
 
 INLINE void *
@@ -96,7 +92,7 @@ LOCALE_( CS_Fetch)( ComandStream *CS){
     if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) == ( *CS).blk_finish){
       char *ptr = ( char *)malloc( ( *CS).blk_size + sizeof( char *));
       if unlikely( ptr == NULL){
-	goto bail;
+	goto end;
       }
       /*lock*/
       *( char **)( ptr + ( *CS).blk_size) = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
@@ -112,7 +108,7 @@ LOCALE_( CS_Fetch)( ComandStream *CS){
   ( *CS).fetch = ( *CS).fetch + ( *CS).size;
   ++( *CS).efetch;
   
- bail:
+ end:
   
   return ret;
 }
