@@ -101,11 +101,13 @@ draw( GraphicWraper *GW, MS_field minefield){
   }
   
   SDL_SetRenderTarget( GW -> renderer, NULL);
-  
-  int ax = GW -> real.realxdiff % GW -> real.realwidth, ay = GW -> real.realydiff % GW -> real.realheight, cx = GW -> real.realwidth - ax, cy = GW -> real.realheight - ay;
-  
-  MS_BlitTex( GW -> renderer, GW -> target, 0 , 0 , ax, ay, cx, cy);
-  MS_BlitTex( GW -> renderer, GW -> target, ax, ay, cx, cy, 0 , 0 );
+
+  {
+    int ax = GW -> real.realxdiff % GW -> real.realwidth, ay = GW -> real.realydiff % GW -> real.realheight, cx = GW -> real.realwidth - ax, cy = GW -> real.realheight - ay;
+    
+    MS_BlitTex( GW -> renderer, GW -> target, 0 , 0 , ax, ay, cx, cy);
+    MS_BlitTex( GW -> renderer, GW -> target, ax, ay, cx, cy, 0 , 0 );
+  }
   
   SDL_RenderPresent( GW -> renderer);
   
