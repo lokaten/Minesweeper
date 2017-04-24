@@ -12,7 +12,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdarg.h>
 #include <assert.h>
-#include <string.h> //memcpy
+#include <string.h> /* memcpy */
 
 #include <sys/time.h>
 #ifdef CLOCK_MONOTONIC
@@ -143,7 +143,7 @@ LOCALE_( MS_Create)( size_t alo_size, int num_elements, ...){
   va_list data;
   assert( data != NULL);
   assert( alo_size);
-  va_start( data, num_elements); //no goto before this line
+  va_start( data, num_elements); /* no goto before this line */
   if( ptr == NULL) goto end;
   ret = ptr;
   while( num_elements--){
@@ -180,8 +180,8 @@ LOCALE_( gen_divobj)( unsigned long a){
 INLINE unsigned long
 LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
   unsigned long ret = ( ( ( ( b * divobj) & 8589934591lu) * a) >> 33);
-  //signficantly slower, but more corect version
-  //unsigned long ret = b >= a? a > 2? ( ( ( b * divobj) & 8589934591lu) * a) >> 33: ( b & ( a - 1)): b;
+  /* signficantly slower, but more corect version */
+  /* unsigned long ret = b >= a? a > 2? ( ( ( b * divobj) & 8589934591lu) * a) >> 33: ( b & ( a - 1)): b; */
   assert( ret == b % a);
   return ret;
 }

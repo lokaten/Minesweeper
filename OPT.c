@@ -42,7 +42,7 @@ procopt( MS_stream *mss, MS_options *opt, const int argc, const char **argv){
               *( void **)( opt[ j].data) = ( void *)( opt[ j].value);
               break;
             case OPTSW_RAW:
-              //*( void **)( opt[ j].data) = ( void *)argv[ i];
+              /* *( void **)( opt[ j].data) = ( void *)argv[ i]; */
               break;
 	    default:
 	      ret = -1;
