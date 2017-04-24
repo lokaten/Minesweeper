@@ -23,8 +23,8 @@ quit( void){
 }
 
 typedef struct{
-  const int *argv;
-  const char ***argc;
+  const int *argc;
+  const char ***argv;
   GraphicWraper *GW;
   MS_field *minefield;
   MS_stream *mss;
@@ -97,7 +97,7 @@ ROOT_Init( MS_root *root){
     
     root -> GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
     
-    if( procopt( root -> mss, opt, *root -> argv, *root -> argc)){
+    if( procopt( root -> mss, opt, *root -> argc, *root -> argv)){
       MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");
     }
     
@@ -162,9 +162,9 @@ ROOT_Free( MS_root *root){
 
 
 int
-main( const int argv, const char** argc){
+main( const int argc, const char** argv){
   int ret = -1;
-  MS_root *root = MS_Create( MS_root, .argv = &argv, .argc = &argc);
+  MS_root *root = MS_Create( MS_root, .argc = &argc, .argv = &argv);
   
   if( ( root              = ROOT_Init( root             )) == NULL) goto fault;
   if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto fault;
