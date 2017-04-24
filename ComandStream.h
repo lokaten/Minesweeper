@@ -79,7 +79,7 @@ LOCALE_( CS_Create)( size_t size){
   ret = CS;
  end:
   if( ret != CS) LOCALE_( CS_Free)( CS);
-  return CS;
+  return ret;
 }
 #define CS_Create( type) LOCALE_( CS_Create)( sizeof( type))
 

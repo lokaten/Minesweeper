@@ -137,15 +137,15 @@ uncov( MS_field *minefield){
      */
     if( ( uncover_element( *minefield, *element, minefield -> mine) & ECOUNT) == 0){
       
-      ret = addelement( minefield, element -> x + 1, element -> y + 1);
-      ret = addelement( minefield, element -> x - 1, element -> y + 1);
-      ret = addelement( minefield, element -> x    , element -> y + 1);
+      addelement( minefield, element -> x + 1, element -> y + 1);
+      addelement( minefield, element -> x - 1, element -> y + 1);
+      addelement( minefield, element -> x    , element -> y + 1);
       
-      ret = addelement( minefield, element -> x + 1, element -> y - 1);
-      ret = addelement( minefield, element -> x - 1, element -> y - 1);
-      ret = addelement( minefield, element -> x    , element -> y - 1);
+      addelement( minefield, element -> x + 1, element -> y - 1);
+      addelement( minefield, element -> x - 1, element -> y - 1);
+      addelement( minefield, element -> x    , element -> y - 1);
       
-      ret = addelement( minefield, element -> x + 1, element -> y    );
+      addelement( minefield, element -> x + 1, element -> y    );
       ret = addelement( minefield, element -> x - 1, element -> y    );
     }
     

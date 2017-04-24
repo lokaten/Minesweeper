@@ -136,15 +136,17 @@ ROOT_Init( MS_root *root){
   
   ret = root;
  end:
-  if( root -> minefield != field_beginner ) MS_Free( field_beginner );
-  if( root -> minefield != field_advanced ) MS_Free( field_advanced );
-  if( root -> minefield != field_expert   ) MS_Free( field_expert   );
-  if( root -> minefield != field_benchmark) MS_Free( field_benchmark);
-  
-  if( root -> mss != very_quiet) MS_Free( very_quiet);
-  if( root -> mss != def_out   ) MS_Free( def_out   );
-  
-  if( root != ret) ROOT_Free( root);
+  if( root != NULL){
+    if( root -> minefield != field_beginner ) MS_Free( field_beginner );
+    if( root -> minefield != field_advanced ) MS_Free( field_advanced );
+    if( root -> minefield != field_expert   ) MS_Free( field_expert   );
+    if( root -> minefield != field_benchmark) MS_Free( field_benchmark);
+    
+    if( root -> mss != very_quiet) MS_Free( very_quiet);
+    if( root -> mss != def_out   ) MS_Free( def_out   );
+    
+    if( root != ret) ROOT_Free( root);
+  }
   
   return ret;
 }
