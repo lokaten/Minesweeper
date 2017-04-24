@@ -48,15 +48,15 @@ ifeq ($(NATIVE), yes)
 CC += -march=native
 endif
 
-CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wlong-long -Wno-error=missing-field-initializers -Wno-c99-extensions
+CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wlong-long -Wno-error=missing-field-initializers
 CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
 
 ifeq ($(GPP), yes)
-CFLAGS += -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
+CFLAGS += -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel -Wno-error=pedantic -fpermissive -Wno-error # temporary mesure,  can't seem to turn of Werror exclusivly for -fpermissive
 else
-CFLAGS += -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS += -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes -Wno-c99-extensions
 endif
 
 ifeq ($(CLANGPP), yes)
