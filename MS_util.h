@@ -121,7 +121,7 @@ typedef struct{
 
 #ifdef LOCALE_
 
-INLINE void *LOCALE_( MS_Create)( size_t, void *);
+INLINE void *LOCALE_( MS_Create)( size_t, int, ...);
 INLINE void *LOCALE_( MS_Free)( void *);
 INLINE unsigned long LOCALE_( gen_divobj)( unsigned long);
 INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
@@ -137,14 +137,25 @@ INLINE __uint64_t LOCALE_( getmicrosec)( void);
 INLINE __uint64_t LOCALE_( getnanosec)( void);
 
 INLINE void *
-LOCALE_( MS_Create)( size_t alo_size, void *data){
-  void *ret = ( void *)malloc( alo_size);
+LOCALE_( MS_Create)( size_t alo_size, int num_elements, ...){
+  void *ret = NULL;
+  void *ptr = ( void *)malloc( alo_size * ( num_elements ? num_elements: 1));
+  va_list data;
   assert( data != NULL);
-  if( ret != NULL) memcpy( ret, data, alo_size);
+  assert( alo_size);
+  va_start( data, num_elements); //no goto before this line
+  if( ptr == NULL) goto end;
+  ret = ptr;
+  while( num_elements--){
+    memcpy( ptr, va_arg( data, void *), alo_size);
+    ptr = ( char *)ptr + alo_size;
+  }
+ end:
+  va_end( data);
   return ret;
 }
-#define MS_Create( type, exp) ( type *)LOCALE_( MS_Create)( sizeof( type), ( void *)&( exp))
-#define MS_CreateEmpty( type) ( type *)LOCALE_( MS_Create)( sizeof( type), ( void *)&( ( type){0}))
+#define MS_Create( type, exp) ( type *)LOCALE_( MS_Create)( sizeof( type), 1, ( void *)&( exp))
+#define MS_CreateEmpty( type) ( type *)LOCALE_( MS_Create)( sizeof( type), 0)
 
 INLINE void *
 LOCALE_( MS_Free)( void *ptr){
