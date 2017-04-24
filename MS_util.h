@@ -154,7 +154,7 @@ LOCALE_( MS_Create)( size_t alo_size, int num_elements, ...){
   va_end( data);
   return ret;
 }
-#define MS_Create( type, exp) ( type *)LOCALE_( MS_Create)( sizeof( type), 1, ( void *)&( exp))
+#define MS_Create( type, ...) ( type *)LOCALE_( MS_Create)( sizeof( type), 1, ( void *)&( ( type){ __VA_ARGS__}))
 #define MS_CreateEmpty( type) ( type *)LOCALE_( MS_Create)( sizeof( type), 0)
 
 INLINE void *

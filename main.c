@@ -45,14 +45,14 @@ MS_root *
 ROOT_Init( MS_root *root){
   MS_root *ret = NULL;
   
-  MS_field *field_custom    = MS_Create( MS_field, ( ( MS_field){ .title = "custom"   , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0}));
-  MS_field *field_beginner  = MS_Create( MS_field, ( ( MS_field){ .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0}));
-  MS_field *field_advanced  = MS_Create( MS_field, ( ( MS_field){ .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0}));
-  MS_field *field_expert    = MS_Create( MS_field, ( ( MS_field){ .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0}));
-  MS_field *field_benchmark = MS_Create( MS_field, ( ( MS_field){ .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0}));
+  MS_field *field_custom    = MS_Create( MS_field, .title = "custom"   , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0);
+  MS_field *field_beginner  = MS_Create( MS_field, .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0);
+  MS_field *field_advanced  = MS_Create( MS_field, .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0);
+  MS_field *field_expert    = MS_Create( MS_field, .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0);
+  MS_field *field_benchmark = MS_Create( MS_field, .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0);
   
-  MS_stream *very_quiet = MS_Create( MS_stream, ( ( MS_stream){ .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL}));
-  MS_stream *def_out    = MS_Create( MS_stream, ( ( MS_stream){ .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL}));
+  MS_stream *very_quiet = MS_Create( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
+  MS_stream *def_out    = MS_Create( MS_stream, .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL);
   
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
@@ -164,7 +164,7 @@ ROOT_Free( MS_root *root){
 int
 main( const int argv, const char** argc){
   int ret = -1;
-  MS_root *root = MS_Create( MS_root, ( ( MS_root){ .argv = &argv, .argc = &argc}));
+  MS_root *root = MS_Create( MS_root, .argv = &argv, .argc = &argc);
   
   if( ( root              = ROOT_Init( root             )) == NULL) goto fault;
   if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto fault;
