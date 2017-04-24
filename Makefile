@@ -99,6 +99,9 @@ LIBS = -lrt -lSDL2 -lSDL2_image
 
 all: $(TARGET)
 
+analyze:
+	clang-check -analyze *.c
+
 clean:
 	$(RM) *.o *.su *.gcda *~ $(TARGET)
 
@@ -120,7 +123,7 @@ endif
 	$(CC) $(CFLAGS) $(PFLAGS) $(LTO_FLAGS) -c -o $@ $<
 
 # Dependencies
-main.o:       main.c        MS_util.h GW.h             ComandStream.h OPT.h
-GW.o:         GW.c          MS_util.h GW.h minefield.h
-minefield.o:  minefield.c   MS_util.h                  ComandStream.h
-OPT.o:        OPT.c         MS_util.h                                 OPT.h
+main.o:       Makefile main.c        MS_util.h GW.h             ComandStream.h OPT.h
+GW.o:         Makefile GW.c          MS_util.h GW.h minefield.h
+minefield.o:  Makefile minefield.c   MS_util.h                  ComandStream.h
+OPT.o:        Makefile OPT.c         MS_util.h                                 OPT.h
