@@ -10,14 +10,14 @@ extern "C" {
 #include "ComandStream.h"
   
   typedef struct{
-    unsigned long uncoverd;
-    unsigned long set;
-    unsigned long mines;
-    unsigned long level;
-    unsigned long flaged;
-    unsigned long noelements;
-    unsigned long hit;
-    __uint32_t seed;
+    u32 uncoverd;
+    u32 set;
+    u32 mines;
+    u32 level;
+    u32 flaged;
+    u32 noelements;
+    u32 hit;
+    u32 seed;
   }MS_mstr;
 
   
@@ -26,15 +26,15 @@ extern "C" {
     const char *title;
     ComandStream *uncovque;
     MS_mstr *mine;
-    unsigned long width;
-    unsigned long width_divobj;
-    unsigned long height;
-    unsigned long height_divobj;
-    unsigned long subwidth;
-    unsigned long subheight;
-    unsigned long global;
-    unsigned long reseed;
-    unsigned long level;
+    u32 width;
+    u32 width_divobj;
+    u32 height;
+    u32 height_divobj;
+    u32 subwidth;
+    u32 subheight;
+    u32 global;
+    u32 reseed;
+    u32 level;
   }MS_field;
   
   

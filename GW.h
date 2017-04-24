@@ -15,8 +15,8 @@ extern "C" {
 #include "minefield.h"
   
   typedef struct{
-    int x;
-    int y;
+    s32 x;
+    s32 y;
   }MS_diff;
   
   
@@ -24,10 +24,8 @@ extern "C" {
     SDL_Window *window;
     SDL_Texture *target;
     SDL_Renderer *renderer;
-    unsigned long global;
     MS_video mfvid;
     MS_video real;
-    unsigned long no_resize;
     SDL_Texture *cover;
     SDL_Texture *clear;
     SDL_Texture *flag;
@@ -40,6 +38,8 @@ extern "C" {
     SDL_Texture *six;
     SDL_Texture *seven;
     SDL_Texture *eight;
+    u8 global;
+    u8 no_resize;
   }GraphicWraper;
 
 
