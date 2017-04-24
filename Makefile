@@ -48,7 +48,7 @@ ifeq ($(NATIVE), yes)
 CC += -march=native
 endif
 
-CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wlong-long -Wno-error=missing-field-initializers
+CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wlong-long -Wno-error=missing-field-initializers -Wno-c99-extensions
 CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel
@@ -60,7 +60,7 @@ CFLAGS += -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes
 endif
 
 ifeq ($(CLANGPP), yes)
-CFLAGS += -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo -Wno-error=deprecated -Wno-error=c99-extensions -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary
+CFLAGS += -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary
 endif
 
 PFLAGS =
