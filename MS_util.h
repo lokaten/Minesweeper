@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 #include <time.h>
+#include <stdlib.h> /* malloc */
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
