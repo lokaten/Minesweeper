@@ -20,7 +20,7 @@ CXX = g++ -std=c++11
 endif
 
 ifeq ($(DEBUG), yes)
-CFLAGS = -Og -ggdb -DDEBUG
+CFLAGS = -Og -ggdb -DDEBUG -v
 endif
 
 ifeq ($(SMALL), yes)
@@ -34,7 +34,7 @@ CFLAGS += -DNO_TERM
 endif
 
 ifeq ($(GCC), yes)
-CFLAGS += -Wlogical-op
+CFLAGS += -Wlogical-op -faggressive-loop-optimizations
 endif
 
 ifeq ($(DEV), yes)
@@ -73,7 +73,7 @@ LTO_FLAGS =
 LDFLAGS =
 
 ifeq ($(LTO),yes)
-LTO_FLAGS += -flto=1 -fuse-linker-plugin
+LTO_FLAGS += -flto
 endif
 
 ifeq ($(PROFILE_GEN),yes)
