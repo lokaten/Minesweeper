@@ -109,7 +109,7 @@ help( FILE *stream, MS_options *opt){
   while( ++j < OPT_MAX){
     switch( opt[ j].optsw){
     case OPTSW_GRP:
-      MS_print( stream, "\r%s: \n", opt[ j].name);
+      MS_print( stream, "\r%s: \n", opt[ j].discript);
       break;
     case OPTSW_LU:
       MS_print( stream, "\r\t --%s ", opt[ j].name);

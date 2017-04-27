@@ -39,7 +39,7 @@ int swap_flag( MS_field *, int, int);
 int pointerpressevent( SDL_Event, MS_field *, MS_video);
 int pointerreleasevent( SDL_Event, MS_field *, MS_stream *, MS_video, __uint64_t, __uint64_t);
 int pointermoveevent( SDL_Event, MS_field *, MS_video);
-void printtime( FILE *, unsigned long);
+INLINE void printtime( FILE *, unsigned long);
 
 MS_root *
 ROOT_Init( MS_root *root){
@@ -64,8 +64,8 @@ ROOT_Init( MS_root *root){
   
   {
     MS_options opt[] = {
-      { OPTSW_GRP, TERM(""                                       ), "Options"        , 0  , NULL                       , NULL},
-      { OPTSW_GRP, TERM(""                                       ), "Minefield"      , 0  , NULL                       , NULL},
+      { OPTSW_GRP, TERM("Options"                                ), ""               , 0  , NULL                       , NULL},
+      { OPTSW_GRP, TERM("Minefield"                              ), ""               , 0  , NULL                       , NULL},
       { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &( field_custom -> width  ), NULL},
       { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &( field_custom -> height ), NULL},
       { OPTSW_LU , TERM("Number of mines"                        ), "level"          , 0  , &( field_custom -> level  ), NULL},
@@ -73,28 +73,27 @@ ROOT_Init( MS_root *root){
       { OPTSW_X  , TERM("Generate Minefield based on this seed"  ), "seed"           , 0  , &( field_custom -> reseed ), NULL},
       { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &( field_custom -> global ), &opt_true},
 #endif
-      { OPTSW_GRP, TERM(""                                       ), "Video"          , 0  , NULL                                 , NULL},
+      { OPTSW_GRP, TERM("Video"                                  ), ""               , 0  , NULL                                 , NULL},
       { OPTSW_LU , TERM("Pixel wide window"                      ), "video-width"    , 0  , &( root -> GW -> real.realwidth     ), NULL},
       { OPTSW_LU , TERM("Pixel high window"                      ), "video-height"   , 0  , &( root -> GW -> real.realheight    ), NULL},
       { OPTSW_LU , TERM("Pixel wide Element"                     ), "element-width"  , 0  , &( root -> GW -> real.element_width ), NULL},
       { OPTSW_LU , TERM("Pixel high Element"                     ), "element-height" , 0  , &( root -> GW -> real.element_height), NULL},
       { OPTSW_CPY, TERM("Resize don't work well with all system" ), "no-resize"      , 'R', &( root -> GW -> no_resize          ), &opt_true},
-      { OPTSW_GRP, TERM(""                                       ), "Mode"           , 0  , NULL                       , NULL},
+      { OPTSW_GRP, TERM("Mode"                                   ), ""               , 0  , NULL                       , NULL},
       { OPTSW_CPY, TERM("Mimic windows minesweeper beginner mode"), "beginner"       , 'b', &root -> minefield         , field_beginner },
       { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &root -> minefield         , field_advanced },
       { OPTSW_CPY, TERM("Mimic windows minesweeper expert mode"  ), "expert"         , 'e', &root -> minefield         , field_expert   },
 #ifdef DEBUG
       { OPTSW_CPY, TERM(""                                       ), "benchmark"      , 'B', &root -> minefield         , field_benchmark},
 #endif
-      { OPTSW_GRP, TERM(""                                       ), "Output"         , 0  , NULL                       , NULL},
-#ifdef NO_TERM
-#else
+#ifndef NO_TERM
+      { OPTSW_GRP, TERM("Output"                                 ), ""               , 0  , NULL                       , NULL},
       { OPTSW_CPY, TERM("Print generic help mesage"              ), "help"           , 'h', &( def_out -> hlp         ), stdout},
-#endif
       { OPTSW_CPY, TERM("Supres reguler output"                  ), "quiet"          , 'q', &( def_out -> out         ), NULL},
       { OPTSW_CPY, TERM("Supres all output"                      ), "very-quiet"     , 'Q', &root -> mss               , very_quiet},
 #ifdef DEBUG
       { OPTSW_CPY, TERM("Debug data"                             ), "debug"          , 'd', &( def_out -> deb         ), stdout},
+#endif
 #endif
       { OPTSW_NUL, TERM(""/* Last elemnt is a NULL termination */), ""               , 0  , NULL                       , NULL}};
     
@@ -103,8 +102,7 @@ ROOT_Init( MS_root *root){
     if( procopt( root -> mss, opt, *root -> argc, *root -> argv)){
       MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");
     }
-#ifdef NO_TERM
-#else
+#ifndef NO_TERM
     if( root -> mss -> hlp){
       help( root -> mss -> hlp, opt);
       ret = root;
@@ -248,7 +246,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
       }else{
 	gamestart = tutime;
       }
-      
+#ifndef NO_TERM
       printtime( mss -> out, ( tutime - gamestart) / 1000000);
       
       nexttu = getnanosec();
@@ -257,6 +255,7 @@ mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
        * the time we wait betwen updating it, with max time betwen update beigen 150ms
        */
       nexttu += 50000000lu + ( ( ( __uint64_t)( seed = MS_rand( seed)) * 100000000lu) / MS_RAND_MAX);
+#endif
     }
     
     
@@ -470,9 +469,10 @@ pointerreleasevent( SDL_Event event,
     
     if unlikely( minefield -> mine -> hit){
       MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = minefield -> subwidth, .height = minefield -> subheight};
-      
+#ifndef NO_TERM
       printtime( mss -> out, ( tutime - gamestart) / 1000000);
       MS_print( mss -> out, "\r\t\t\t Mine!!               \n");
+#endif
       uncov_elements( *minefield, minefield -> uncovque, mfvid, minefield -> mine);
       
       if unlikely( uncov( minefield)){
@@ -481,8 +481,10 @@ pointerreleasevent( SDL_Event event,
     }
     
     if unlikely( !minefield -> mine -> hit && ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level))){
+#ifndef NO_TERM
       printtime( mss -> out, ( tutime - gamestart) / 1000000);
       MS_print( mss -> out, "\r\t\t\t Win!!         \n");
+#endif
     }
     
   default:
@@ -535,8 +537,9 @@ pointermoveevent( SDL_Event event,
 }
 
 
-void
+INLINE void
 printtime( FILE * stream, unsigned long time){
+#ifndef NO_TERM
   if( time > 3600000lu){
     MS_print( stream, "\r%lu:",    ( ( time) / 3600000)       );
     MS_print( stream, "%02lu:",    ( ( time) / 60000  ) % 60  );
@@ -552,5 +555,6 @@ printtime( FILE * stream, unsigned long time){
       MS_print( stream, "%03lu    ", ( ( time) / 1      ) % 1000);
     }
   }
+#endif
   return;
 }
