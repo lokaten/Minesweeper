@@ -104,6 +104,10 @@ procopt( MS_stream *mss, MS_options *opt, const int argc, const char **argv){
 int
 help( FILE *stream, MS_options *opt){
   int ret = 0;
+#ifdef NO_TERM
+  ( void) stream;
+  ( void) opt;
+#else
   int j = -1;
   
   while( ++j < OPT_MAX){
@@ -132,7 +136,7 @@ help( FILE *stream, MS_options *opt){
       ret = -1;
     }
   }
-
+#endif
   return ret;
 }
 

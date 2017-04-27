@@ -257,6 +257,10 @@ _Pragma("GCC diagnostic ignored \"-Wformat-nonliteral\"")
 INLINE int
 LOCALE_( print)( FILE *stream, const char * format, ...){
   int ret = 0;
+#ifdef NO_TERM
+  ( void) stream;
+  ( void) format;
+#else
   if( stream != NULL){
     va_list args;
     va_start( args, format);
@@ -264,18 +268,14 @@ LOCALE_( print)( FILE *stream, const char * format, ...){
     fflush( stream);
     va_end( args);
   }
+#endif
   return ret;
 }
-#ifdef NO_TERM
-#define MS_print( ...) 0
-#define DEBUG_PRINT( ...) 0
-#else
 #define MS_print LOCALE_( print)
 #ifdef DEBUG
 #define DEBUG_PRINT LOCALE_( print)
 #else
 #define DEBUG_PRINT( ...) 0
-#endif
 #endif
 
 /*

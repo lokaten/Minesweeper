@@ -469,7 +469,11 @@ pointerreleasevent( SDL_Event event,
     
     if unlikely( minefield -> mine -> hit){
       MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = minefield -> subwidth, .height = minefield -> subheight};
-#ifndef NO_TERM
+#ifdef NO_TERM
+      ( void) mss;
+      ( void) tutime;
+      ( void) gamestart;
+#else
       printtime( mss -> out, ( tutime - gamestart) / 1000000);
       MS_print( mss -> out, "\r\t\t\t Mine!!               \n");
 #endif
@@ -479,14 +483,16 @@ pointerreleasevent( SDL_Event event,
 	ret = -2;
       }
     }
-    
+#ifdef NO_TERM
+    ( void) mss;
+    ( void) tutime;
+    ( void) gamestart;
+#else
     if unlikely( !minefield -> mine -> hit && ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level))){
-#ifndef NO_TERM
       printtime( mss -> out, ( tutime - gamestart) / 1000000);
       MS_print( mss -> out, "\r\t\t\t Win!!         \n");
-#endif
     }
-    
+#endif
   default:
     break;
   }
@@ -539,7 +545,10 @@ pointermoveevent( SDL_Event event,
 
 INLINE void
 printtime( FILE * stream, unsigned long time){
-#ifndef NO_TERM
+#ifdef NO_TERM
+  ( void) stream;
+  ( void) time;
+#else
   if( time > 3600000lu){
     MS_print( stream, "\r%lu:",    ( ( time) / 3600000)       );
     MS_print( stream, "%02lu:",    ( ( time) / 60000  ) % 60  );
