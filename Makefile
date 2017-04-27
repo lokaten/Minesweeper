@@ -29,6 +29,10 @@ endif
 
 CFLAGS ?= -Ofast -DNDEBUG
 
+ifeq ($(NO_TERM), yes)
+CFLAGS += -DNO_TERM
+endif
+
 ifeq ($(GCC), yes)
 CFLAGS += -Wlogical-op
 endif

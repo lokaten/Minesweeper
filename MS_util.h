@@ -51,6 +51,12 @@ extern "C" {
 #define assert( exp) ( void)( exp);
 #endif
 
+#ifdef NO_TERM
+#define TERM( string) ""
+#else
+#define TERM( string) string
+#endif
+
 #ifdef SMALL
 typedef uint_least64_t u64;
 typedef uint_least32_t u32;
@@ -260,11 +266,16 @@ LOCALE_( print)( FILE *stream, const char * format, ...){
   }
   return ret;
 }
+#ifdef NO_TERM
+#define MS_print( ...) 0
+#define DEBUG_PRINT( ...) 0
+#else
 #define MS_print LOCALE_( print)
 #ifdef DEBUG
 #define DEBUG_PRINT LOCALE_( print)
 #else
-#define DEBUG_PRINT( ...)
+#define DEBUG_PRINT( ...) 0
+#endif
 #endif
 
 /*
