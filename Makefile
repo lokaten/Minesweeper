@@ -24,7 +24,7 @@ CFLAGS = -Og -ggdb -DDEBUG
 endif
 
 ifeq ($(SMALL), yes)
-CFLAGS ?= -Os -DNDEBUG #-DSMALL
+CFLAGS ?= -Os -DNDEBUG -DSMALL
 endif
 
 CFLAGS ?= -Ofast -DNDEBUG
