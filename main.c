@@ -37,7 +37,7 @@ typedef struct{
   u32 seed;
 }MS_root;
 
-INLINE int take_action( ComandStream *, action *);
+INLINE int take_action( ComandStream *, int ( *)( void *), void *);
 int quit( void *);
 MS_root *ROOT_Init( MS_root *);
 void ROOT_Free( MS_root *);
@@ -51,15 +51,15 @@ int pointermoveevent( void *);
 INLINE void printtime( FILE *, unsigned long);
 
 INLINE int
-take_action( ComandStream *actionque, action *act){
+take_action( ComandStream *actionque, int ( *func)( void *), void *data){
   int ret = 0;
   action *pact;
   pact = CS_Fetch( actionque);
-  memcpy( pact, act, actionque -> size);
+  pact -> func = func;
+  pact -> data = data;
   CS_Push( actionque, pact);
   return ret;
 }
-#define take_action( que, ...) take_action( que, &( action){__VA_ARGS__})
 
 int
 quit( void *data){
@@ -394,7 +394,7 @@ int
 keyreleasevent( void *data){
   int ret = 0;
   unsigned e    = ( ( MS_root *)data) -> event.key.keysym.sym;
-  MS_diff *diff = ( ( MS_root *) data) -> diff;
+  MS_diff *diff = ( ( MS_root *)data) -> diff;
   
   if( e == SDLK_h || e == SDLK_LEFT){
     diff -> x += 3;
