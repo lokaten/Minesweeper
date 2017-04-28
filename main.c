@@ -226,17 +226,11 @@ main( const int argc, const char** argv){
   root -> gamestart = root -> tutime;
   root -> nextframe = root -> tutime;
   root -> nexttu    = root -> tutime;
-  
+
+  take_action( root -> actionque, mainloop, ( void *)root);
   
   {
     action *act, *dact = MS_CreateEmpty( action);
-    
-    act = CS_Fetch( root -> actionque);
-    
-    act -> func = mainloop;
-    act -> data = ( void *)root;
-    
-    CS_Push( root -> actionque, act);
     
     while( ( act = CS_Releas( root -> actionque)) != NULL){
       assert( act -> func != NULL);
