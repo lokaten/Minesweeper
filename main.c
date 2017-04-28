@@ -36,6 +36,7 @@ typedef struct{
   u32 seed;
 }MS_root;
 
+INLINE int take_action( ComandStream *, action *);
 int quit( void *);
 MS_root *ROOT_Init( MS_root *);
 void ROOT_Free( MS_root *);
@@ -48,6 +49,16 @@ int pointerreleasevent( SDL_Event, MS_field *, MS_stream *, MS_video, __uint64_t
 int pointermoveevent( SDL_Event, MS_field *, MS_video);
 INLINE void printtime( FILE *, unsigned long);
 
+INLINE int
+take_action( ComandStream *actionque, action *act){
+  int ret = 0;
+  action *pact;
+  pact = CS_Fetch( actionque);
+  memcpy( pact, act, actionque -> size);
+  CS_Push( actionque, pact);
+  return ret;
+}
+#define take_action( que, ...) take_action( que, &( action){__VA_ARGS__})
 
 int
 quit( void *data){
@@ -265,7 +276,7 @@ mainloop( void *data){
     
     if( e){
       switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
-      case SDL_QUIT: ret = quit( ( void *)root); goto end;
+      case SDL_QUIT: take_action( root -> actionque, quit, ( void *)root); goto end;
       case SDL_KEYDOWN:         ret = keypressevent(      event, minefield, mss, GW -> mfvid, root -> diff); break;
       case SDL_KEYUP:           ret = keyreleasevent(     event,                              root -> diff); break;
       case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent(  event, minefield,      GW -> real); break;
@@ -319,18 +330,8 @@ mainloop( void *data){
     }
 #endif
   }
-  
-  {
-    action *act;
-    
-    act = CS_Fetch( root -> actionque);
-    
-    act -> func = mainloop;
-    act -> data = ( void *)root;
-    
-    CS_Push( root -> actionque, act);
-  }
-  
+
+  take_action( root -> actionque, mainloop, ( void *)root);
  end:
   return ret;
 }
