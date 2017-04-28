@@ -43,11 +43,11 @@ MS_root *ROOT_Init( MS_root *);
 void ROOT_Free( MS_root *);
 int mainloop( void *);
 int keypressevent( void *);
-int keyreleasevent( SDL_Event, MS_diff *);
+int keyreleasevent( void *);
 int swap_flag( MS_field *, int, int);
-int pointerpressevent( SDL_Event, MS_field *, MS_video);
-int pointerreleasevent( SDL_Event, MS_field *, MS_stream *, MS_video, __uint64_t, __uint64_t);
-int pointermoveevent( SDL_Event, MS_field *, MS_video);
+int pointerpressevent( void *);
+int pointerreleasevent( void *);
+int pointermoveevent( void *);
 INLINE void printtime( FILE *, unsigned long);
 
 INLINE int
@@ -267,16 +267,16 @@ mainloop( void *data){
     
     if( SDL_WaitEventTimeout( &root -> event, ( root -> nexttu - root -> tutime) / 1000000)){
       switch( expect( root -> event.type, SDL_MOUSEBUTTONDOWN)){
-      case SDL_QUIT:      take_action( root -> actionque, quit         , ( void *)root); goto end;
-      case SDL_KEYDOWN:   take_action( root -> actionque, keypressevent, ( void *)root); break;
-      case SDL_KEYUP:           ret = keyreleasevent(     root -> event,                              root -> diff); break;
-      case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent(  root -> event, minefield,      GW -> real); break;
-      case SDL_MOUSEBUTTONUP:   ret = pointerreleasevent( root -> event, minefield, mss, GW -> real, root -> tutime, root -> gamestart); break;
-      case SDL_MOUSEMOTION:     ret = pointermoveevent(   root -> event, minefield,      GW -> real); break;
+      case SDL_QUIT:            take_action( root -> actionque, quit              , ( void *)root); goto end;
+      case SDL_KEYDOWN:         take_action( root -> actionque, keypressevent     , ( void *)root); break;
+      case SDL_KEYUP:           take_action( root -> actionque, keyreleasevent    , ( void *)root); break;
+      case SDL_MOUSEBUTTONDOWN: take_action( root -> actionque, pointerpressevent , ( void *)root); break;
+      case SDL_MOUSEBUTTONUP:   take_action( root -> actionque, pointerreleasevent, ( void *)root); break;
+      case SDL_MOUSEMOTION:     take_action( root -> actionque, pointermoveevent  , ( void *)root); break;
       default: break;
       }
       
-      if( ret > 0) root -> nextframe = root -> tutime;
+      root -> nextframe = root -> tutime;
       
       assert( ret >= -1);
     }
@@ -391,11 +391,11 @@ keypressevent( void *data){
 
 
 int
-keyreleasevent( SDL_Event event,
-                MS_diff *diff){
+keyreleasevent( void *data){
   int ret = 0;
-  unsigned e =  event.key.keysym.sym;
-      
+  unsigned e    = ( ( MS_root *)data) -> event.key.keysym.sym;
+  MS_diff *diff = ( ( MS_root *) data) -> diff;
+  
   if( e == SDLK_h || e == SDLK_LEFT){
     diff -> x += 3;
     diff -> x = diff -> x < 0? 0: diff -> x;
@@ -436,10 +436,13 @@ swap_flag( MS_field *minefield, int x, int y){
 
 
 int
-pointerpressevent( SDL_Event event,
-                   MS_field *minefield,
-                   MS_video video){
+pointerpressevent( void *data){
   int ret = 0;
+  
+  SDL_Event event     = ( ( MS_root *)data) -> event;
+  MS_field *minefield = ( ( MS_root *)data) -> minefield;
+  MS_video video      = ( ( MS_root *)data) -> GW -> real;
+  
   MS_pos postion;
   MS_video vid;
   
@@ -469,13 +472,16 @@ pointerpressevent( SDL_Event event,
 
 
 int
-pointerreleasevent( SDL_Event event,
-                    MS_field *minefield,
-                    MS_stream *mss,
-                    MS_video video,
-                    __uint64_t tutime,
-                    __uint64_t gamestart){
+pointerreleasevent( void *data){
   int ret = 0;
+  
+  SDL_Event event     = ( ( MS_root *)data) -> event;
+  MS_field *minefield = ( ( MS_root *)data) -> minefield;
+  MS_stream *mss      = ( ( MS_root *)data) -> mss;
+  MS_video video      = ( ( MS_root *)data) -> GW -> real;
+  u64 tutime          = ( ( MS_root *)data) -> tutime;
+  u64 gamestart       = ( ( MS_root *)data) -> gamestart;
+  
   MS_pos postion, *el;
   MS_video vid;
   
@@ -545,10 +551,13 @@ pointerreleasevent( SDL_Event event,
 
 
 int
-pointermoveevent( SDL_Event event,
-                  MS_field *minefield,
-                  MS_video video){
+pointermoveevent( void *data){
   int ret = 0;
+  
+  SDL_Event event     = ( ( MS_root *)data) -> event;
+  MS_field *minefield = ( ( MS_root *)data) -> minefield;
+  MS_video video      = ( ( MS_root *)data) -> GW -> real;
+  
   MS_pos postion, prv_pos;
   
   unsigned long pos, pps;
