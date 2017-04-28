@@ -22,17 +22,25 @@ quit( void){
   SDL_PushEvent( &key);
 }
 
+
+typedef struct{
+  int ( *func)( void *);
+  void *data;
+}action;
+
+
 typedef struct{
   const int *argc;
   const char ***argv;
   GraphicWraper *GW;
   MS_field *minefield;
   MS_stream *mss;
+  ComandStream *actionque;
 }MS_root;
 
 MS_root *ROOT_Init( MS_root *);
 void ROOT_Free( MS_root *);
-int mainloop( MS_stream *, MS_field *, GraphicWraper *);
+int mainloop( void *);
 int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
 int keyreleasevent( SDL_Event, MS_diff *);
 int swap_flag( MS_field *, int, int);
@@ -161,6 +169,7 @@ ROOT_Free( MS_root *root){
     MF_Free( root -> minefield);
     GW_Free( root -> GW);
     MS_Free( root -> mss);
+    CS_Free( root -> actionque);
     MS_Free( root);
   }
 }
@@ -174,6 +183,7 @@ main( const int argc, const char** argv){
   if( ( root              = ROOT_Init( root             )) == NULL) goto fault;
   if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto fault;
   if( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto fault;
+  if( ( root -> actionque = CS_Create(         action   )) == NULL) goto fault;
   
   if( strstr( root -> minefield -> title, "benchmark")){
     SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
@@ -182,9 +192,22 @@ main( const int argc, const char** argv){
   }
   
   setminefield( root -> minefield, root -> mss, root -> GW -> mfvid);
-  
-  ret = mainloop( root -> mss, root -> minefield, root -> GW);
 
+  {
+    action *act;
+
+    act = CS_Fetch( root -> actionque);
+    
+    act -> func = mainloop;
+    act -> data = ( void *)root;
+    
+    CS_Push( root -> actionque, act);
+    
+    while( ( act = CS_Releas( root -> actionque)) != NULL){
+      ret = act -> func( act -> data);
+    }
+  }
+  
   MS_print( root -> mss -> out, "\rBye!                                \n");
  fault:
   ROOT_Free( root);
@@ -197,8 +220,12 @@ main( const int argc, const char** argv){
 
 
 int
-mainloop( MS_stream *mss, MS_field *minefield, GraphicWraper *GW){
+mainloop( void *root){
   int ret = -1;
+
+  MS_stream     *mss       = ( ( MS_root *)root) -> mss;
+  MS_field      *minefield = ( ( MS_root *)root) -> minefield;
+  GraphicWraper *GW        = ( ( MS_root *)root) -> GW;
   
   SDL_Event event;
   
