@@ -28,6 +28,7 @@ typedef struct{
   MS_field *minefield;
   MS_stream *mss;
   ComandStream *actionque;
+  SDL_Event event;
   u64 tutime;
   u64 nextframe;
   u64 gamestart;
@@ -41,7 +42,7 @@ int quit( void *);
 MS_root *ROOT_Init( MS_root *);
 void ROOT_Free( MS_root *);
 int mainloop( void *);
-int keypressevent( SDL_Event, MS_field *, MS_stream *, MS_video, MS_diff *);
+int keypressevent( void *);
 int keyreleasevent( SDL_Event, MS_diff *);
 int swap_flag( MS_field *, int, int);
 int pointerpressevent( SDL_Event, MS_field *, MS_video);
@@ -228,7 +229,7 @@ main( const int argc, const char** argv){
   
   
   {
-    action *act;
+    action *act, *dact = MS_CreateEmpty( action);
     
     act = CS_Fetch( root -> actionque);
     
@@ -240,8 +241,9 @@ main( const int argc, const char** argv){
     while( ( act = CS_Releas( root -> actionque)) != NULL){
       assert( act -> func != NULL);
       assert( act -> data != NULL);
-      ret = act -> func( act -> data);
+      *dact = *act;
       CS_Finish( root -> actionque, act);
+      ret = dact -> func( dact -> data);
     }
   }
   
@@ -263,11 +265,10 @@ mainloop( void *data){
   MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = root -> GW;
   
-  SDL_Event event;
   int e;
   
   if( root -> nexttu > root -> tutime){
-    e = SDL_WaitEventTimeout( &event, ( root -> nexttu - root -> tutime) / 1000000);
+    e = SDL_WaitEventTimeout( &root -> event, ( root -> nexttu - root -> tutime) / 1000000);
     
     root -> tutime = getnanosec();
     if( !minefield -> mine -> uncoverd){
@@ -275,13 +276,13 @@ mainloop( void *data){
     }
     
     if( e){
-      switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
-      case SDL_QUIT: take_action( root -> actionque, quit, ( void *)root); goto end;
-      case SDL_KEYDOWN:         ret = keypressevent(      event, minefield, mss, GW -> mfvid, root -> diff); break;
-      case SDL_KEYUP:           ret = keyreleasevent(     event,                              root -> diff); break;
-      case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent(  event, minefield,      GW -> real); break;
-      case SDL_MOUSEBUTTONUP:   ret = pointerreleasevent( event, minefield, mss, GW -> real, root -> tutime, root -> gamestart); break;
-      case SDL_MOUSEMOTION:     ret = pointermoveevent(   event, minefield,      GW -> real); break;
+      switch( expect( root -> event.type, SDL_MOUSEBUTTONDOWN)){
+      case SDL_QUIT:      take_action( root -> actionque, quit         , ( void *)root); goto end;
+      case SDL_KEYDOWN:   take_action( root -> actionque, keypressevent, ( void *)root); break;
+      case SDL_KEYUP:           ret = keyreleasevent(     root -> event,                              root -> diff); break;
+      case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent(  root -> event, minefield,      GW -> real); break;
+      case SDL_MOUSEBUTTONUP:   ret = pointerreleasevent( root -> event, minefield, mss, GW -> real, root -> tutime, root -> gamestart); break;
+      case SDL_MOUSEMOTION:     ret = pointermoveevent(   root -> event, minefield,      GW -> real); break;
       default: break;
       }
       
@@ -338,27 +339,33 @@ mainloop( void *data){
 
 
 int
-keypressevent( SDL_Event event,
-               MS_field *minefield,
-               MS_stream *mss,
-               MS_video mfvid,
-               MS_diff *diff){
+keypressevent( void *data){
   int ret = 0;
+  
+  MS_root       *root      = ( MS_root *)data;
+  MS_stream     *mss       = root -> mss;
+  MS_field      *minefield = root -> minefield;
+  GraphicWraper *GW        = root -> GW;
+  
+  SDL_Event event = root -> event;
+
+  MS_diff *diff = root -> diff;
+  
   unsigned e =  event.key.keysym.sym;
     
   switch( e){
   case SDLK_ESCAPE:
-    //quit( ( void *)root);
-    return 0;
+    take_action( root -> actionque, quit, ( void *)root);
+    break;
   case SDLK_F2:
     if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
-      setminefield( minefield, mss, mfvid);
+      setminefield( minefield, mss, GW -> mfvid);
       ret = 1;
     }
     break;
   case SDLK_F3:
     if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
-      ret = uncov_elements( *minefield, minefield -> uncovque, mfvid, minefield -> mine);
+      ret = uncov_elements( *minefield, minefield -> uncovque, GW -> mfvid, minefield -> mine);
     }
     if unlikely( uncov( minefield)){
       ret = -2;
