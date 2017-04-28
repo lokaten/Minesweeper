@@ -14,14 +14,6 @@
 #include "minefield.h"
 #include "OPT.h"
 
-void quit( void);
-
-void
-quit( void){
-  SDL_Event key = ( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}};
-  SDL_PushEvent( &key);
-}
-
 
 typedef struct{
   int ( *func)( void *);
@@ -44,6 +36,7 @@ typedef struct{
   u32 seed;
 }MS_root;
 
+int quit( void *);
 MS_root *ROOT_Init( MS_root *);
 void ROOT_Free( MS_root *);
 int mainloop( void *);
@@ -54,6 +47,19 @@ int pointerpressevent( SDL_Event, MS_field *, MS_video);
 int pointerreleasevent( SDL_Event, MS_field *, MS_stream *, MS_video, __uint64_t, __uint64_t);
 int pointermoveevent( SDL_Event, MS_field *, MS_video);
 INLINE void printtime( FILE *, unsigned long);
+
+
+int
+quit( void *data){
+  int ret = 0;
+  MS_root *root = ( MS_root *)data;
+  action *act;
+  while( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
+    CS_Finish( root -> actionque, act);
+  }
+  return ret;
+}
+
 
 MS_root *
 ROOT_Init( MS_root *root){
@@ -120,7 +126,7 @@ ROOT_Init( MS_root *root){
     if( root -> mss -> hlp){
       help( root -> mss -> hlp, opt);
       ret = root;
-      quit();
+      quit( ( void *)root);
       goto end;
     }
 #endif
@@ -259,16 +265,7 @@ mainloop( void *data){
     
     if( e){
       switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
-      case SDL_QUIT:
-        ret = 0;
-        {
-          action *act;
-          while( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
-            CS_Finish( root -> actionque, act);
-          }
-        }
-        goto end;
-        break;
+      case SDL_QUIT: ret = quit( ( void *)root); goto end;
       case SDL_KEYDOWN:         ret = keypressevent(      event, minefield, mss, GW -> mfvid, root -> diff); break;
       case SDL_KEYUP:           ret = keyreleasevent(     event,                              root -> diff); break;
       case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent(  event, minefield,      GW -> real); break;
@@ -350,7 +347,7 @@ keypressevent( SDL_Event event,
     
   switch( e){
   case SDLK_ESCAPE:
-    quit();
+    //quit( ( void *)root);
     return 0;
   case SDLK_F2:
     if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
