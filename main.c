@@ -180,10 +180,10 @@ main( const int argc, const char** argv){
   int ret = -1;
   MS_root *root = MS_Create( MS_root, .argc = &argc, .argv = &argv);
   
-  if( ( root              = ROOT_Init( root             )) == NULL) goto fault;
-  if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto fault;
-  if( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto fault;
-  if( ( root -> actionque = CS_Create(         action   )) == NULL) goto fault;
+  if( ( root              = ROOT_Init( root             )) == NULL) goto end;
+  if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto end;
+  if( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto end;
+  if( ( root -> actionque = CS_Create(         action   )) == NULL) goto end;
   
   if( strstr( root -> minefield -> title, "benchmark")){
     SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
@@ -205,11 +205,12 @@ main( const int argc, const char** argv){
     
     while( ( act = CS_Releas( root -> actionque)) != NULL){
       ret = act -> func( act -> data);
+      CS_Finish( root -> actionque, act);
     }
   }
   
   MS_print( root -> mss -> out, "\rBye!                                \n");
- fault:
+ end:
   ROOT_Free( root);
   MS_print( stdout, "\r");
   exit( ret);
