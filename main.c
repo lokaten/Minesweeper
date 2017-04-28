@@ -91,6 +91,7 @@ ROOT_Init( MS_root *root){
   
   if(   root                                                == NULL) goto end;
   if( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto end;
+  if( ( root -> actionque = CS_Create(      action       )) == NULL) goto end;
   if( ( root -> mss       = def_out                       ) == NULL) goto end;
   if( ( root -> minefield = field_custom                  ) == NULL) goto end;
   
@@ -138,7 +139,7 @@ ROOT_Init( MS_root *root){
     if( root -> mss -> hlp){
       help( root -> mss -> hlp, opt);
       ret = root;
-      quit( ( void *)root);
+      take_action( root -> actionque, quit, ( void *)root);
       goto end;
     }
 #endif
@@ -208,7 +209,6 @@ main( const int argc, const char** argv){
   if( ( root              = ROOT_Init( root             )) == NULL) goto end;
   if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto end;
   if( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto end;
-  if( ( root -> actionque = CS_Create(         action   )) == NULL) goto end;
   
   if( strstr( root -> minefield -> title, "benchmark")){
     SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
