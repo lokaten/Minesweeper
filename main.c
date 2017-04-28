@@ -36,6 +36,12 @@ typedef struct{
   MS_field *minefield;
   MS_stream *mss;
   ComandStream *actionque;
+  u64 tutime;
+  u64 nextframe;
+  u64 gamestart;
+  u64 nexttu;
+  MS_diff *diff;
+  u32 seed;
 }MS_root;
 
 MS_root *ROOT_Init( MS_root *);
@@ -170,6 +176,7 @@ ROOT_Free( MS_root *root){
     GW_Free( root -> GW);
     MS_Free( root -> mss);
     CS_Free( root -> actionque);
+    MS_Free( root -> diff);
     MS_Free( root);
   }
 }
@@ -192,10 +199,20 @@ main( const int argc, const char** argv){
   }
   
   setminefield( root -> minefield, root -> mss, root -> GW -> mfvid);
-
+  
+  root -> diff = MS_CreateEmpty( MS_diff);
+  
+  root -> seed = MS_rand_seed();
+  
+  root -> tutime    = getnanosec();
+  root -> gamestart = root -> tutime;
+  root -> nextframe = root -> tutime;
+  root -> nexttu    = root -> tutime;
+  
+  
   {
     action *act;
-
+    
     act = CS_Fetch( root -> actionque);
     
     act -> func = mainloop;
@@ -204,6 +221,8 @@ main( const int argc, const char** argv){
     CS_Push( root -> actionque, act);
     
     while( ( act = CS_Releas( root -> actionque)) != NULL){
+      assert( act -> func != NULL);
+      assert( act -> data != NULL);
       ret = act -> func( act -> data);
       CS_Finish( root -> actionque, act);
     }
@@ -218,102 +237,104 @@ main( const int argc, const char** argv){
 }
 
 
-
-
 int
-mainloop( void *root){
-  int ret = -1;
-
-  MS_stream     *mss       = ( ( MS_root *)root) -> mss;
-  MS_field      *minefield = ( ( MS_root *)root) -> minefield;
-  GraphicWraper *GW        = ( ( MS_root *)root) -> GW;
+mainloop( void *data){
+  int ret = 1;
+  
+  MS_root       *root      = ( MS_root *)data;
+  MS_stream     *mss       = root -> mss;
+  MS_field      *minefield = root -> minefield;
+  GraphicWraper *GW        = root -> GW;
   
   SDL_Event event;
-  
-  __uint64_t tutime, nextframe, gamestart, nexttu;
-  
-  MS_diff *diff = MS_CreateEmpty( MS_diff);
-  
-  unsigned long seed = MS_rand_seed();
-  
   int e;
+  
+  if( root -> nexttu > root -> tutime){
+    e = SDL_WaitEventTimeout( &event, ( root -> nexttu - root -> tutime) / 1000000);
     
-  tutime = getnanosec();
-  gamestart = tutime;
-  nextframe = tutime;
-  nexttu = tutime;
-      
-  while( TRUE){
-    
-    if( nexttu > tutime){
-      e = SDL_WaitEventTimeout( &event, ( nexttu - tutime) / 1000000);
-      
-      tutime = getnanosec();
-      if( !minefield -> mine -> uncoverd){
-        gamestart = tutime;
-      }
-      
-      if( e){
-        switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
-        case SDL_QUIT: ret = 0; goto end;
-        case SDL_KEYDOWN:         ret = keypressevent(      event, minefield, mss, GW -> mfvid, diff); break;
-        case SDL_KEYUP:           ret = keyreleasevent(     event,                              diff); break;
-        case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent(  event, minefield,      GW -> real); break;
-        case SDL_MOUSEBUTTONUP:   ret = pointerreleasevent( event, minefield, mss, GW -> real, tutime, gamestart); break;
-        case SDL_MOUSEMOTION:     ret = pointermoveevent(   event, minefield,      GW -> real); break;
-        default: break;
-        }
-        
-        if( ret > 0) nextframe = tutime;
-        
-        assert( ret >= -1);
-      }
-    }else{
-      if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
-	MS_print( mss -> out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
-      }else{
-	gamestart = tutime;
-      }
-#ifndef NO_TERM
-      printtime( mss -> out, ( tutime - gamestart) / 1000000);
-      
-      nexttu = getnanosec();
-      
-      /* to make sure the time looks like it updatet consistanly we randomaize
-       * the time we wait betwen updating it, with max time betwen update beigen 150ms
-       */
-      nexttu += 50000000lu + ( ( ( __uint64_t)( seed = MS_rand( seed)) * 100000000lu) / MS_RAND_MAX);
-#endif
+    root -> tutime = getnanosec();
+    if( !minefield -> mine -> uncoverd){
+      root -> gamestart = root -> tutime;
     }
     
-    
-    if( ( nextframe == tutime) || ( ( nextframe < tutime) && ( diff -> x || diff -> y))){
-      if( window_scroll( GW, *diff)){
-        nextframe += 1000000000 / 30;
+    if( e){
+      switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
+      case SDL_QUIT:
+        ret = 0;
+        {
+          action *act;
+          while( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
+            CS_Finish( root -> actionque, act);
+          }
+        }
+        goto end;
+        break;
+      case SDL_KEYDOWN:         ret = keypressevent(      event, minefield, mss, GW -> mfvid, root -> diff); break;
+      case SDL_KEYUP:           ret = keyreleasevent(     event,                              root -> diff); break;
+      case SDL_MOUSEBUTTONDOWN: ret = pointerpressevent(  event, minefield,      GW -> real); break;
+      case SDL_MOUSEBUTTONUP:   ret = pointerreleasevent( event, minefield, mss, GW -> real, root -> tutime, root -> gamestart); break;
+      case SDL_MOUSEMOTION:     ret = pointermoveevent(   event, minefield,      GW -> real); break;
+      default: break;
       }
       
-      assert( !( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))));
-      
-      assert( !( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)));
-      
-      ret = draw( GW, *minefield);
+      if( ret > 0) root -> nextframe = root -> tutime;
       
       assert( ret >= -1);
-      
-      nexttu = getnanosec();
-#ifdef DEBUG
-      if( mss -> deb != NULL){
-        __uint64_t mytime = getnanosec() - tutime;
-        
-        DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
-      }
-#endif
     }
+  }else{
+    if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
+      MS_print( mss -> out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
+    }else{
+      root -> gamestart = root -> tutime;
+    }
+#ifndef NO_TERM
+    printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
+    
+    root -> nexttu = getnanosec();
+    
+    /* to make sure the time looks like it updatet consistanly we randomaize
+     * the time we wait betwen updating it, with max time betwen update beigen 150ms
+     */
+    root -> nexttu += 50000000lu + ( ( ( __uint64_t)( root -> seed = MS_rand( root -> seed)) * 100000000lu) / MS_RAND_MAX);
+#endif
+  }
+  
+  
+  if( ( root -> nextframe == root -> tutime) || ( ( root -> nextframe < root -> tutime) && ( root -> diff -> x || root -> diff -> y))){
+    if( window_scroll( GW, *root -> diff)){
+      root -> nextframe += 1000000000 / 30;
+    }
+    
+    assert( !( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))));
+    
+    assert( !( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)));
+    
+    ret = draw( GW, *minefield);
+    
+    assert( ret >= -1);
+    
+    root -> nexttu = getnanosec();
+#ifdef DEBUG
+    if( mss -> deb != NULL){
+      __uint64_t mytime = getnanosec() - root -> tutime;
+      
+      DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
+    }
+#endif
+  }
+  
+  {
+    action *act;
+    
+    act = CS_Fetch( root -> actionque);
+    
+    act -> func = mainloop;
+    act -> data = ( void *)root;
+    
+    CS_Push( root -> actionque, act);
   }
   
  end:
-  if( diff != NULL)free( diff);
-  
   return ret;
 }
 
