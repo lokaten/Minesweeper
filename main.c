@@ -258,18 +258,14 @@ mainloop( void *data){
   MS_stream     *mss       = root -> mss;
   MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = root -> GW;
-  
-  int e;
-  
-  if( root -> nexttu > root -> tutime){
-    e = SDL_WaitEventTimeout( &root -> event, ( root -> nexttu - root -> tutime) / 1000000);
     
+  if( root -> nexttu > root -> tutime){
     root -> tutime = getnanosec();
     if( !minefield -> mine -> uncoverd){
       root -> gamestart = root -> tutime;
     }
     
-    if( e){
+    if( SDL_WaitEventTimeout( &root -> event, ( root -> nexttu - root -> tutime) / 1000000)){
       switch( expect( root -> event.type, SDL_MOUSEBUTTONDOWN)){
       case SDL_QUIT:      take_action( root -> actionque, quit         , ( void *)root); goto end;
       case SDL_KEYDOWN:   take_action( root -> actionque, keypressevent, ( void *)root); break;
