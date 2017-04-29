@@ -49,13 +49,17 @@ extern "C" {
 #define acse LOCALE_( acse)
   
 #endif
-  
-  void setzero( MS_field, MS_mstr *, MS_video);
+
+  typedef struct{ MS_field *minefield; MS_video vid;}setzeroargs;
+  int setzero( void *args);
   MS_field *MF_Init( MS_field *);
-  void setminefield( MS_field *, MS_stream *, MS_video);
+  typedef struct{ MS_field *minefield; MS_stream *mss; MS_video video;}setminefieldargs;
+  int setminefield( void *);
   void MF_Free( MS_field *);
-  int uncov( MS_field *);
-  int uncov_elements( MS_field, ComandStream *, MS_video, MS_mstr *);
+  typedef struct{ MS_field *minefield;}uncovargs;
+  int uncov( void *);
+  typedef struct{ MS_field *minefield;  MS_video vid;}uncov_elementsargs;  
+  int uncov_elements( void *args);
   
 #ifdef __cplusplus
 }

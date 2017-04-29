@@ -52,8 +52,14 @@ MF_Init( MS_field *minefield){
 }
 
 
-void
-setminefield( MS_field *minefield, MS_stream *mss, MS_video video){
+int
+setminefield( void *args){
+  int ret = 0;
+  
+  MS_field  *minefield = ( ( setminefieldargs *)args) -> minefield;
+  MS_stream *mss       = ( ( setminefieldargs *)args) -> mss;
+  MS_video   video     = ( ( setminefieldargs *)args) -> video;
+  
   unsigned long i;
   unsigned long x;
   
@@ -91,6 +97,9 @@ setminefield( MS_field *minefield, MS_stream *mss, MS_video video){
   }
   
   MS_print( mss -> deb, "\rSeed: %08x   \n", minefield -> mine -> seed);
+  
+  MS_Free( args);
+  return ret;
 }
 
 
@@ -127,12 +136,16 @@ addelement( MS_field *minefield, signed long x, signed long y){
 
 
 int
-uncov( MS_field *minefield){
+uncov( void *args){
   int ret = 0;
+  
+  MS_field *minefield = ( ( uncovargs *)args) -> minefield;
   MS_pos *element;
   
+  assert( minefield != NULL);
+  
   while likely( ( element = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
-      
+    
     /* check if elemnt has no suronding mines and if that is the case continue whit uncovering the neigburing elemnts
      */
     if( ( uncover_element( *minefield, *element, minefield -> mine) & ECOUNT) == 0){
@@ -151,7 +164,8 @@ uncov( MS_field *minefield){
     
     CS_Finish( minefield -> uncovque, element);
   }
-      
+  
+  MS_Free( args);
   return ret;
 }
 
@@ -213,48 +227,49 @@ setmine_element( __uint8_t *element, MS_mstr *mine){
 
 
 int
-uncov_elements( MS_field minefield, ComandStream *CS, MS_video vid, MS_mstr *mine){
+uncov_elements( void *args){
+  int ret = 0;
+  
+  MS_field *minefield = ( ( uncov_elementsargs *)args) -> minefield;
+  MS_video  vid       = ( ( uncov_elementsargs *)args) -> vid;
+  
   unsigned long i, x, y;
-  signed long ret;
-  
-  ( void)mine;
-  
-  ret = 0;
   
   i = vid.width * vid.height;
   
   while( i--){
-    x = ( ( i % vid.width) + vid.xdiff) % minefield.width;
-    y = ( ( i / vid.width) + vid.ydiff) % minefield.height;
-  
-    if unlikely( addelement( &minefield, x, y) == -2) ret = -2;
+    x = ( ( i % vid.width) + vid.xdiff) % minefield -> width;
+    y = ( ( i / vid.width) + vid.ydiff) % minefield -> height;
+    
+    ret = addelement( minefield, x, y);
   }
-
-  if( CS -> push != CS -> releas){
-    ret = 1;
-  }
-  
+    
   return ret;
 }
 
 
-void
-setzero( MS_field minefield, MS_mstr *mine, MS_video vid){
+int
+setzero( void *args){
+  int ret = 0;
+  
+  MS_field *minefield = ( ( setzeroargs *)args) -> minefield;
+  MS_video  vid       = ( ( setzeroargs *)args) -> vid;
+  
   unsigned long i, x, y;
     
   i = vid.width * vid.height;
   
   while( i--){
-    x = ( ( i % vid.width) + vid.xdiff) % minefield.width;
-    y = ( ( i / vid.width) + vid.ydiff) % minefield.height;
+    x = ( ( i % vid.width) + vid.xdiff) % minefield -> width;
+    y = ( ( i / vid.width) + vid.ydiff) % minefield -> height;
 
-    if( !( *acse( minefield, x, y) & ESET ) &&
-        !( *acse( minefield, x, y) & EFLAG)){
-      *acse( minefield, x, y) |= ESET;
-      ++( *mine).set;
+    if( !( *acse( *minefield, x, y) & ESET ) &&
+        !( *acse( *minefield, x, y) & EFLAG)){
+      *acse( *minefield, x, y) |= ESET;
+      ++minefield -> mine ->  set;
     }
     
   }
     
-  return;
+  return ret;
 }
