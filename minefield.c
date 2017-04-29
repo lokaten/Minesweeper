@@ -243,7 +243,8 @@ uncov_elements( void *args){
     
     ret = addelement( minefield, x, y);
   }
-    
+  
+  MS_Free( args);
   return ret;
 }
 
@@ -270,6 +271,7 @@ setzero( void *args){
     }
     
   }
-    
+  
+  MS_Free( args);
   return ret;
 }
