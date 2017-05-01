@@ -158,7 +158,7 @@ GraphicWraper *
 GW_Init( GraphicWraper *GW){
   GraphicWraper *ret = NULL;
   
-  if( GW == NULL) goto end;
+  if unlikely( GW == NULL) goto end;
   
   GW -> real.realwidth  = GW -> real.realwidth ? GW -> real.realwidth : GW -> mfvid.width  * GW -> real.element_width;
   GW -> real.realheight = GW -> real.realheight? GW -> real.realheight: GW -> mfvid.height * GW -> real.element_height;
@@ -169,16 +169,16 @@ GW_Init( GraphicWraper *GW){
   GW -> mfvid.realwidth  = GW -> mfvid.width  * GW -> real.element_width;
   GW -> mfvid.realheight = GW -> mfvid.height * GW -> real.element_height;
   
-  if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)) goto end;
+  if unlikely( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)) goto end;
   
   GW -> window = SDL_CreateWindow( "Minesweeper", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 				   GW -> real.realwidth, GW -> real.realheight, SDL_WINDOW_HIDDEN);
   
-  if( GW -> window   == NULL) goto end;
+  if unlikely( GW -> window   == NULL) goto end;
   
   GW -> renderer = SDL_CreateRenderer( GW -> window, -1, 0);
   
-  if( GW -> renderer == NULL) goto end;
+  if unlikely( GW -> renderer == NULL) goto end;
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
   SDL_RenderSetLogicalSize( GW -> renderer, GW -> real.realwidth, GW -> real.realheight);
@@ -215,7 +215,7 @@ GW_Init( GraphicWraper *GW){
   
   ret = GW;
  end:
-  if( ret != GW) GW_Free( GW);
+  if unlikely( ret != GW) GW_Free( GW);
   return ret;
 }
 

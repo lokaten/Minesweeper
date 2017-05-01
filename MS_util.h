@@ -125,7 +125,10 @@ typedef struct{
 #define ECOUNT   0x0f
 
 #define MS_RAND_MAX   4294967295u
-
+  /*
+#undef LOCALE_
+#define LOCALE_( name) __FILE__##name
+  */
 #ifdef LOCALE_
 
 INLINE void *LOCALE_( MS_Create)( size_t, int, ...);

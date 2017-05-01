@@ -17,12 +17,10 @@ MS_field *
 MF_Init( MS_field *minefield){
   MS_field *ret = NULL;
   
-  if( minefield == NULL){
-    goto end;
-  }
+  if unlikely( minefield == NULL) goto end;
   
-  if( ( minefield -> mine     = MS_CreateEmpty( MS_mstr)) == NULL) goto end;
-  if( ( minefield -> uncovque = CS_Create(      MS_pos )) == NULL) goto end;
+  if unlikely( ( minefield -> mine     = MS_CreateEmpty( MS_mstr)) == NULL) goto end;
+  if unlikely( ( minefield -> uncovque = CS_Create(      MS_pos )) == NULL) goto end;
   
   minefield -> mine -> noelements = minefield -> width * minefield -> height;
   
@@ -39,7 +37,7 @@ MF_Init( MS_field *minefield){
   
   minefield -> data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield -> width * minefield -> height);
   
-  if( minefield -> data == NULL) goto end;
+  if  unlikely( minefield -> data == NULL) goto end;
   
   if( !minefield -> global){
     memset( minefield -> data, ESET, minefield -> width * minefield -> height);
@@ -47,7 +45,7 @@ MF_Init( MS_field *minefield){
   
   ret = minefield;
  end:
-  if( ret == NULL)MF_Free( minefield);
+  if unlikely( ret == NULL)MF_Free( minefield);
   return ret;
 }
 
@@ -107,7 +105,7 @@ void
 MF_Free( MS_field *minefield){
   if( minefield != NULL){
     if( minefield -> data != NULL) free( minefield -> data);
-    if( minefield -> mine != NULL)free( minefield -> mine);
+    if( minefield -> mine != NULL) free( minefield -> mine);
     
     CS_Free( minefield -> uncovque);
   }

@@ -103,11 +103,11 @@ ROOT_Init( MS_root *root){
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
   
-  if(   root                                                == NULL) goto end;
-  if( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto end;
-  if( ( root -> actionque = CS_Create(      action       )) == NULL) goto end;
-  if( ( root -> mss       = def_out                       ) == NULL) goto end;
-  if( ( root -> minefield = field_custom                  ) == NULL) goto end;
+  if unlikely(   root                                                == NULL) goto end;
+  if unlikely( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto end;
+  if unlikely( ( root -> actionque = CS_Create(      action       )) == NULL) goto end;
+  if unlikely( ( root -> mss       = def_out                       ) == NULL) goto end;
+  if unlikely( ( root -> minefield = field_custom                  ) == NULL) goto end;
   
   {
     MS_options opt[] = {
@@ -159,8 +159,8 @@ ROOT_Init( MS_root *root){
 #endif
   }
   
-  if( root -> minefield == NULL) goto end;
-  if( root -> mss       == NULL) goto end;
+  if unlikely( root -> minefield == NULL) goto end;
+  if unlikely( root -> mss       == NULL) goto end;
   
   root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .element_width = 1,  .element_height = 1, .realwidth = 1, .realheight = 1}: root -> GW -> real;
   
@@ -186,7 +186,7 @@ ROOT_Init( MS_root *root){
   
   ret = root;
  end:
-  if( root != NULL){
+  if unlikely( root != NULL){
     if( root -> minefield != field_beginner ) MS_Free( field_beginner );
     if( root -> minefield != field_advanced ) MS_Free( field_advanced );
     if( root -> minefield != field_expert   ) MS_Free( field_expert   );
@@ -220,9 +220,9 @@ main( const int argc, const char** argv){
   int ret = -1;
   MS_root *root = MS_Create( MS_root, .argc = &argc, .argv = &argv);
   
-  if( ( root              = ROOT_Init( root             )) == NULL) goto end;
-  if( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto end;
-  if( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto end;
+  if unlikely( ( root              = ROOT_Init( root             )) == NULL) goto end;
+  if unlikely( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto end;
+  if unlikely( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto end;
   
   if( strstr( root -> minefield -> title, "benchmark")){
     SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
@@ -246,7 +246,7 @@ main( const int argc, const char** argv){
   {
     action *act, *dact = MS_CreateEmpty( action);
     
-    while( ( act = CS_Releas( root -> actionque)) != NULL){
+    while likely( ( act = CS_Releas( root -> actionque)) != NULL){
       assert( act -> func != NULL);
       assert( act -> data != NULL);
       *dact = *act;
@@ -258,7 +258,7 @@ main( const int argc, const char** argv){
   MS_print( root -> mss -> out, "\rBye!                                \n");
  end:
   ROOT_Free( root);
-  MS_print( stdout, "\r");
+  fprintf( stdout, "\r"); /* we never want this line to be optimazie out */
   exit( ret);
   return ret;
 }
