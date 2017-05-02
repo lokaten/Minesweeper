@@ -86,6 +86,7 @@ quit( void *data){
   while( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
     CS_Finish( root -> actionque, act);
   }
+  MS_print( root -> mss -> out, "\rBye!                                \n");
   return ret;
 }
 
@@ -262,9 +263,7 @@ main( const int argc, const char** argv){
     }
   }
   
-  MS_print( root -> mss -> out, "\rBye!                                \n");
  end:
-  ROOT_Free( root);
   fprintf( stdout, "\r"); /* we never want this line to be optimazie out */
   exit( ret);
   return ret;
