@@ -39,7 +39,6 @@ typedef struct{
 }MS_root;
 
 INLINE int take_action( ComandStream *, int ( *)( void *), void *);
-INLINE int new_take_action( ComandStream *, int ( *)( void *), void *);
 int quit( void *);
 MS_root *ROOT_Init( MS_root *);
 void ROOT_Free( MS_root *);
@@ -65,18 +64,7 @@ take_action( ComandStream *actionque, int ( *func)( void *), void *data){
   CS_Push( actionque, pact);
   return ret;
 }
-
-INLINE int
-new_take_action( ComandStream *actionque, int ( *func)( void *), void *data){
-  int ret = 0;
-  action *pact;
-  pact = CS_Fetch( actionque);
-  pact -> func = func;
-  pact -> data = data;
-  CS_Push( actionque, pact);
-  return ret;
-}
-#define new_take_action( que, fn, ...)  new_take_action( que, fn, ( void *)MS_Create( fn##args, __VA_ARGS__));
+#define new_take_action( que, fn, ...)  take_action( que, fn, ( void *)MS_Create( fn##args, __VA_ARGS__));
 
 int
 quit( void *data){
@@ -87,6 +75,7 @@ quit( void *data){
     CS_Finish( root -> actionque, act);
   }
   MS_print( root -> mss -> out, "\rBye!                                \n");
+  //ROOT_Free( root);
   return ret;
 }
 
