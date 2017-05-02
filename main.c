@@ -24,6 +24,7 @@ typedef struct{
 typedef struct{
   const int *argc;
   const char ***argv;
+  void *new;
   GraphicWraper *GW;
   MS_field *minefield;
   MS_stream *mss;
@@ -42,7 +43,9 @@ INLINE int new_take_action( ComandStream *, int ( *)( void *), void *);
 int quit( void *);
 MS_root *ROOT_Init( MS_root *);
 void ROOT_Free( MS_root *);
-int mainloop( void *);
+int event_dispatch( void *);
+int updateterm( void *);
+int scroll_draw( void *);
 int keypressevent( void *);
 int keyreleasevent( void *);
 int swap_flag( MS_field *, int, int);
@@ -184,6 +187,8 @@ ROOT_Init( MS_root *root){
   DEBUG_PRINT( root -> mss -> deb, "\r\t\theight: %lu   ", root -> minefield -> height);
   DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
   
+  root -> new = root;
+  
   ret = root;
  end:
   if unlikely( root != NULL){
@@ -241,7 +246,9 @@ main( const int argc, const char** argv){
   root -> nextframe = root -> tutime;
   root -> nexttu    = root -> tutime;
 
-  take_action( root -> actionque, mainloop, ( void *)root);
+  take_action( root -> actionque, event_dispatch, ( void *)root);
+  take_action( root -> actionque, updateterm    , ( void *)root);
+  take_action( root -> actionque, scroll_draw   , ( void *)root);
   
   {
     action *act, *dact = MS_CreateEmpty( action);
@@ -265,10 +272,10 @@ main( const int argc, const char** argv){
 
 
 int
-mainloop( void *data){
+event_dispatch( void *data){
   int ret = 1;
   
-  MS_root       *root      = ( MS_root *)data;
+  MS_root       *root      = MS_CreateCopy( MS_root, data);
   MS_stream     *mss       = root -> mss;
   MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = root -> GW;
@@ -294,23 +301,57 @@ mainloop( void *data){
       
       assert( ret >= -1);
     }
-  }else{
-    if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
-      MS_print( mss -> out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
-    }else{
-      root -> gamestart = root -> tutime;
-    }
-#ifndef NO_TERM
-    printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
-    
-    root -> nexttu = getnanosec();
-    
-    /* to make sure the time looks like it updatet consistanly we randomaize
-     * the time we wait betwen updating it, with max time betwen update beigen 150ms
-     */
-    root -> nexttu += 50000000lu + ( ( ( __uint64_t)( root -> seed = MS_rand( root -> seed)) * 100000000lu) / MS_RAND_MAX);
-#endif
   }
+    
+  take_action( root -> actionque, MS_Free       ,               data);
+  take_action( root -> actionque, event_dispatch, ( ( MS_root *)data) -> new);
+ end:
+  assert( data != NULL);
+  return ret;
+}
+
+
+int
+updateterm( void * data){
+  int ret = 0;
+#ifndef NO_TERM
+  
+  MS_root       *root      = MS_CreateCopy( MS_root, data);
+  MS_stream     *mss       = root -> mss;
+  MS_field      *minefield = root -> minefield;
+    
+  if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
+    MS_print( mss -> out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
+  }else{
+    root -> gamestart = root -> tutime;
+  }
+  
+  printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
+  
+  root -> nexttu = getnanosec();
+  
+  /* to make sure the time looks like it updatet consistanly we randomaize
+   * the time we wait betwen updating it, with max time betwen update beigen 150ms
+   */
+  root -> nexttu += 50000000lu + ( ( ( __uint64_t)( root -> seed = MS_rand( root -> seed)) * 100000000lu) / MS_RAND_MAX);
+  
+  take_action( root -> actionque, MS_Free   ,               data);
+  take_action( root -> actionque, updateterm, ( ( MS_root *)data) -> new);
+#endif
+ end:
+  assert( data != NULL);
+  return ret;
+}
+
+
+int
+scroll_draw( void * data){
+  int ret = 1;
+  
+  MS_root       *root      = MS_CreateCopy( MS_root, data);
+  MS_stream     *mss       = root -> mss;
+  MS_field      *minefield = root -> minefield;
+  GraphicWraper *GW        = root -> GW;
   
   
   if( ( root -> nextframe == root -> tutime) || ( ( root -> nextframe < root -> tutime) && ( root -> diff -> x || root -> diff -> y))){
@@ -336,8 +377,10 @@ mainloop( void *data){
 #endif
   }
 
-  take_action( root -> actionque, mainloop, ( void *)root);
+  take_action( root -> actionque, MS_Free    ,               data);
+  take_action( root -> actionque, scroll_draw, ( ( MS_root *)data) -> new);
  end:
+  assert( data != NULL);
   return ret;
 }
 

@@ -132,7 +132,7 @@ typedef struct{
 #ifdef LOCALE_
 
 INLINE void *LOCALE_( MS_Create)( size_t, int, ...);
-INLINE void *LOCALE_( MS_Free)( void *);
+INLINE int LOCALE_( MS_Free)( void *);
 INLINE unsigned long LOCALE_( gen_divobj)( unsigned long);
 INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
 INLINE unsigned long LOCALE_( div_)( unsigned long, unsigned long, unsigned long);
@@ -166,13 +166,14 @@ LOCALE_( MS_Create)( size_t alo_size, int num_elements, ...){
 }
 #define MS_Create( type, ...) ( type *)LOCALE_( MS_Create)( sizeof( type), 1, ( void *)&( ( type){ __VA_ARGS__}))
 #define MS_CreateEmpty( type) ( type *)LOCALE_( MS_Create)( sizeof( type), 0)
+#define MS_CreateCopy( type, src) ( type *)LOCALE_( MS_Create)( sizeof( type), 1, ( void *)src)
 
-INLINE void *
+INLINE int
 LOCALE_( MS_Free)( void *ptr){
   if( ptr != NULL) free( ptr);
-  return NULL;
+  return 0;
 }
-#define MS_Free( exp) LOCALE_( MS_Free)( ( void *)(exp))
+#define MS_Free LOCALE_( MS_Free)
 
 /* divsion is slow, make sure we don't do it more then we have to*/
 

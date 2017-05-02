@@ -21,6 +21,7 @@ extern "C" {
   
   
   typedef struct{
+    void *new;
     SDL_Window *window;
     SDL_Texture *target;
     SDL_Renderer *renderer;

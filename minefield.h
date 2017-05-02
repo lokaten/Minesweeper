@@ -22,6 +22,7 @@ extern "C" {
 
   
   typedef struct{
+    void * new;
     __uint8_t *data;
     const char *title;
     ComandStream *uncovque;

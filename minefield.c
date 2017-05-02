@@ -37,11 +37,13 @@ MF_Init( MS_field *minefield){
   
   minefield -> data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield -> width * minefield -> height);
   
-  if  unlikely( minefield -> data == NULL) goto end;
+  if unlikely( minefield -> data == NULL) goto end;
   
   if( !minefield -> global){
     memset( minefield -> data, ESET, minefield -> width * minefield -> height);
   }
+  
+  minefield -> new = minefield;
   
   ret = minefield;
  end:

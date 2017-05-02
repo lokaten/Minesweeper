@@ -213,6 +213,7 @@ GW_Init( GraphicWraper *GW){
   SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
   SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
   
+  GW -> new = GW;
   ret = GW;
  end:
   if unlikely( ret != GW) GW_Free( GW);
