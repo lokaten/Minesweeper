@@ -247,10 +247,10 @@ main( const int argc, const char** argv){
   root -> nextframe = root -> tutime;
   root -> nexttu    = root -> tutime;
 
-  take_action( root -> actionque, event_dispatch, ( void *)root);
   take_action( root -> actionque, updateterm    , ( void *)root);
+  take_action( root -> actionque, event_dispatch, ( void *)root);
   take_action( root -> actionque, scroll_draw   , ( void *)root);
-  
+    
   {
     action *act, *dact = MS_CreateEmpty( action);
     
@@ -279,33 +279,31 @@ event_dispatch( void *data){
   MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = root -> GW;
     
-  if( root -> nexttu > root -> tutime){
-    root -> tutime = getnanosec();
-    if( !minefield -> mine -> uncoverd){
-      root -> gamestart = root -> tutime;
+  root -> tutime = getnanosec();
+  if( !minefield -> mine -> uncoverd){
+    root -> gamestart = root -> tutime;
+  }
+  
+  if( SDL_WaitEventTimeout( &root -> event, ( root -> nexttu - root -> tutime) / 1000000)){
+    switch( expect( root -> event.type, SDL_MOUSEBUTTONDOWN)){
+    case SDL_QUIT:            take_action( root -> actionque, quit              , ( void *)root); goto end;
+    case SDL_KEYDOWN:         take_action( root -> actionque, keypressevent     , ( void *)root); break;
+    case SDL_KEYUP:           take_action( root -> actionque, keyreleasevent    , ( void *)root); break;
+    case SDL_MOUSEBUTTONDOWN: take_action( root -> actionque, pointerpressevent , ( void *)root); break;
+    case SDL_MOUSEBUTTONUP:   take_action( root -> actionque, pointerreleasevent, ( void *)root); break;
+    case SDL_MOUSEMOTION: new_take_action( root -> actionque, pointermoveevent  , ( void *)root); break;
+    default: break;
     }
     
-    if( SDL_WaitEventTimeout( &root -> event, ( root -> nexttu - root -> tutime) / 1000000)){
-      switch( expect( root -> event.type, SDL_MOUSEBUTTONDOWN)){
-      case SDL_QUIT:            take_action( root -> actionque, quit              , ( void *)root); goto end;
-      case SDL_KEYDOWN:         take_action( root -> actionque, keypressevent     , ( void *)root); break;
-      case SDL_KEYUP:           take_action( root -> actionque, keyreleasevent    , ( void *)root); break;
-      case SDL_MOUSEBUTTONDOWN: take_action( root -> actionque, pointerpressevent , ( void *)root); break;
-      case SDL_MOUSEBUTTONUP:   take_action( root -> actionque, pointerreleasevent, ( void *)root); break;
-      case SDL_MOUSEMOTION: new_take_action( root -> actionque, pointermoveevent  , ( void *)root); break;
-      default: break;
-      }
-      
-      root -> nextframe = root -> tutime;
-      
-      assert( ret >= -1);
-    }
+    root -> nextframe = root -> tutime;
   }
     
-  take_action( root -> actionque, MS_Free       ,               data);
-  take_action( root -> actionque, event_dispatch, ( ( MS_root *)data) -> new);
- end:
   assert( data != NULL);
+  
+  while( ( ( MS_root *)data) -> new != data) ( ( MS_root *)data) -> new = data;
+  take_action( root -> actionque, event_dispatch, ( ( MS_root *)data) -> new);
+  take_action( root -> actionque, MS_Free       ,               root);
+ end:
   return ret;
 }
 
@@ -334,11 +332,13 @@ updateterm( void * data){
    */
   root -> nexttu += 50000000lu + ( ( ( __uint64_t)( root -> seed = MS_rand( root -> seed)) * 100000000lu) / MS_RAND_MAX);
   
-  take_action( root -> actionque, MS_Free   ,               data);
+  assert( data != NULL);
+  
+  while( ( ( MS_root *)data) -> new != data) ( ( MS_root *)data) -> new = data;
   take_action( root -> actionque, updateterm, ( ( MS_root *)data) -> new);
+  take_action( root -> actionque, MS_Free   ,               root);
 #endif
  end:
-  assert( data != NULL);
   return ret;
 }
 
@@ -375,11 +375,13 @@ scroll_draw( void * data){
     }
 #endif
   }
-
-  take_action( root -> actionque, MS_Free    ,               data);
-  take_action( root -> actionque, scroll_draw, ( ( MS_root *)data) -> new);
- end:
+  
   assert( data != NULL);
+  
+  while( ( ( MS_root *)data) -> new != data) ( ( MS_root *)data) -> new = data;
+  take_action( root -> actionque, scroll_draw, ( ( MS_root *)data) -> new);
+  take_action( root -> actionque, MS_Free    ,               root);
+ end:
   return ret;
 }
 
