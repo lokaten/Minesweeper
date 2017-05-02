@@ -224,6 +224,15 @@ main( const int argc, const char** argv){
     SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONUP  , .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
     SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
   }
+  /*
+  if( strstr( root -> minefield -> title, "benchmark")){
+    take_action( root -> actionque, setzero           ,  MS_Create( setzeroargs       , root -> minefield, ( MS_video){ .xdiff = 0, .ydiff = 0, .width  = 1, .height = 1}));
+    take_action( root -> actionque, uncov_elements    ,  MS_Create( uncov_elementsargs, root -> minefield, ( MS_video){ .xdiff = 0, .ydiff = 0, .width  = 1, .height = 1}));
+    take_action( root -> actionque, uncov             ,  MS_Create( uncovargs         , root -> minefield));
+    take_action( root -> actionque, scroll_draw       , root);    
+    take_action( root -> actionque, quit              , root); 
+  }
+  */
   
   new_take_action( root -> actionque, setminefield, root -> minefield, root -> mss, root -> GW -> mfvid);
   
@@ -275,7 +284,7 @@ event_dispatch( void *data){
     root -> gamestart = root -> tutime;
   }
   
-  if( SDL_WaitEventTimeout( &root -> event, ( root -> nexttu - root -> tutime) / 1000000)){
+  if( SDL_WaitEventTimeout( &root -> event, 1)){
     switch( expect( root -> event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:            take_action( root -> actionque, quit              , root); goto end;
     case SDL_KEYDOWN:         take_action( root -> actionque, keypressevent     , root); break;
@@ -307,7 +316,12 @@ updateterm( void * data){
   MS_root       *root      = MS_CreateCopy( MS_root, data);
   MS_stream     *mss       = root -> mss;
   MS_field      *minefield = root -> minefield;
-    
+  
+  root -> tutime = getnanosec();
+  if( !minefield -> mine -> uncoverd){
+    root -> gamestart = root -> tutime;
+  }
+  
   if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
     MS_print( mss -> out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
   }else{
@@ -342,7 +356,11 @@ scroll_draw( void * data){
   MS_stream     *mss       = root -> mss;
   MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = root -> GW;
-  
+
+  root -> tutime = getnanosec();
+  if( !minefield -> mine -> uncoverd){
+    root -> gamestart = root -> tutime;
+  }
   
   if( ( root -> nextframe == root -> tutime) || ( ( root -> nextframe < root -> tutime) && ( root -> diff -> x || root -> diff -> y))){
     if( window_scroll( GW, *root -> diff)){
@@ -574,9 +592,7 @@ pointerreleasevent( void *data){
 #endif
       take_action( ( ( MS_root *)data) -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, vid));
       
-      if unlikely( uncov( minefield)){
-	ret = -2;
-      }
+      take_action( ( ( MS_root *)data) -> actionque,  uncov,  MS_Create( uncovargs, minefield));
     }
 #ifdef NO_TERM
     ( void) mss;
