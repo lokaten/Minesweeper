@@ -236,9 +236,9 @@ main( const int argc, const char** argv){
   root -> nextframe = root -> tutime;
   root -> nexttu    = root -> tutime;
 
-  take_action( root -> actionque, updateterm    , ( void *)root);
-  take_action( root -> actionque, event_dispatch, ( void *)root);
-  take_action( root -> actionque, scroll_draw   , ( void *)root);
+  take_action( root -> actionque, updateterm    , root);
+  take_action( root -> actionque, event_dispatch, root);
+  take_action( root -> actionque, scroll_draw   , root);
     
   {
     action *act, *dact = MS_CreateEmpty( action);
@@ -251,6 +251,8 @@ main( const int argc, const char** argv){
       ret = dact -> func( dact -> data);
     }
   }
+  
+  MS_Free( root);
   
  end:
   fprintf( stdout, "\r"); /* we never want this line to be optimazie out */
@@ -275,12 +277,12 @@ event_dispatch( void *data){
   
   if( SDL_WaitEventTimeout( &root -> event, ( root -> nexttu - root -> tutime) / 1000000)){
     switch( expect( root -> event.type, SDL_MOUSEBUTTONDOWN)){
-    case SDL_QUIT:            take_action( root -> actionque, quit              , ( void *)root); goto end;
-    case SDL_KEYDOWN:         take_action( root -> actionque, keypressevent     , ( void *)root); break;
-    case SDL_KEYUP:           take_action( root -> actionque, keyreleasevent    , ( void *)root); break;
-    case SDL_MOUSEBUTTONDOWN: take_action( root -> actionque, pointerpressevent , ( void *)root); break;
-    case SDL_MOUSEBUTTONUP:   take_action( root -> actionque, pointerreleasevent, ( void *)root); break;
-    case SDL_MOUSEMOTION: new_take_action( root -> actionque, pointermoveevent  , ( void *)root); break;
+    case SDL_QUIT:            take_action( root -> actionque, quit              , root); goto end;
+    case SDL_KEYDOWN:         take_action( root -> actionque, keypressevent     , root); break;
+    case SDL_KEYUP:           take_action( root -> actionque, keyreleasevent    , root); break;
+    case SDL_MOUSEBUTTONDOWN: take_action( root -> actionque, pointerpressevent , root); break;
+    case SDL_MOUSEBUTTONUP:   take_action( root -> actionque, pointerreleasevent, root); break;
+    case SDL_MOUSEMOTION: new_take_action( root -> actionque, pointermoveevent  , root); break;
     default: break;
     }
     
