@@ -151,7 +151,6 @@ LOCALE_( MS_Create)( size_t alo_size, int num_elements, ...){
   void *ret = NULL;
   void *ptr = ( void *)malloc( alo_size * ( num_elements ? num_elements: 1));
   va_list data;
-  assert( data != NULL);
   assert( alo_size);
   va_start( data, num_elements); /* no goto before this line */
   if( ptr == NULL) goto end;
