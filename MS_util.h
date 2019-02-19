@@ -193,7 +193,7 @@ LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
   unsigned long ret = ( ( ( ( b * divobj) & 8589934591lu) * a) >> 33);
   /* signficantly slower, but more corect version */
   /* unsigned long ret = b >= a? a > 2? ( ( ( b * divobj) & 8589934591lu) * a) >> 33: ( b & ( a - 1)): b; */
-  assert( ret == b % a);
+  assert( LOCALE_( div_)( b, a, divobj) * a + ret == b);
   return ret;
 }
 #define mol_ LOCALE_( mol_)
@@ -205,7 +205,7 @@ INLINE unsigned long
 LOCALE_( div_)( unsigned long b, unsigned long a, unsigned long divobj){
   unsigned long ret = ( b * ( divobj >> 1)) >> 32;
   ( void)a; /* we only take in a for the assert */
-  assert( ret == b / a);
+  assert( ret * a <= b && ret * a + a > b);
   return ret;
 }
 #define div_ LOCALE_( div_)
