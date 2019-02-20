@@ -128,9 +128,9 @@ typedef struct{
 
 INLINE void *LOCALE_( MS_Create)( size_t, int, ...);
 INLINE int LOCALE_( MS_Free)( void *);
-INLINE unsigned long LOCALE_( gen_divobj)( unsigned long);
-INLINE unsigned long LOCALE_( mol_)( unsigned long, unsigned long, unsigned long);
-INLINE unsigned long LOCALE_( div_)( unsigned long, unsigned long, unsigned long);
+static inline u32 LOCALE_( gen_divobj)( u32);
+static inline u32 LOCALE_( mol_)( u32, u32, u32);
+static inline u32 LOCALE_( div_)( u32, u32, u32);
 /* protype of named parmenter function daclaration, migth be useful in other cases*/
 typedef struct{ unsigned long seed;}MS_rand_args;
 INLINE __uint32_t LOCALE_( MS_rand)( MS_rand_args);
@@ -172,8 +172,8 @@ LOCALE_( MS_Free)( void *ptr){
 /* divsion is slow, make sure we don't do it more then we have to*/
 
 /* genrate a divobj from the divaider */
-INLINE unsigned long
-LOCALE_( gen_divobj)( unsigned long a){
+static inline u32
+LOCALE_( gen_divobj)( u32 a){
   return a > 2? ( UINT64_C( 4294967295) + (u64)a) / (u64)a: UINT64_C( 4294967295);
 }
 #define gen_divobj LOCALE_( gen_divobj)
@@ -181,10 +181,9 @@ LOCALE_( gen_divobj)( unsigned long a){
 /* divobj = gen_divobj( a)
  * ( b % a) => 
  */
-INLINE unsigned long
-LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
-  /* signficantly slower, but more corect version */
-  unsigned long ret = a > 2? ( ( ( (u64)b * (u64)divobj) & UINT64_C( 4294967295)) * (u64)a) >> 32: ( b & ( a - 1));
+static inline u32
+LOCALE_( mol_)( u32 b, u32 a, u32 divobj){
+  u32 ret = a > 2? ( ( ( (u64)b * (u64)divobj) & UINT64_C( 4294967295)) * (u64)a) >> 32: ( b & ( a - 1));
   assert( LOCALE_( div_)( b, a, divobj) * a + ret == b);
   return ret;
 }
@@ -193,10 +192,9 @@ LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
 /* divobj = gen_divobj( a)
  * ( b / a) =>
  */
-INLINE unsigned long
-LOCALE_( div_)( unsigned long b, unsigned long a, unsigned long divobj){
-  unsigned long ret = ( (u64)b * (u64)divobj) >> 32;
-  ( void)a; /* we only take in a for the assert */
+static inline u32
+LOCALE_( div_)( u32 b, u32 a, u32 divobj){
+  u32 ret = ( (u64)b * (u64)divobj) >> 32;
   assert( ret * a <= b && ret * a + a > b);
   return ret;
 }
