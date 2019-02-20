@@ -129,5 +129,5 @@ endif
 # Dependencies
 main.o:       Makefile main.c        MS_util.h GW.h             ComandStream.h OPT.h
 GW.o:         Makefile GW.c          MS_util.h GW.h minefield.h
-minefield.o:  Makefile minefield.c   MS_util.h                  ComandStream.h
+minefield.o:  Makefile minefield.c   MS_util.h      minefield.h ComandStream.h
 OPT.o:        Makefile OPT.c         MS_util.h                                 OPT.h
