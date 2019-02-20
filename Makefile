@@ -24,10 +24,10 @@ CFLAGS = -Og -ggdb -DDEBUG -v
 endif
 
 ifeq ($(SMALL), yes)
-CFLAGS ?= -Os -DNDEBUG -DSMALL
+CFLAGS ?= -Os -DSMALL
 endif
 
-CFLAGS ?= -Ofast -DNDEBUG
+CFLAGS ?= -Ofast
 
 ifeq ($(NO_TERM), yes)
 CFLAGS += -DNO_TERM

@@ -46,11 +46,6 @@ extern "C" {
 #define INLINE 
 #endif
 
-#ifdef NDEBUG
-#undef assert
-#define assert( exp) ( void)( exp);
-#endif
-
 #ifdef NO_TERM
 #define TERM( string) ""
 #else
