@@ -131,7 +131,7 @@ typedef struct{
   */
 #ifdef LOCALE_
 
-INLINE void *LOCALE_( MS_Create)( size_t, int, ...);
+static inline void *LOCALE_( MS_Create)( size_t, u16, ...);
 INLINE int LOCALE_( MS_Free)( void *);
 static inline u32 LOCALE_( gen_divobj)( u32);
 static inline u32 LOCALE_( mol_)( u32, u32, u32);
@@ -146,8 +146,8 @@ INLINE int LOCALE_( print)( FILE *, const char *, ...);
 INLINE __uint64_t LOCALE_( getmicrosec)( void);
 INLINE __uint64_t LOCALE_( getnanosec)( void);
 
-INLINE void *
-LOCALE_( MS_Create)( size_t alo_size, int num_elements, ...){
+static inline void *
+LOCALE_( MS_Create)( size_t alo_size, u16 num_elements, ...){
   void *ret = NULL;
   void *ptr = ( void *)malloc( alo_size * ( num_elements ? num_elements: 1));
   va_list data;
