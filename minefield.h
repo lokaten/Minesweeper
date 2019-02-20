@@ -43,8 +43,8 @@ extern "C" {
     
   INLINE __uint8_t *
   LOCALE_( acse)( MS_field field, int x, int y){
-    return field.data + ( mol_( ( ( x) + field.width ), field.width , field.width_divobj ) +
-			  mol_( ( ( y) + field.height), field.height, field.height_divobj) * field.width);
+    return field.data + ( mol_( (u32)( ( x) + (int)field.width ), field.width , field.width_divobj ) +
+			  mol_( (u32)( ( y) + (int)field.height), field.height, field.height_divobj) * field.width);
   }
 #define acse LOCALE_( acse)
   

@@ -58,8 +58,8 @@ setminefield( void *args){
   MS_stream *mss       = ( ( setminefieldargs *)args) -> mss;
   MS_video   video     = ( ( setminefieldargs *)args) -> video;
   
-  unsigned long i;
-  unsigned long x;
+  u32 i;
+  u32 x;
   
   i = video.height;
   
@@ -119,8 +119,8 @@ addelement( MS_field *minefield, signed long x, signed long y){
   if( ( *acse( *minefield, x, y) & ECOVER) && ( *acse( *minefield, x, y) & EFLAG) ^ EFLAG){
     MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
     if likely( pos != NULL){
-      pos -> x = mol_( ( x + minefield -> width ), minefield -> width , minefield -> width_divobj );
-      pos -> y = mol_( ( y + minefield -> height), minefield -> height, minefield -> height_divobj);
+      pos -> x = (s32)mol_( ( x + minefield -> width ), minefield -> width , minefield -> width_divobj );
+      pos -> y = (s32)mol_( ( y + minefield -> height), minefield -> height, minefield -> height_divobj);
       *acse( *minefield, x, y) &= ~ECOVER;
       CS_Push( minefield -> uncovque, pos);
     }else{
