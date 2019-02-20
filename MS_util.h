@@ -41,6 +41,11 @@ extern "C" {
 #endif
 #endif
 
+#ifdef UNSAFE
+#undef assert
+#define assert( exp) (void)0
+#endif
+
 #ifdef INLINE 
 #else
 #define INLINE 
