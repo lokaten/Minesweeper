@@ -406,12 +406,14 @@ keypressevent( void *data){
     take_action( root -> actionque, quit, ( void *)root);
     break;
   case SDLK_F2:
+  case 'r':
     if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
       take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, minefield, mss, GW -> mfvid));
       ret = 1;
     }
     break;
   case SDLK_F3:
+  case 'e':
     if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
       take_action( ( ( MS_root *)data) -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, GW -> mfvid));
     }
