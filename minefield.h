@@ -1,8 +1,8 @@
 
 
-#ifdef _MS_MF_H__
+#ifdef MS_MF_H__
 #else
-#define _MS_MF_H__
+#define MS_MF_H__
 #ifdef __cplusplus
 extern "C" {
 #endif

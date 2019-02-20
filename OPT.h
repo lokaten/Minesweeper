@@ -1,8 +1,8 @@
 
 
-#ifdef _OPT_H__
+#ifdef OPT_H__
 #else
-#define _OPT_H__
+#define OPT_H__
 #ifdef __cplusplus
 extern "C" {
 #endif
