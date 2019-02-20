@@ -81,22 +81,22 @@ typedef struct{
 
     
 typedef struct{
-  u32 realheight;
-  u32 realwidth;
-  u32 height;
-  u32 width;
-  u32 element_width;
-  u32 element_height;
-  s32 realxdiff;
-  s32 realydiff;
   s32 xdiff;
   s32 ydiff;
+  s32 realxdiff;
+  s32 realydiff;
+  u32 width;
+  u32 height;
+  u32 element_width;
+  u32 element_height;
+  u32 realwidth;
+  u32 realheight;
 }MS_video;
 
 
 typedef struct{
-  FILE *err;
   FILE *out;
+  FILE *err;
   FILE *deb;
   FILE *hlp;
 }MS_stream;

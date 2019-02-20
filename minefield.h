@@ -32,9 +32,9 @@ extern "C" {
     u32 height_divobj;
     u32 subwidth;
     u32 subheight;
+    u32 level;
     u32 global;
     u32 reseed;
-    u32 level;
   }MS_field;
   
   
