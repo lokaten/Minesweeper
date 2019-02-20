@@ -43,8 +43,6 @@ MF_Init( MS_field *minefield){
     memset( minefield -> data, ESET, minefield -> width * minefield -> height);
   }
   
-  minefield -> new = minefield;
-  
   ret = minefield;
  end:
   if unlikely( ret == NULL)MF_Free( minefield);
