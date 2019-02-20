@@ -200,17 +200,8 @@ setmine_element( __uint8_t *element, MS_mstr *mine){
   if( !( ( *element) & ESET)){
     __uint8_t u;  
     
-    /* this is probrbly the third or fourth atampte to detect 32bit machins hoepe fully it works*/
-    if( sizeof( unsigned long) == 8){
-      u = ( ( ( __uint64_t)( ( *mine).noelements - ( *mine).set  ) * ( __uint64_t)( ( *mine).seed = MS_rand( ( *mine).seed))) <
-            ( ( __uint64_t)( ( *mine).level      - ( *mine).mines) * ( __uint64_t)MS_RAND_MAX));
-    }else{
-      if( ( *mine).noelements > ( *mine).set){
-        u = ( __uint32_t)( ( *mine).seed = MS_rand( ( *mine).seed)) < ( ( MS_RAND_MAX / ( ( ( *mine).noelements - ( *mine).set))) * ( ( *mine).level - ( *mine).mines));
-      }else{
-        u = 0;
-      }
-    }
+    u = ( ( ( __uint64_t)( ( *mine).noelements - ( *mine).set  ) * ( __uint64_t)( ( *mine).seed = MS_rand( ( *mine).seed))) <
+	  ( ( __uint64_t)( ( *mine).level      - ( *mine).mines) * ( __uint64_t)MS_RAND_MAX));
     
     ++( *mine).set;
     
