@@ -1,12 +1,12 @@
 
 ifeq ($(CLANG), yes)
-CC = clang -std=c11
+CC = clang -std=c99
 CXX = clang++ -std=c++11
 endif
 
 ifeq ($(GCC), yes)
-CC = gcc -std=c11
-CXX = g++ -std=c++11
+CC = gcc -std=c99
+CXX = g++ -std=c++2a
 endif
 
 ifeq ($(CLANGPP), yes)
@@ -15,8 +15,8 @@ CXX = clang++ -std=c++11
 endif
 
 ifeq ($(GPP), yes)
-CC = g++ -std=c++11
-CXX = g++ -std=c++11
+CC = g++ -std=c++2a
+CXX = g++ -std=c++2a
 endif
 
 ifeq ($(DEBUG), yes)
@@ -52,16 +52,16 @@ ifeq ($(NATIVE), yes)
 CC += -march=native
 endif
 
-CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security -Wdeclaration-after-statement
+CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security
 CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo
 
 ifeq ($(GPP), yes)
-CFLAGS += -Wlogical-op -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel -Wno-error=missing-field-initializers -Wno-error=pedantic -fpermissive -Wno-error # temporary mesure,  can't seem to turn of Werror exclusivly for -fpermissive
+CFLAGS += -Wlogical-op -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel -Wno-error=missing-field-initializers -Wno-missing-field-initializers -Wno-error=pedantic -fpermissive -Wno-error # temporary mesure,  can't seem to turn of Werror exclusivly for -fpermissive
 CXXFLAGS += -Wnoexcept -Wstrict-null-sentinel
 else
-CFLAGS += -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes -Wno-c99-extensions
+CFLAGS += -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes -Wno-c99-extensions -Wdeclaration-after-statement
 endif
 
 ifeq ($(CLANGPP), yes)
