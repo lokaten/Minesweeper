@@ -184,7 +184,7 @@ GW_Init( GraphicWraper *GW){
   SDL_RenderSetLogicalSize( GW -> renderer, GW -> real.realwidth, GW -> real.realheight);
   SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
   
-  SDL_SetWindowResizable( GW ->  window, !GW -> no_resize);
+  SDL_SetWindowResizable( GW ->  window, (SDL_bool)!GW -> no_resize);
   
   GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> real.realwidth, GW -> real.realheight);
   
