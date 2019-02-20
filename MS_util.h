@@ -174,7 +174,7 @@ LOCALE_( MS_Free)( void *ptr){
 /* genrate a divobj from the divaider */
 INLINE unsigned long
 LOCALE_( gen_divobj)( unsigned long a){
-  return ( UINT64_C( 4294967294) + (u64)a) / (u64)a;
+  return a > 2? ( UINT64_C( 4294967295) + (u64)a) / (u64)a: UINT64_C( 4294967295);
 }
 #define gen_divobj LOCALE_( gen_divobj)
 
@@ -183,7 +183,6 @@ LOCALE_( gen_divobj)( unsigned long a){
  */
 INLINE unsigned long
 LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
-  //unsigned long ret = ( ( ( ( b * divobj) & 8589934591lu) * a) >> 33);
   /* signficantly slower, but more corect version */
   unsigned long ret = a > 2? ( ( ( (u64)b * (u64)divobj) & UINT64_C( 4294967295)) * (u64)a) >> 32: ( b & ( a - 1));
   assert( LOCALE_( div_)( b, a, divobj) * a + ret == b);
@@ -196,7 +195,7 @@ LOCALE_( mol_)( unsigned long b, unsigned long a, unsigned long divobj){
  */
 INLINE unsigned long
 LOCALE_( div_)( unsigned long b, unsigned long a, unsigned long divobj){
-  unsigned long ret = ( (u64)b * (u64)divobj) >> 31;
+  unsigned long ret = ( (u64)b * (u64)divobj) >> 32;
   ( void)a; /* we only take in a for the assert */
   assert( ret * a <= b && ret * a + a > b);
   return ret;
