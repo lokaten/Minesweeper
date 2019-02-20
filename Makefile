@@ -42,7 +42,7 @@ CFLAGS += -Wlogical-op -faggressive-loop-optimizations
 else
 ifeq ($(GPP), yes)
 else
-CFLAGS = -Weverything
+CFLAGS = -Weverything -Wno-disabled-macro-expansion
 endif
 endif
 
