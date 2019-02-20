@@ -179,7 +179,7 @@ LOCALE_( MS_Free)( void *ptr){
 /* genrate a divobj from the divaider */
 static inline u32
 LOCALE_( gen_divobj)( u32 a){
-  return a > 2? ( UINT64_C( 4294967295) + (u64)a) / (u64)a: UINT64_C( 4294967295);
+  return (u32)( a > 2? ( UINT64_C( 4294967295) + (u64)a) / (u64)a: UINT64_C( 4294967295));
 }
 #define gen_divobj LOCALE_( gen_divobj)
 

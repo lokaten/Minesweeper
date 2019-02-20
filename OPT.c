@@ -44,7 +44,8 @@ procopt( MS_stream *mss, MS_options *opt, const int argc, const char **argv){
             case OPTSW_RAW:
               /* *( void **)( opt[ j].data) = ( void *)argv[ i]; */
               break;
-	    default:
+	    case OPTSW_NUL:
+	    case OPTSW_GRP:
 	      ret = -1;
             }
             break;
@@ -79,7 +80,10 @@ procopt( MS_stream *mss, MS_options *opt, const int argc, const char **argv){
               case OPTSW_CPY:
                 *( void **)( opt[ j].data) = ( void *)( opt[ j].value);
                 break;
-              default:
+              case OPTSW_NUL:
+	      case OPTSW_X:
+	      case OPTSW_GRP:
+	      case OPTSW_RAW:
 		ret = -1;
               }
               break;
@@ -132,7 +136,7 @@ help( FILE *stream, MS_options *opt){
       break;
     case OPTSW_NUL:
       return ret;
-    default:
+    case OPTSW_RAW:
       ret = -1;
     }
   }
