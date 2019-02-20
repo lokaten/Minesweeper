@@ -119,8 +119,8 @@ addelement( MS_field *minefield, signed long x, signed long y){
   if( ( *acse( *minefield, x, y) & ECOVER) && ( *acse( *minefield, x, y) & EFLAG) ^ EFLAG){
     MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
     if likely( pos != NULL){
-      pos -> x = (s32)mol_( ( x + minefield -> width ), minefield -> width , minefield -> width_divobj );
-      pos -> y = (s32)mol_( ( y + minefield -> height), minefield -> height, minefield -> height_divobj);
+	pos -> x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
+	pos -> y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
       *acse( *minefield, x, y) &= ~ECOVER;
       CS_Push( minefield -> uncovque, pos);
     }else{
@@ -222,13 +222,14 @@ uncov_elements( void *args){
   MS_field *minefield = ( ( uncov_elementsargs *)args) -> minefield;
   MS_video  vid       = ( ( uncov_elementsargs *)args) -> vid;
   
-  unsigned long i, x, y;
+  unsigned long i;
+  int x, y;
   
   i = vid.width * vid.height;
   
   while( i--){
-    x = ( ( i % vid.width) + vid.xdiff) % minefield -> width;
-    y = ( ( i / vid.width) + vid.ydiff) % minefield -> height;
+    x = ( s32)( i % vid.width) + vid.xdiff;
+    y = ( s32)( i / vid.width) + vid.ydiff;
     
     ret = addelement( minefield, x, y);
   }
@@ -245,13 +246,14 @@ setzero( void *args){
   MS_field *minefield = ( ( setzeroargs *)args) -> minefield;
   MS_video  vid       = ( ( setzeroargs *)args) -> vid;
   
-  unsigned long i, x, y;
-    
+  unsigned long i;
+  int x, y;
+  
   i = vid.width * vid.height;
   
   while( i--){
-    x = ( ( i % vid.width) + vid.xdiff) % minefield -> width;
-    y = ( ( i / vid.width) + vid.ydiff) % minefield -> height;
+    x = ( s32)( i % vid.width) + vid.xdiff;
+    y = ( s32)( i / vid.width) + vid.ydiff;
 
     if( !( *acse( *minefield, x, y) & ESET ) &&
         !( *acse( *minefield, x, y) & EFLAG)){
