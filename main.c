@@ -57,7 +57,7 @@ INLINE int
 take_action( ComandStream *actionque, int ( *func)( void *), void *data){
   int ret = 0;
   action *pact;
-  pact = CS_Fetch( actionque);
+  pact = ( action *)CS_Fetch( actionque);
   pact -> func = func;
   pact -> data = data;
   CS_Push( actionque, pact);
@@ -250,7 +250,7 @@ main( const int argc, const char** argv){
   {
     action *act, *dact = MS_CreateEmpty( action);
     
-    while likely( ( act = CS_Releas( root -> actionque)) != NULL){
+    while likely( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
       assert( act -> func != NULL);
       assert( act -> data != NULL);
       *dact = *act;
