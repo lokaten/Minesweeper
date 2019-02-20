@@ -24,7 +24,6 @@ extern "C" {
     char *discript;
     char *name;
     char chr;
-    char pading[ 3];
     void *data;
     void *value;
   }MS_options;
