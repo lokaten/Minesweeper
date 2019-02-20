@@ -39,6 +39,11 @@ endif
 
 ifeq ($(GCC), yes)
 CFLAGS += -Wlogical-op -faggressive-loop-optimizations
+else
+ifeq ($(GPP), yes)
+else
+CFLAGS = -Weverything
+endif
 endif
 
 ifeq ($(DEV), yes)
