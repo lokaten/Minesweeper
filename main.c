@@ -24,7 +24,6 @@ typedef struct{
 typedef struct{
   const int *argc;
   const char ***argv;
-  void *new;
   GraphicWraper *GW;
   MS_field *minefield;
   MS_stream *mss;
@@ -177,7 +176,6 @@ ROOT_Init( MS_root *root){
   DEBUG_PRINT( root -> mss -> deb, "\r\t\theight: %lu   ", root -> minefield -> height);
   DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
   
-  root -> new = root;
   
   ret = root;
  end:
@@ -300,9 +298,7 @@ event_dispatch( void *data){
     
   assert( data != NULL);
   
-  while( ( ( MS_root *)data) -> new != data) ( ( MS_root *)data) -> new = data;
-  take_action( root -> actionque, event_dispatch, ( ( MS_root *)data) -> new);
-  take_action( root -> actionque, MS_Free       ,               root);
+  take_action( root -> actionque, event_dispatch, root);
  end:
   return ret;
 }
@@ -339,9 +335,7 @@ updateterm( void * data){
   
   assert( data != NULL);
   
-  while( ( ( MS_root *)data) -> new != data) ( ( MS_root *)data) -> new = data;
-  take_action( root -> actionque, updateterm, ( ( MS_root *)data) -> new);
-  take_action( root -> actionque, MS_Free   ,               root);
+  take_action( root -> actionque, updateterm, root);
 #endif
  end:
   return ret;
@@ -387,9 +381,7 @@ scroll_draw( void * data){
   
   assert( data != NULL);
   
-  while( ( ( MS_root *)data) -> new != data) ( ( MS_root *)data) -> new = data;
-  take_action( root -> actionque, scroll_draw, ( ( MS_root *)data) -> new);
-  take_action( root -> actionque, MS_Free    ,               root);
+  take_action( root -> actionque, scroll_draw, root);
  end:
   return ret;
 }
