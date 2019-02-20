@@ -63,7 +63,6 @@ take_action( ComandStream *actionque, int ( *func)( void *), void *data){
   CS_Push( actionque, pact);
   return ret;
 }
-#define new_take_action( que, fn, ...)  take_action( que, fn, ( void *)MS_Create( fn##args, __VA_ARGS__));
 
 int
 quit( void *data){
@@ -232,7 +231,7 @@ main( const int argc, const char** argv){
   }
   */
   
-  new_take_action( root -> actionque, setminefield, root -> minefield, root -> mss, root -> GW -> mfvid);
+  take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, root -> minefield, root -> mss, root -> GW -> mfvid));
   
   root -> diff = MS_CreateEmpty( MS_diff);
   
@@ -289,7 +288,7 @@ event_dispatch( void *data){
     case SDL_KEYUP:           take_action( root -> actionque, keyreleasevent    , root); break;
     case SDL_MOUSEBUTTONDOWN: take_action( root -> actionque, pointerpressevent , root); break;
     case SDL_MOUSEBUTTONUP:   take_action( root -> actionque, pointerreleasevent, root); break;
-    case SDL_MOUSEMOTION: new_take_action( root -> actionque, pointermoveevent  , root); break;
+    case SDL_MOUSEMOTION:     take_action( root -> actionque, pointermoveevent  , MS_Create( pointermoveeventargs, root)); break;
     default: break;
     }
     
@@ -408,7 +407,7 @@ keypressevent( void *data){
     break;
   case SDLK_F2:
     if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
-      new_take_action( root -> actionque, setminefield, minefield, mss, GW -> mfvid);
+      take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, minefield, mss, GW -> mfvid));
       ret = 1;
     }
     break;
