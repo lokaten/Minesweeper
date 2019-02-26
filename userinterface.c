@@ -134,9 +134,6 @@ event_dispatch( void *data){
     root -> nextframe = root -> tutime;
   }
   
-  assert( data != NULL);
-  
-  take_action( root -> actionque, event_dispatch, root);
  end:
   return ret;
 }

@@ -18,8 +18,6 @@
 int quit( void *);
 MS_root *ROOT_Init( MS_root *);
 void ROOT_Free( MS_root *);
-int updateterm( void *);
-int scroll_draw( void *);
 int swap_flag( MS_field *, int, int);
 INLINE void printtime( FILE *, unsigned long);
 
@@ -33,8 +31,8 @@ quit( void *data){
     CS_Finish( root -> actionque, act);
   }
   MS_print( root -> mss -> out, "\rBye!                                \n");
-  //ROOT_Free( root);
-  return ret;
+  ROOT_Free( root);
+  exit( ret);
 }
 
 
@@ -203,23 +201,83 @@ main( const int argc, const char** argv){
     take_action( root -> actionque, setzero           ,  MS_Create( setzeroargs       , root -> minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3}));
     take_action( root -> actionque, uncov_elements    ,  MS_Create( uncov_elementsargs, root -> minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1}));
     take_action( root -> actionque, uncov             ,  MS_Create( uncovargs         , root -> minefield));
-    take_action( root -> actionque, updateterm    , root);
     take_action( root -> actionque, quit              , root);
   }
   
-  take_action( root -> actionque, updateterm    , root);
-  take_action( root -> actionque, event_dispatch, root);
-  take_action( root -> actionque, scroll_draw   , root);
-  
-  {
-    action *act, *dact = MS_CreateEmpty( action);
+  while( TRUE){
+    {
+      action *act, *dact = MS_CreateEmpty( action);
+      
+      while likely( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
+	assert( act -> func != NULL);
+	assert( act -> data != NULL);
+	*dact = *act;
+	CS_Finish( root -> actionque, act);
+	ret = dact -> func( dact -> data);
+      }
+    }
     
-    while likely( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
-      assert( act -> func != NULL);
-      assert( act -> data != NULL);
-      *dact = *act;
-      CS_Finish( root -> actionque, act);
-      ret = dact -> func( dact -> data);
+    {
+#ifndef NO_TERM
+      MS_stream     *mss       = root -> mss;
+      MS_field      *minefield = root -> minefield;
+      
+      if( !root -> gameover){
+	if unlikely( minefield -> mine -> hit){
+	  printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
+	  MS_print( mss -> out, "\r\t\t\t Mine!!               \n");
+	  root -> gameover = TRUE;
+	}
+	
+	if unlikely( !minefield -> mine -> hit && ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level))){
+	  printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
+	  MS_print( mss -> out, "\r\t\t\t Win!!         \n");
+	  root -> gameover = TRUE;
+	}
+      }
+      
+      if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
+	MS_print( mss -> out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
+      }
+      
+      printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
+      
+      root -> nexttu = getnanosec();
+      
+      /* to make sure the time looks like it updatet consistanly we randomaize
+       * the time we wait betwen updating it, with max time betwen update beigen 150ms
+       */
+      root -> nexttu += 50000000lu + ( ( ( __uint64_t)( root -> seed = MS_rand( root -> seed)) * 100000000lu) / MS_RAND_MAX);
+#endif
+    }
+        
+    {
+      MS_stream     *mss       = root -> mss;
+      MS_field      *minefield = root -> minefield;
+      GraphicWraper *GW        = root -> GW;
+      
+      if( ( root -> nextframe == root -> tutime) || ( ( root -> nextframe < root -> tutime) && ( root -> diff -> x || root -> diff -> y))){
+	if( window_scroll( GW, *root -> diff)){
+	  root -> nextframe += 1000000000 / 30;
+	}
+	
+	assert( !( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))));
+	
+	assert( !( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)));
+	
+	ret = draw( GW, *minefield);
+	
+	event_dispatch( root);
+	
+	root -> nexttu = getnanosec();
+#ifdef DEBUG
+	if( mss -> deb != NULL){
+	  __uint64_t mytime = getnanosec() - root -> tutime;
+	  
+	  DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
+	}
+#endif
+      }
     }
   }
   
@@ -230,93 +288,6 @@ main( const int argc, const char** argv){
   exit( ret);
   return ret;
 }
-
-
-int
-updateterm( void * data){
-  int ret = 0;
-#ifndef NO_TERM
-  
-  MS_root       *root      = data;
-  MS_stream     *mss       = root -> mss;
-  MS_field      *minefield = root -> minefield;
-  
-  if( !root -> gameover){
-    if unlikely( minefield -> mine -> hit){
-      printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
-      MS_print( mss -> out, "\r\t\t\t Mine!!               \n");
-      root -> gameover = TRUE;
-    }
-    
-    if unlikely( !minefield -> mine -> hit && ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level))){
-      printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
-      MS_print( mss -> out, "\r\t\t\t Win!!         \n");
-      root -> gameover = TRUE;
-    }
-  }
-  
-  if( minefield -> mine -> uncoverd && !minefield -> mine -> hit && minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> level)){
-    MS_print( mss -> out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
-  }
-  
-  printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
-  
-  root -> nexttu = getnanosec();
-  
-  /* to make sure the time looks like it updatet consistanly we randomaize
-   * the time we wait betwen updating it, with max time betwen update beigen 150ms
-   */
-  root -> nexttu += 50000000lu + ( ( ( __uint64_t)( root -> seed = MS_rand( root -> seed)) * 100000000lu) / MS_RAND_MAX);
-  
-  assert( data != NULL);
-  
-  take_action( root -> actionque, updateterm, root);
-#endif
- end:
-  return ret;
-}
-
-
-int
-scroll_draw( void * data){
-  int ret = 1;
-  
-  MS_root       *root      = data;
-  MS_stream     *mss       = root -> mss;
-  MS_field      *minefield = root -> minefield;
-  GraphicWraper *GW        = root -> GW;
-  
-  if( ( root -> nextframe == root -> tutime) || ( ( root -> nextframe < root -> tutime) && ( root -> diff -> x || root -> diff -> y))){
-    if( window_scroll( GW, *root -> diff)){
-      root -> nextframe += 1000000000 / 30;
-    }
-    
-    assert( !( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))));
-    
-    assert( !( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)));
-    
-    ret = draw( GW, *minefield);
-    
-    assert( ret >= -1);
-    
-    root -> nexttu = getnanosec();
-#ifdef DEBUG
-    if( mss -> deb != NULL){
-      __uint64_t mytime = getnanosec() - root -> tutime;
-      
-      DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
-    }
-#endif
-  }
-  
-  assert( data != NULL);
-  
-  take_action( root -> actionque, scroll_draw, root);
- end:
-  return ret;
-}
-
-
 
 
 INLINE void
