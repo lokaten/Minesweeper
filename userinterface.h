@@ -38,11 +38,47 @@ extern "C" {
     SDL_Texture *six;
     SDL_Texture *seven;
     SDL_Texture *eight;
-    u8 global;
-    u8 no_resize;
+    u16 global;
+    u16 no_resize;
   }GraphicWraper;
 
-
+  typedef struct{
+    int ( *func)( void *);
+    void *data;
+  }action;
+  
+  typedef struct{
+    const int *argc;
+    const char ***argv;
+    GraphicWraper *GW;
+    MS_field *minefield;
+    MS_stream *mss;
+    ComandStream *actionque;
+    SDL_Event event;
+    u64 tutime;
+    u64 nextframe;
+    u64 gamestart;
+    u64 nexttu;
+    _Bool gameover;
+    MS_diff *diff;
+    u32 seed;
+    int( *quit)( void *);
+  }MS_root;
+  
+  
+  static inline int
+  LOCALE_( take_action)( ComandStream *actionque, int ( *func)( void *), void *data){
+    int ret = 0;
+    action *pact;
+    pact = ( action *)CS_Fetch( actionque);
+    pact -> func = func;
+    pact -> data = data;
+    CS_Push( actionque, pact);
+    return ret;
+  }
+#define take_action LOCALE_( take_action)
+  
+  int event_dispatch( void *);
   int drawtemp( GraphicWraper *, MS_video, __uint8_t);
   GraphicWraper *GW_Init( GraphicWraper *);
   void GW_Free( GraphicWraper *);

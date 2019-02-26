@@ -121,7 +121,7 @@ clean:
 strip:
 	$(STRIP) $(TARGET)
 
-$(TARGET): main.o GW.o minefield.o OPT.o
+$(TARGET): main.o userinterface.o minefield.o OPT.o
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS) $(PFLAGS) $(LTO_FLAGS)
 
 ifeq ($(DEV),yes)
@@ -136,7 +136,7 @@ endif
 	$(CC) $(CFLAGS) $(PFLAGS) $(LTO_FLAGS) -c -o $@ $<
 
 # Dependencies
-main.o:       Makefile main.c        MS_util.h GW.h             ComandStream.h OPT.h
-GW.o:         Makefile GW.c          MS_util.h GW.h minefield.h
-minefield.o:  Makefile minefield.c   MS_util.h      minefield.h ComandStream.h
-OPT.o:        Makefile OPT.c         MS_util.h                                 OPT.h
+main.o:          main.c           MS_util.h userinterface.h             ComandStream.h OPT.h
+userinterface.o: userinterface.c  MS_util.h userinterface.h minefield.h
+minefield.o:     minefield.c      MS_util.h                 minefield.h ComandStream.h
+OPT.o:           OPT.c            MS_util.h                                            OPT.h
