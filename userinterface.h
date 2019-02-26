@@ -48,8 +48,6 @@ extern "C" {
   }action;
   
   typedef struct{
-    const int *argc;
-    const char ***argv;
     GraphicWraper *GW;
     MS_field *minefield;
     MS_stream *mss;

@@ -16,7 +16,7 @@
 
 
 int quit( void *);
-MS_root *ROOT_Init( MS_root *);
+MS_root *ROOT_Init( const int, const char **);
 void ROOT_Free( MS_root *);
 int swap_flag( MS_field *, int, int);
 INLINE void printtime( FILE *, unsigned long);
@@ -37,8 +37,9 @@ quit( void *data){
 
 
 MS_root *
-ROOT_Init( MS_root *root){
+ROOT_Init( const int argc, const char **argv){
   MS_root *ret = NULL;
+  MS_root *root;
   
   MS_field *field_custom    = MS_Create( MS_field, .title = "custom"   , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0);
   MS_field *field_beginner  = MS_Create( MS_field, .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0);
@@ -52,7 +53,7 @@ ROOT_Init( MS_root *root){
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
   
-  if unlikely(   root                                                == NULL) goto end;
+  if unlikely( ( root              = MS_CreateEmpty( MS_root      )) == NULL) goto end;
   if unlikely( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto end;
   if unlikely( ( root -> actionque = CS_Create(      action       )) == NULL) goto end;
   if unlikely( ( root -> mss       = def_out                       ) == NULL) goto end;
@@ -95,7 +96,7 @@ ROOT_Init( MS_root *root){
     
     root -> GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
     
-    if( procopt( root -> mss, opt, *root -> argc, *root -> argv)){
+    if( procopt( root -> mss, opt, argc, argv)){
       MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");
     }
 #ifndef NO_TERM
@@ -170,9 +171,9 @@ ROOT_Free( MS_root *root){
 int
 main( const int argc, const char** argv){
   int ret = -1;
-  MS_root *root = MS_Create( MS_root, .argc = &argc, .argv = &argv);
+  MS_root *root;
   
-  if unlikely( ( root              = ROOT_Init( root             )) == NULL) goto end;
+  if unlikely( ( root              = ROOT_Init( argc, argv)       ) == NULL) goto end;
   if unlikely( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto end;
   if unlikely( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto end;
   
@@ -250,7 +251,7 @@ main( const int argc, const char** argv){
       root -> nexttu += 50000000lu + ( ( ( __uint64_t)( root -> seed = MS_rand( root -> seed)) * 100000000lu) / MS_RAND_MAX);
 #endif
     }
-        
+    
     {
       MS_stream     *mss       = root -> mss;
       MS_field      *minefield = root -> minefield;
