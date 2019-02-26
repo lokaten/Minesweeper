@@ -150,7 +150,6 @@ ROOT_Free( MS_root *root){
     GW_Free( root -> GW);
     MS_Free( root -> mss);
     CS_Free( root -> actionque);
-    MS_Free( root -> diff);
     MS_Free( root);
   }
 }
@@ -167,8 +166,6 @@ main( const int argc, const char** argv){
   
   
   take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, root -> minefield, root -> mss, ( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight}));
-  
-  root -> diff = MS_CreateEmpty( MS_diff);
   
   root -> seed = MS_rand_seed();
   

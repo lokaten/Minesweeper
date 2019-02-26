@@ -8,6 +8,10 @@
 #include "minefield.h"
 #include "userinterface.h"
 
+typedef struct{
+  s32 x;
+  s32 y;
+}MS_diff;
 
 typedef struct{
   SDL_Window *window;
@@ -67,8 +71,6 @@ event_dispatch( void *data){
     case SDL_QUIT: take_action( root -> actionque, root -> quit, root); goto end;
     case SDL_KEYDOWN:
       {
-	MS_diff *diff = root -> diff;
-		
 	switch( event.key.keysym.sym){
 	case SDLK_ESCAPE:
 	  take_action( root -> actionque, root -> quit, ( void *)root);

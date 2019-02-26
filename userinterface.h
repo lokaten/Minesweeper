@@ -11,10 +11,6 @@ extern "C" {
 #include "MS_util.h"
 #include "minefield.h"
   
-  typedef struct{
-    s32 x;
-    s32 y;
-  }MS_diff;
   
   typedef struct{
     int ( *func)( void *);
@@ -32,7 +28,6 @@ extern "C" {
     u64 nexttu;
     _Bool gameover;
     _Bool no_resize;
-    MS_diff *diff;
     u32 seed;
     int( *quit)( void *);
   }MS_root;
