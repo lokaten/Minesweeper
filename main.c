@@ -106,6 +106,8 @@ ROOT_Init( const int argc, const char **argv){
   
   if unlikely( root -> minefield == NULL) goto end;
   if unlikely( root -> mss       == NULL) goto end;
+
+  root -> minefield -> reseed = field_custom -> reseed;
   
   root -> quit = quit;
   
