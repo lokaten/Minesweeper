@@ -54,7 +54,6 @@ ROOT_Init( const int argc, const char **argv){
   unsigned long opt_false = FALSE;
   
   if unlikely( ( root              = MS_CreateEmpty( MS_root      )) == NULL) goto end;
-  if unlikely( ( root -> GW        = MS_CreateEmpty( GraphicWraper)) == NULL) goto end;
   if unlikely( ( root -> actionque = CS_Create(      action       )) == NULL) goto end;
   if unlikely( ( root -> mss       = def_out                       ) == NULL) goto end;
   if unlikely( ( root -> minefield = field_custom                  ) == NULL) goto end;
@@ -71,11 +70,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &( field_custom -> global ), &opt_true},
 #endif
       { OPTSW_GRP, TERM("Video"                                  ), ""               , 0  , NULL                                 , NULL},
-      { OPTSW_LU , TERM("Pixel wide window"                      ), "video-width"    , 0  , &( root -> GW -> real.realwidth     ), NULL},
-      { OPTSW_LU , TERM("Pixel high window"                      ), "video-height"   , 0  , &( root -> GW -> real.realheight    ), NULL},
-      { OPTSW_LU , TERM("Pixel wide Element"                     ), "element-width"  , 0  , &( root -> GW -> real.element_width ), NULL},
-      { OPTSW_LU , TERM("Pixel high Element"                     ), "element-height" , 0  , &( root -> GW -> real.element_height), NULL},
-      { OPTSW_CPY, TERM("Resize don't work well with all system" ), "no-resize"      , 'R', &( root -> GW -> no_resize          ), &opt_true},
+      { OPTSW_CPY, TERM("Resize don't work well with all system" ), "no-resize"      , 'R', &( root -> no_resize          ), &opt_true},
       { OPTSW_GRP, TERM("Mode"                                   ), ""               , 0  , NULL                       , NULL},
       { OPTSW_CPY, TERM("Mimic windows minesweeper beginner mode"), "beginner"       , 'b', &root -> minefield         , field_beginner },
       { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &root -> minefield         , field_advanced },
@@ -94,7 +89,7 @@ ROOT_Init( const int argc, const char **argv){
 #endif
       { OPTSW_NUL, TERM(""/* Last elemnt is a NULL termination */), ""               , 0  , NULL                       , NULL}};
     
-    root -> GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
+    
     
     if( procopt( root -> mss, opt, argc, argv)){
       MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");
@@ -113,13 +108,6 @@ ROOT_Init( const int argc, const char **argv){
   if unlikely( root -> mss       == NULL) goto end;
   
   root -> quit = quit;
-  
-  root -> GW -> real = root -> minefield == field_benchmark? ( MS_video){ .element_width = 1,  .element_height = 1, .realwidth = 1, .realheight = 1}: root -> GW -> real;
-  
-  root -> GW -> global = root -> minefield -> global;
-  
-  root -> GW -> mfvid.width  = root -> minefield -> width;
-  root -> GW -> mfvid.height = root -> minefield -> height;
   
   if( root -> minefield -> level >= ( root -> minefield -> width * root -> minefield -> height)){
     root -> minefield -> level = ( root -> minefield -> width * root -> minefield -> height + 1) / 3;
@@ -174,11 +162,11 @@ main( const int argc, const char** argv){
   MS_root *root;
   
   if unlikely( ( root              = ROOT_Init( argc, argv)       ) == NULL) goto end;
-  if unlikely( ( root -> GW        = GW_Init(   root -> GW       )) == NULL) goto end;
+  if unlikely( ( root -> GW        = GW_Init(   root             )) == NULL) goto end;
   if unlikely( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto end;
   
   
-  take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, root -> minefield, root -> mss, root -> GW -> mfvid));
+  take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, root -> minefield, root -> mss, ( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight}));
   
   root -> diff = MS_CreateEmpty( MS_diff);
   
@@ -191,13 +179,6 @@ main( const int argc, const char** argv){
   
   root -> gameover = FALSE;
   
-  /*
-  if( strstr( root -> minefield -> title, "benchmark")){
-    SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONDOWN, .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
-    SDL_PushEvent( &( SDL_Event){ .button = ( SDL_MouseButtonEvent){ .type = SDL_MOUSEBUTTONUP  , .button = SDL_BUTTON_LEFT, .x = 0, .y = 0}});
-    SDL_PushEvent( &( SDL_Event){ .key = ( SDL_KeyboardEvent){ .type = SDL_QUIT}});
-  }
-  */
   if( strstr( root -> minefield -> title, "benchmark")){
     take_action( root -> actionque, setzero           ,  MS_Create( setzeroargs       , root -> minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3}));
     take_action( root -> actionque, uncov_elements    ,  MS_Create( uncov_elementsargs, root -> minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1}));
@@ -255,30 +236,23 @@ main( const int argc, const char** argv){
     {
       MS_stream     *mss       = root -> mss;
       MS_field      *minefield = root -> minefield;
-      GraphicWraper *GW        = root -> GW;
       
-      if( ( root -> nextframe == root -> tutime) || ( ( root -> nextframe < root -> tutime) && ( root -> diff -> x || root -> diff -> y))){
-	if( window_scroll( GW, *root -> diff)){
-	  root -> nextframe += 1000000000 / 30;
-	}
-	
-	assert( !( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))));
-	
-	assert( !( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)));
-	
-	ret = draw( GW, *minefield);
-	
-	event_dispatch( root);
-	
-	root -> nexttu = getnanosec();
+      assert( !( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))));
+      
+      assert( !( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)));
+      
+      ret = draw( root -> GW, *minefield);
+      
+      event_dispatch( root);
+      
+      root -> nexttu = getnanosec();
 #ifdef DEBUG
-	if( mss -> deb != NULL){
-	  __uint64_t mytime = getnanosec() - root -> tutime;
-	  
-	  DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
-	}
-#endif
+      if( mss -> deb != NULL){
+	__uint64_t mytime = getnanosec() - root -> tutime;
+	
+	DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
       }
+#endif
     }
   }
   

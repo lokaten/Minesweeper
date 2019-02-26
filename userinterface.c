@@ -8,6 +8,31 @@
 #include "userinterface.h"
 
 
+typedef struct{
+  SDL_Window *window;
+  SDL_Texture *target;
+  SDL_Renderer *renderer;
+  MS_video mfvid;
+  MS_video real;
+  SDL_Texture *cover;
+  SDL_Texture *clear;
+  SDL_Texture *flag;
+  SDL_Texture *mine;
+  SDL_Texture *one;
+  SDL_Texture *two;
+  SDL_Texture *three;
+  SDL_Texture *four;
+  SDL_Texture *five;
+  SDL_Texture *six;
+  SDL_Texture *seven;
+  SDL_Texture *eight;
+  u16 global;
+  u16 no_resize;
+}GraphicWraper;
+
+
+int drawtemp( void *, MS_video, __uint8_t);
+int window_scroll( GraphicWraper *, MS_diff);
 SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
 int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
 int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
@@ -73,7 +98,7 @@ event_dispatch( void *data){
 	MS_pos postion;
 	
 	{
-	  MS_video video = root -> GW -> real;
+	  MS_video video = ( ( GraphicWraper *)( root -> GW)) -> real;
 	  postion.x = ( ( unsigned long)( ( ( root -> event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
 	  postion.y = ( ( unsigned long)( ( ( root -> event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
 	}
@@ -190,12 +215,14 @@ MS_BlitTile( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, i
 
 
 int
-draw( GraphicWraper *GW, MS_field minefield){
+draw( void *gw_void, MS_field minefield){
   int ret = 0;
   MS_pos element;
   unsigned long i;
   SDL_Texture *tile;
 
+  GraphicWraper *GW = gw_void;
+  
   int w = GW -> real.realwidth  / GW -> real.element_width  + 1;
   int h = GW -> real.realheight / GW -> real.element_height + 1;
 
@@ -278,11 +305,18 @@ drawelement( GraphicWraper *GW, __uint8_t element){
 }
 
 
-GraphicWraper *
-GW_Init( GraphicWraper *GW){
-  GraphicWraper *ret = NULL;
+void *
+GW_Init( MS_root *root){
+  GraphicWraper *GW = NULL;
   
-  if unlikely( GW == NULL) goto end;
+  if unlikely( ( GW = MS_CreateEmpty( GraphicWraper)) == NULL) goto end;
+  
+  GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
+  
+  GW -> global = root -> minefield -> global;
+  
+  GW -> mfvid.width  = root -> minefield -> width;
+  GW -> mfvid.height = root -> minefield -> height;
   
   GW -> real.realwidth  = GW -> real.realwidth ? GW -> real.realwidth : GW -> mfvid.width  * GW -> real.element_width;
   GW -> real.realheight = GW -> real.realheight? GW -> real.realheight: GW -> mfvid.height * GW -> real.element_height;
@@ -308,7 +342,7 @@ GW_Init( GraphicWraper *GW){
   SDL_RenderSetLogicalSize( GW -> renderer, GW -> real.realwidth, GW -> real.realheight);
   SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
   
-  SDL_SetWindowResizable( GW ->  window, (SDL_bool)!GW -> no_resize);
+  SDL_SetWindowResizable( GW ->  window, (SDL_bool)!root -> no_resize);
   
   GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> real.realwidth, GW -> real.realheight);
   
@@ -332,15 +366,15 @@ GW_Init( GraphicWraper *GW){
   SDL_EventState( SDL_JOYBUTTONUP  , SDL_IGNORE);
   SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
   SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
-  
-  ret = GW;
+
+  return GW;
  end:
-  if unlikely( ret != GW) GW_Free( GW);
-  return ret;
+  GW_Free( GW);
+  return GW;
 }
 
 void
-GW_Free( GraphicWraper *GW){
+GW_Free( void *GW){
   if( GW != NULL){
     SDL_Quit();
     
