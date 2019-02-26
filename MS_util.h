@@ -16,10 +16,6 @@ extern "C" {
 #include <string.h> /* memcpy */
 
 #include <sys/time.h>
-#ifdef CLOCK_MONOTONIC
-#else
-#include <SDL2/SDL_timer.h>
-#endif
 
 #define TRUE  1
 #define FALSE 0
@@ -179,7 +175,7 @@ LOCALE_( MS_Free)( void *ptr){
 /* genrate a divobj from the divaider */
 static inline u32
 LOCALE_( gen_divobj)( u32 a){
-  return (u32)( a > 2? ( UINT64_C( 4294967295) + (u64)a) / (u64)a: UINT64_C( 4294967295));
+  return (u32)( ( UINT64_C( 4294967295) + (u64)a) / (u64)a);
 }
 #define gen_divobj LOCALE_( gen_divobj)
 
@@ -307,7 +303,7 @@ LOCALE_( getnanosec)( void){
     
   return ( ( __uint64_t)tv.tv_sec * 1000000000 + ( __uint64_t)tv.tv_nsec);
 #else
-  return ( __uint64_t)SDL_GetTicks() * 1000000;
+  return ( __uint64_t)time( NULL) * 1000000000;
 #endif
 }
 #define getnanosec LOCALE_( getnanosec)

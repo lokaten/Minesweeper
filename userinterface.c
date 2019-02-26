@@ -1,5 +1,6 @@
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #define LOCALE_( name) GW_##name
 
@@ -47,7 +48,8 @@ event_dispatch( void *data){
   MS_root       *root      = data;
   MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = root -> GW;
-    
+  SDL_Event event;
+  
   root -> tutime = getnanosec();
   if( !minefield -> mine -> uncoverd || root -> gameover){
     root -> gamestart = root -> tutime;
@@ -60,16 +62,14 @@ event_dispatch( void *data){
     take_action( root -> actionque,  uncov,  MS_Create( uncovargs, minefield));
   }
   
-  if( SDL_WaitEventTimeout( &root -> event, 1)){
-    switch( expect( root -> event.type, SDL_MOUSEBUTTONDOWN)){
-    case SDL_QUIT:            take_action( root -> actionque, root -> quit, root); goto end;
+  if( SDL_WaitEventTimeout( &event, 1)){
+    switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
+    case SDL_QUIT: take_action( root -> actionque, root -> quit, root); goto end;
     case SDL_KEYDOWN:
       {
-	SDL_Event event = root -> event;
-	
 	MS_diff *diff = root -> diff;
 		
-	switch( root -> event.key.keysym.sym){
+	switch( event.key.keysym.sym){
 	case SDLK_ESCAPE:
 	  take_action( root -> actionque, root -> quit, ( void *)root);
 	  break;
@@ -99,11 +99,11 @@ event_dispatch( void *data){
 	
 	{
 	  MS_video video = ( ( GraphicWraper *)( root -> GW)) -> real;
-	  postion.x = ( ( unsigned long)( ( ( root -> event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
-	  postion.y = ( ( unsigned long)( ( ( root -> event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
+	  postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
+	  postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
 	}
 	
-	switch( root -> event.button.button){
+	switch( event.button.button){
 	case SDL_BUTTON_LEFT:
 	case SDL_BUTTON_MIDDLE:
 	  {
@@ -121,7 +121,7 @@ event_dispatch( void *data){
 	    
 	    vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
 	    
-	    if( root -> event.button.button == SDL_BUTTON_MIDDLE){
+	    if( event.button.button == SDL_BUTTON_MIDDLE){
 	      vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
 	    }
 	    

@@ -7,9 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
   
 #include "MS_util.h"
 #include "minefield.h"
@@ -29,7 +26,6 @@ extern "C" {
     MS_field *minefield;
     MS_stream *mss;
     ComandStream *actionque;
-    SDL_Event event;
     u64 tutime;
     u64 nextframe;
     u64 gamestart;
