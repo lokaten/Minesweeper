@@ -46,12 +46,9 @@ int event_dispatch( void *);
 int updateterm( void *);
 int scroll_draw( void *);
 int keypressevent( void *);
-int keyreleasevent( void *);
 int swap_flag( MS_field *, int, int);
 int pointerpressevent( void *);
-int pointerreleasevent( void *);
 typedef struct{ void *data;}pointermoveeventargs;
-int pointermoveevent( void *);
 INLINE void printtime( FILE *, unsigned long);
 
 INLINE int
@@ -296,10 +293,7 @@ event_dispatch( void *data){
     switch( expect( root -> event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:            take_action( root -> actionque, quit              , root); goto end;
     case SDL_KEYDOWN:         take_action( root -> actionque, keypressevent     , root); break;
-    case SDL_KEYUP:           take_action( root -> actionque, keyreleasevent    , root); break;
     case SDL_MOUSEBUTTONDOWN: take_action( root -> actionque, pointerpressevent , root); break;
-    case SDL_MOUSEBUTTONUP:   take_action( root -> actionque, pointerreleasevent, root); break;
-    case SDL_MOUSEMOTION:     take_action( root -> actionque, pointermoveevent  , MS_Create( pointermoveeventargs, root)); break;
     default: break;
     }
     
@@ -436,54 +430,6 @@ keypressevent( void *data){
   default:
     break;
   }
-  
-  if( e == SDLK_h || e == SDLK_LEFT){
-    diff -> x -= 3;
-    diff -> x = diff -> x < -3? -3: diff -> x;
-    ret = 1;
-  }
-  if( e == SDLK_j || e == SDLK_DOWN){
-    diff -> y += 3;
-    diff -> y = ( *diff).y > 3? 3: diff -> y;
-    ret = 1;
-  }
-  if( e == SDLK_k || e == SDLK_UP){
-    diff -> y -= 3;
-    diff -> y = diff -> y < -3? -3: diff -> y;
-    ret =  1;
-  }
-  if( e == SDLK_l || e == SDLK_RIGHT){
-    diff -> x += 3;
-    diff -> x = ( *diff).x > 3? 3: diff -> x;
-    ret = 1;
-  }
-
-  return ret;
-}
-
-
-int
-keyreleasevent( void *data){
-  int ret = 0;
-  unsigned e    = ( ( MS_root *)data) -> event.key.keysym.sym;
-  MS_diff *diff = ( ( MS_root *)data) -> diff;
-  
-  if( e == SDLK_h || e == SDLK_LEFT){
-    diff -> x += 3;
-    diff -> x = diff -> x < 0? 0: diff -> x;
-  }
-  if( e == SDLK_j || e == SDLK_DOWN){
-    diff -> y -= 3;
-    diff -> y = diff -> y > 0? 0: diff -> y;
-  }
-  if( e == SDLK_k || e == SDLK_UP){
-    diff -> y += 3;
-    diff -> y = diff -> y < 0? 0: diff -> y;
-  }
-  if( e == SDLK_l || e == SDLK_RIGHT){
-    diff -> x -= 3;
-    diff -> x = diff -> x > 0? 0: diff -> x;
-  }
 
   return ret;
 }
@@ -509,42 +455,6 @@ swap_flag( MS_field *minefield, int x, int y){
 
 int
 pointerpressevent( void *data){
-  int ret = 0;
-  
-  SDL_Event event     = ( ( MS_root *)data) -> event;
-  MS_field *minefield = ( ( MS_root *)data) -> minefield;
-  MS_video video      = ( ( MS_root *)data) -> GW -> real;
-  
-  MS_pos postion;
-  MS_video vid;
-  
-  postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
-  postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
-  
-  switch( event.button.button){
-  case SDL_BUTTON_LEFT:
-  case SDL_BUTTON_MIDDLE:
-    vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
-    
-    if( event.button.button == SDL_BUTTON_MIDDLE){
-      vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
-    }
-
-    take_action( ( ( MS_root *)data) -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, vid));
-    break;
-  case SDL_BUTTON_RIGHT:
-    ret = swap_flag( minefield, postion.x, postion.y);
-    break;
-  default:
-    break;
-  }
-  
-  return ret;
-}
-
-
-int
-pointerreleasevent( void *data){
   int ret = 0;
   
   SDL_Event event     = ( ( MS_root *)data) -> event;
@@ -586,59 +496,12 @@ pointerreleasevent( void *data){
     take_action( ( ( MS_root *)data) -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, vid));
     
     take_action( ( ( MS_root *)data) -> actionque,  uncov,  MS_Create( uncovargs, minefield));
+    break;
+  case SDL_BUTTON_RIGHT:
+    ret = swap_flag( minefield, postion.x, postion.y);
   default:
     break;
   }
-  return ret;
-}
-
-
-int
-pointermoveevent( void *args){
-  int ret = 0;
-  
-  void *data = ( ( pointermoveeventargs *)args) -> data;
-  
-  SDL_Event event     = ( ( MS_root *)data) -> event;
-  MS_field *minefield = ( ( MS_root *)data) -> minefield;
-  MS_video video      = ( ( MS_root *)data) -> GW -> real;
-  
-  MS_pos postion, prv_pos;
-  
-  unsigned long pos, pps;
-  
-  MS_video vid;
-    
-  postion.x = ( ( unsigned long)( ( ( event.motion.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
-  postion.y = ( ( unsigned long)( ( ( event.motion.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
-  
-  prv_pos.x = ( ( unsigned long)( ( ( event.motion.x - event.motion.xrel + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
-  prv_pos.y = ( ( unsigned long)( ( ( event.motion.y - event.motion.yrel + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
-  
-  pos = postion.x + postion.y * minefield -> width;
-  
-  pps = prv_pos.x + prv_pos.y * minefield -> width;
-  
-  if( pos != pps){
-    
-    if( event.motion.state & SDL_BUTTON_LMASK){
-      vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
-      take_action( ( ( MS_root *)data) -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, vid));
-    }
-    
-    if( event.motion.state & SDL_BUTTON_MMASK){
-      vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
-      take_action( ( ( MS_root *)data) -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, vid));
-    }
-    
-    if( event.motion.state & SDL_BUTTON_RMASK){
-      ret += swap_flag( minefield, postion.x, postion.y);
-      ret += swap_flag( minefield, prv_pos.x, prv_pos.y);
-    }
-  }
-
-  MS_Free( args);
-  
   return ret;
 }
 
