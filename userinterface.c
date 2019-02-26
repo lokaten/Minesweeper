@@ -329,7 +329,7 @@ GW_Init( MS_root *root){
   
   if unlikely( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)) goto end;
   
-  GW -> window = SDL_CreateWindow( "Minesweeper", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+  GW -> window = SDL_CreateWindow( root -> minefield -> title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 				   GW -> real.realwidth, GW -> real.realheight, SDL_WINDOW_HIDDEN);
   
   if unlikely( GW -> window   == NULL) goto end;
