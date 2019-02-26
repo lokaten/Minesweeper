@@ -270,7 +270,6 @@ event_dispatch( void *data){
   int ret = 1;
   
   MS_root       *root      = data;
-  MS_stream     *mss       = root -> mss;
   MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = root -> GW;
     
@@ -281,9 +280,9 @@ event_dispatch( void *data){
   
   if unlikely( minefield -> mine -> hit){
     MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = minefield -> subwidth, .height = minefield -> subheight};
-    take_action( ( ( MS_root *)data) -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, mfvid));
+    take_action( root -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, mfvid));
     
-    take_action( ( ( MS_root *)data) -> actionque,  uncov,  MS_Create( uncovargs, minefield));
+    take_action( root -> actionque,  uncov,  MS_Create( uncovargs, minefield));
   }
   
   if( SDL_WaitEventTimeout( &root -> event, 1)){
@@ -294,10 +293,8 @@ event_dispatch( void *data){
 	SDL_Event event = root -> event;
 	
 	MS_diff *diff = root -> diff;
-	
-	unsigned e =  event.key.keysym.sym;
-	
-	switch( e){
+		
+	switch( root -> event.key.keysym.sym){
 	case SDLK_ESCAPE:
 	  take_action( root -> actionque, quit, ( void *)root);
 	  break;
@@ -305,14 +302,14 @@ event_dispatch( void *data){
 	case 'r':
 	  root -> gameover = FALSE;
 	  if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
-	    take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, minefield, mss, GW -> mfvid));
+	    take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, minefield, root -> mss, GW -> mfvid));
 	    ret = 1;
 	  }
 	  break;
 	case SDLK_F3:
 	case 'e':
 	  if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
-	    take_action( ( ( MS_root *)data) -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, GW -> mfvid));
+	    take_action( root -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, GW -> mfvid));
 	  }
 	  take_action( root -> actionque,  uncov,  MS_Create( uncovargs, minefield));
 	  break;
@@ -323,44 +320,46 @@ event_dispatch( void *data){
       }
     case SDL_MOUSEBUTTONDOWN:
       {
-	SDL_Event event     = ( ( MS_root *)data) -> event;
-	u64 tutime          = ( ( MS_root *)data) -> tutime;
-	u64 gamestart       = ( ( MS_root *)data) -> gamestart;
-	MS_video video      = ( ( MS_root *)data) -> GW -> real;
+	MS_pos postion;
 	
-	MS_pos postion, *el;
-	MS_video vid;
+	{
+	  MS_video video = root -> GW -> real;
+	  postion.x = ( ( unsigned long)( ( ( root -> event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
+	  postion.y = ( ( unsigned long)( ( ( root -> event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
+	}
 	
-	postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
-	postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
-	
-	switch( event.button.button){
+	switch( root -> event.button.button){
 	case SDL_BUTTON_LEFT:
 	case SDL_BUTTON_MIDDLE:
-	  while( ( el = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
-	    *acse( *minefield, el -> x, el -> y) |= ECOVER;
-	    CS_Finish( minefield -> uncovque, el);
-	  }
-	  
-	  if( ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level)) || ( minefield -> mine -> hit)){
+	  {
+	    MS_video vid;
+	    MS_pos *el;
+	    
+	    while( ( el = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
+	      *acse( *minefield, el -> x, el -> y) |= ECOVER;
+	      CS_Finish( minefield -> uncovque, el);
+	    }
+	    
+	    if( ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level)) || ( minefield -> mine -> hit)){
+	      break;
+	    }
+	    
+	    vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
+	    
+	    if( root -> event.button.button == SDL_BUTTON_MIDDLE){
+	      vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
+	    }
+	    
+	    if( minefield -> mine -> set == 0){
+	      /*let's play "Texas Sharpshooter"*/
+	      take_action( root -> actionque,  setzero,  MS_Create( setzeroargs, minefield, vid));
+	    }
+	    
+	    take_action( root -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, vid));
+	    
+	    take_action( root -> actionque,  uncov,  MS_Create( uncovargs, minefield));
 	    break;
 	  }
-	  
-	  vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
-	  
-	  if( event.button.button == SDL_BUTTON_MIDDLE){
-	    vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
-	  }
-	  
-	  if( minefield -> mine -> set == 0){
-	    /*let's play "Texas Sharpshooter"*/
-	    take_action( ( ( MS_root *)data) -> actionque,  setzero,  MS_Create( setzeroargs, minefield, vid));
-	  }
-	  
-	  take_action( ( ( MS_root *)data) -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, vid));
-	  
-	  take_action( ( ( MS_root *)data) -> actionque,  uncov,  MS_Create( uncovargs, minefield));
-	  break;
 	case SDL_BUTTON_RIGHT:
 	  {
 	    __uint8_t *element = acse( *minefield, postion.x, postion.y);
