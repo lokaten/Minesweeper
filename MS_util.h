@@ -184,7 +184,7 @@ LOCALE_( gen_divobj)( u32 a){
  */
 static inline u32
 LOCALE_( mol_)( u32 b, u32 a, u32 divobj){
-  u32 ret = ( ( ( (u64)b * (u64)divobj) & UINT64_C( 4294967295)) * (u64)a) >> 32;
+  u32 ret = ( (u64)( b * divobj) * (u64)a) >> 32;
   assert( LOCALE_( div_)( b, a, divobj) * a + ret == b);
   return ret;
 }
