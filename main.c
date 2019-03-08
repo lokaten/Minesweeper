@@ -241,9 +241,8 @@ main( const int argc, const char** argv){
       MS_stream     *mss       = root -> mss;
       MS_field      *minefield = root -> minefield;
       
-      assert( !( ( minefield -> mine -> mines > minefield -> mine -> level) || ( minefield -> mine -> set > ( minefield -> mine -> noelements))));
-      
-      assert( !( ( minefield -> mine -> set >= minefield -> mine -> noelements) && ( minefield -> mine -> mines < minefield -> mine -> level)));
+      assert( minefield -> mine -> mines <= minefield -> mine -> level);
+      assert( minefield -> mine -> set   <= minefield -> mine -> noelements);
       
       ret = draw( root -> GW, *minefield);
       
