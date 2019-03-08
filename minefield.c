@@ -58,22 +58,25 @@ setminefield( void *args){
   MS_stream *mss       = ( ( setminefieldargs *)args) -> mss;
   MS_video   video     = ( ( setminefieldargs *)args) -> video;
   
-  u32 i;
+  int i;
   u32 x;
   
-  i = video.height;
+  i = ( int)video.height;
   
-  x = minefield -> subwidth - video.xdiff;
+  video.xdiff = ( int)( ( u32)( video.xdiff + ( int)video.width ) % video.width );
+  video.ydiff = ( int)( ( u32)( video.ydiff + ( int)video.height) % video.height);
+  
+  x = minefield -> subwidth - ( u32)video.xdiff;
   x = x < video.width? x: video.width;
   
   if( x) while( i--){
-    memset( minefield -> data + ( video.xdiff + ( ( video.ydiff + i) % minefield -> subheight) * minefield -> width), ENUT, x);
+    memset( minefield -> data + ( video.xdiff + ( int)( ( ( u32)( video.ydiff + i) % minefield -> subheight) * minefield -> width)), ENUT, x);
   }
   
-  i = video.height;
+  i = ( int)video.height;
   
   if( video.width - x) while( i--){
-    memset( minefield -> data + ( ( video.ydiff + i) % minefield -> subheight) * minefield -> width, ENUT, video.width - x);
+    memset( minefield -> data + ( ( u32)( video.ydiff + i) % minefield -> subheight) * minefield -> width, ENUT, video.width - x);
   }
   
   minefield -> mine -> level = minefield -> level;
@@ -119,8 +122,8 @@ addelement( MS_field *minefield, signed long x, signed long y){
   if( ( *acse( *minefield, x, y) & ECOVER) && ( *acse( *minefield, x, y) & EFLAG) ^ EFLAG){
     MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
     if likely( pos != NULL){
-	pos -> x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
-	pos -> y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
+      pos -> x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
+      pos -> y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
       *acse( *minefield, x, y) &= ~ECOVER;
       CS_Push( minefield -> uncovque, pos);
     }else{
@@ -198,7 +201,7 @@ uncover_element( MS_field minefield, MS_pos postion, MS_mstr *mine){
 INLINE __uint8_t
 setmine_element( __uint8_t *element, MS_mstr *mine){
   if( !( ( *element) & ESET)){
-    __uint8_t u;  
+    __uint8_t u;
     
     u = ( ( ( __uint64_t)( ( *mine).noelements - ( *mine).set  ) * ( __uint64_t)( ( *mine).seed = MS_rand( ( *mine).seed))) <
 	  ( ( __uint64_t)( ( *mine).level      - ( *mine).mines) * ( __uint64_t)MS_RAND_MAX));
@@ -207,7 +210,7 @@ setmine_element( __uint8_t *element, MS_mstr *mine){
     
     ( *element) |= u << SMINE;
     ( *mine).mines += u;
-        
+    
     ( *element) |= ESET;
   }
   

@@ -1,6 +1,3 @@
 
 
-( nil (( custom-set-variables)
-       '(indent-tabs-mode nil)))
-
-
+(setq-default indent-tabs-mode nil)

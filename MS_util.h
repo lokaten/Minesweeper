@@ -39,7 +39,7 @@ extern "C" {
 
 #ifdef UNSAFE
 #undef assert
-#define assert( exp) (void)0
+#define assert( exp) (void)( exp)
 #endif
 
 #ifdef INLINE 
@@ -74,6 +74,16 @@ typedef int_fast32_t  s32;
 typedef int_fast16_t  s16;
 typedef int_fast8_t   s8;
 #endif
+
+#define U64C( exp)   ( u64)UINT64_C( exp)
+#define U32C( exp)   ( u32)UINT32_C( exp)
+#define U16C( exp)   ( u16)UINT16_C( exp)
+#define U8C(  exp)   ( u8 )UINT8_C(  exp)
+
+#define S64C( exp)   ( s64)INT64_C( exp)
+#define S32C( exp)   ( s32)INT32_C( exp)
+#define S16C( exp)   ( s16)INT16_C( exp)
+#define S8C(  exp)   ( s8 )INT8_C(  exp)
 
 typedef struct{
   s16 x;
@@ -120,7 +130,7 @@ typedef struct{
 /*ECOUNT   0b00001111*/
 #define ECOUNT   0x0f
 
-#define MS_RAND_MAX   4294967295u
+#define MS_RAND_MAX   U32C( 0xffffffff)
   /*
 #undef LOCALE_
 #define LOCALE_( name) __FILE__##name
@@ -133,11 +143,11 @@ static inline u32 LOCALE_( gen_divobj)( u32);
 static inline u32 LOCALE_( mol_)( u32, u32, u32);
 static inline u32 LOCALE_( div_)( u32, u32, u32);
 /* protype of named parmenter function daclaration, migth be useful in other cases*/
-typedef struct{ unsigned long seed;}MS_rand_args;
-INLINE __uint32_t LOCALE_( MS_rand)( MS_rand_args);
+typedef struct{ u32 seed;}MS_rand_args;
+static inline u32 LOCALE_( MS_rand)( MS_rand_args);
 #define MS_rand( exp) LOCALE_( MS_rand)( ( MS_rand_args){ exp})
 
-INLINE unsigned long LOCALE_( rand_seed)( void);
+static inline u32 LOCALE_( rand_seed)( void);
 INLINE int LOCALE_( print)( FILE *, const char *, ...);
 INLINE __uint64_t LOCALE_( getmicrosec)( void);
 INLINE __uint64_t LOCALE_( getnanosec)( void);
@@ -175,7 +185,7 @@ LOCALE_( MS_Free)( void *ptr){
 /* genrate a divobj from the divaider */
 static inline u32
 LOCALE_( gen_divobj)( u32 a){
-  return (u32)( ( UINT64_C( 4294967295) + (u64)a) / (u64)a);
+  return (u32)( ( U64C( 0xffffffff) + (u64)a) / (u64)a);
 }
 #define gen_divobj LOCALE_( gen_divobj)
 
@@ -184,7 +194,7 @@ LOCALE_( gen_divobj)( u32 a){
  */
 static inline u32
 LOCALE_( mol_)( u32 b, u32 a, u32 divobj){
-  u32 ret = ( (u64)( b * divobj) * (u64)a) >> 32;
+  u32 ret = ( (u64)( ( b * divobj) & U32C( 0xffffffff)) * (u64)a) >> 32;
   assert( LOCALE_( div_)( b, a, divobj) * a + ret == b);
   return ret;
 }
@@ -220,28 +230,31 @@ LOCALE_( div_)( u32 b, u32 a, u32 divobj){
  * if you have two calls to MS_rand() with litel diferance betwen seed,
  * it's farliy easy to caluculate the "secret" numbers.
  */
-INLINE __uint32_t
+static inline u32
 LOCALE_( MS_rand)( MS_rand_args args){
-  return ( ( ( ( __uint64_t)args.seed + 2654435405lu) * 2654435909lu) & 4294967295lu);
+  return ( ( ( args.seed + U32C( 2654435405)) & U32C( 0xffffffff)) * U32C( 2654435909)) & U32C( 0xffffffff);
 }
 
 
 /*
  * return a seed, for use with MS_rand( __uint32_t seed)
  */
-INLINE unsigned long
+static inline u32
 LOCALE_( rand_seed)( void){
-  unsigned long seed;
+  u32 seed;
   
 #ifdef CLOCK_REALTIME
   struct timespec tv;
   
   clock_gettime( CLOCK_REALTIME, &tv);
   
-  seed = ( __uint32_t)tv.tv_nsec;
+  seed = ( u32)tv.tv_nsec;
 #else
-  seed = ( __uint32_t)time( NULL);
+  seed = ( u32)time( NULL);
 #endif
+  
+  while( seed == MS_rand( seed))
+    seed += 42;
   
   return seed;
 }

@@ -42,7 +42,7 @@ CFLAGS += -Wlogical-op -faggressive-loop-optimizations
 else
 ifeq ($(GPP), yes)
 else
-CFLAGS = -Weverything -Wno-disabled-macro-expansion
+CFLAGS = -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
 endif
 endif
 
@@ -62,7 +62,7 @@ CC += -march=native
 endif
 
 CFLAGS += -pedantic -Wall -Wextra -Wformat-security -Werror=format-security
-CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option 
+CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo
 
@@ -121,8 +121,10 @@ clean:
 strip:
 	$(STRIP) $(TARGET)
 
+#$(TARGET): main.o epoxy.o minefield.o OPT.o
 $(TARGET): main.o userinterface.o minefield.o OPT.o
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS) $(PFLAGS) $(LTO_FLAGS)
+
 
 ifeq ($(DEV),yes)
 else
@@ -138,5 +140,6 @@ endif
 # Dependencies
 main.o:          main.c           MS_util.h userinterface.h             ComandStream.h OPT.h
 userinterface.o: userinterface.c  MS_util.h userinterface.h minefield.h
+epoxy.o:         epoxy.c          MS_util.h userinterface.h minefield.h
 minefield.o:     minefield.c      MS_util.h                 minefield.h ComandStream.h
 OPT.o:           OPT.c            MS_util.h                                            OPT.h
