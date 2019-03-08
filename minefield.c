@@ -107,10 +107,11 @@ setminefield( void *args){
 void
 MF_Free( MS_field *minefield){
   if( minefield != NULL){
-    if( minefield -> data != NULL) free( minefield -> data);
-    if( minefield -> mine != NULL) free( minefield -> mine);
+    MS_Free( minefield -> data);
+    MS_Free( minefield -> mine);
     
     CS_Free( minefield -> uncovque);
+    MS_Free( minefield);
   }
 }
 

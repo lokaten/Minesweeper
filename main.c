@@ -52,6 +52,9 @@ ROOT_Init( const int argc, const char **argv){
   
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
+
+  assert( opt_true);
+  assert( !opt_false);
   
   if unlikely( ( root              = MS_CreateEmpty( MS_root      )) == NULL) goto end;
   if unlikely( ( root -> actionque = CS_Create(      action       )) == NULL) goto end;
@@ -131,6 +134,7 @@ ROOT_Init( const int argc, const char **argv){
   ret = root;
  end:
   if( root != NULL){
+    if( root -> minefield != field_custom   ) MS_Free( field_custom   );
     if( root -> minefield != field_beginner ) MS_Free( field_beginner );
     if( root -> minefield != field_advanced ) MS_Free( field_advanced );
     if( root -> minefield != field_expert   ) MS_Free( field_expert   );
@@ -197,6 +201,8 @@ main( const int argc, const char** argv){
 	CS_Finish( root -> actionque, act);
 	ret = dact -> func( dact -> data);
       }
+
+      MS_Free( dact);
     }
     
     {
@@ -254,9 +260,8 @@ main( const int argc, const char** argv){
     }
   }
   
-  MS_Free( root);
-  
  end:
+  ROOT_Free( root);
   fprintf( stdout, "\r"); /* we never want this line to be optimazie out */
   return ret;
 }
