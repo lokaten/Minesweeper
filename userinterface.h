@@ -10,7 +10,7 @@ extern "C" {
   
 #include "MS_util.h"
 #include "minefield.h"
-  
+
   
   typedef struct{
     int ( *func)( void *);
@@ -26,8 +26,8 @@ extern "C" {
     u64 nextframe;
     u64 gamestart;
     u64 nexttu;
-    _Bool gameover;
-    _Bool no_resize;
+    bool gameover;
+    bool no_resize;
     u32 seed;
     int( *quit)( void *);
   }MS_root;

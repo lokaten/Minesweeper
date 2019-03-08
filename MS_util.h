@@ -53,6 +53,10 @@ extern "C" {
 #define TERM( string) string
 #endif
 
+#ifndef __cplusplus
+typedef _Bool bool;
+#endif
+
 #ifdef SMALL
 typedef uint_least64_t u64;
 typedef uint_least32_t u32;
