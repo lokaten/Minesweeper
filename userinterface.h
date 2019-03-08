@@ -25,7 +25,6 @@ extern "C" {
     u64 tutime;
     u64 nextframe;
     u64 gamestart;
-    u64 nexttu;
     bool gameover;
     bool no_resize;
     u32 seed;

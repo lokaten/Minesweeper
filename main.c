@@ -179,8 +179,7 @@ main( const int argc, const char** argv){
   root -> tutime    = getnanosec();
   root -> gamestart = root -> tutime;
   root -> nextframe = root -> tutime;
-  root -> nexttu    = root -> tutime;
-  
+    
   root -> gameover = FALSE;
   
   if( strstr( root -> minefield -> title, "benchmark")){
@@ -192,23 +191,35 @@ main( const int argc, const char** argv){
   
   while( TRUE){
     {
-      action *act, *dact = MS_CreateEmpty( action);
+      action *act;
+      
+      event_dispatch( root);
       
       while likely( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
 	assert( act -> func != NULL);
 	assert( act -> data != NULL);
-	*dact = *act;
+	ret = act -> func( act -> data);
 	CS_Finish( root -> actionque, act);
-	ret = dact -> func( dact -> data);
       }
-
-      MS_Free( dact);
+      
+      assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
+      assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
+      
+      ret = draw( root -> GW, *root -> minefield);
     }
     
     {
 #ifndef NO_TERM
       MS_stream     *mss       = root -> mss;
       MS_field      *minefield = root -> minefield;
+      
+#ifdef DEBUG
+      if( mss -> deb != NULL){
+	__uint64_t mytime = getnanosec() - root -> tutime;
+	
+	DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
+      }
+#endif
       
       if( !root -> gameover){
 	if unlikely( minefield -> mine -> hit){
@@ -227,34 +238,6 @@ main( const int argc, const char** argv){
       }
       
       printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
-      
-      root -> nexttu = getnanosec();
-      
-      /* to make sure the time looks like it updatet consistanly we randomaize
-       * the time we wait betwen updating it, with max time betwen update beigen 150ms
-       */
-      root -> nexttu += 50000000lu + ( ( ( __uint64_t)( root -> seed = MS_rand( root -> seed)) * 100000000lu) / MS_RAND_MAX);
-#endif
-    }
-    
-    {
-      MS_stream     *mss       = root -> mss;
-      MS_field      *minefield = root -> minefield;
-      
-      assert( minefield -> mine -> mines <= minefield -> mine -> level);
-      assert( minefield -> mine -> set   <= minefield -> mine -> noelements);
-      
-      ret = draw( root -> GW, *minefield);
-      
-      event_dispatch( root);
-      
-      root -> nexttu = getnanosec();
-#ifdef DEBUG
-      if( mss -> deb != NULL){
-	__uint64_t mytime = getnanosec() - root -> tutime;
-	
-	DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
-      }
 #endif
     }
   }
