@@ -39,12 +39,12 @@ extern "C" {
   
   
 #ifdef LOCALE_
-  INLINE __uint8_t *LOCALE_( acse)( MS_field, int, int);
+  static inline __uint8_t *LOCALE_( acse)( MS_field, int, int);
   
-  INLINE __uint8_t *
+  static inline __uint8_t *
   LOCALE_( acse)( MS_field field, int x, int y){
-    return field.data + ( mol_( (u32)( ( x) + (int)field.width ), field.width , field.width_divobj ) +
-			  mol_( (u32)( ( y) + (int)field.height), field.height, field.height_divobj) * field.width);
+    return field.data + ( mol_( (u32)( x + (int)field.width ), field.width , field.width_divobj ) +
+			  mol_( (u32)( y + (int)field.height), field.height, field.height_divobj) * field.width);
   }
   
 #define acse LOCALE_( acse)
