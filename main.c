@@ -38,7 +38,6 @@ quit( void *data){
 
 MS_root *
 ROOT_Init( const int argc, const char **argv){
-  MS_root *ret = NULL;
   MS_root *root;
   
   MS_field *field_custom    = MS_Create( MS_field, .title = "custom"   , .width =    0, .height =    0, .level =  0, .global = 0, .reseed = 0);
@@ -56,10 +55,11 @@ ROOT_Init( const int argc, const char **argv){
   assert( opt_true);
   assert( !opt_false);
   
-  if unlikely( ( root              = MS_CreateEmpty( MS_root      )) == NULL) goto end;
-  if unlikely( ( root -> actionque = CS_Create(      action       )) == NULL) goto end;
-  if unlikely( ( root -> mss       = def_out                       ) == NULL) goto end;
-  if unlikely( ( root -> minefield = field_beginner                ) == NULL) goto end;
+  root = MS_CreateEmpty( MS_root);
+  root -> actionque = CS_Create( action);
+
+  assert( root -> mss       == def_out);
+  assert( root -> minefield == field_beginner);
   
   {
     MS_options opt[] = {
@@ -103,14 +103,10 @@ ROOT_Init( const int argc, const char **argv){
       help( root -> mss -> hlp, opt);
       ret = root;
       take_action( root -> actionque, quit, ( void *)root);
-      goto end;
     }
 #endif
   }
   
-  if unlikely( root -> minefield == NULL) goto end;
-  if unlikely( root -> mss       == NULL) goto end;
-
   root -> minefield -> reseed = field_custom -> reseed;
   
   root -> quit = quit;
@@ -130,23 +126,19 @@ ROOT_Init( const int argc, const char **argv){
   DEBUG_PRINT( root -> mss -> deb, "\r\t\theight: %lu   ", root -> minefield -> height);
   DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
   
-  
-  ret = root;
  end:
-  if( root != NULL){
-    if( root -> minefield != field_custom   ) MS_Free( field_custom   );
-    if( root -> minefield != field_beginner ) MS_Free( field_beginner );
-    if( root -> minefield != field_advanced ) MS_Free( field_advanced );
-    if( root -> minefield != field_expert   ) MS_Free( field_expert   );
-    if( root -> minefield != field_benchmark) MS_Free( field_benchmark);
-    
-    if( root -> mss != very_quiet) MS_Free( very_quiet);
-    if( root -> mss != def_out   ) MS_Free( def_out   );
-    
-    if( root != ret) ROOT_Free( root);
-  }
+  if( root -> minefield != field_custom   ) MS_Free( field_custom   );
+  if( root -> minefield != field_beginner ) MS_Free( field_beginner );
+  if( root -> minefield != field_advanced ) MS_Free( field_advanced );
+  if( root -> minefield != field_expert   ) MS_Free( field_expert   );
+  if( root -> minefield != field_benchmark) MS_Free( field_benchmark);
   
-  return ret;
+  if( root -> mss != very_quiet) MS_Free( very_quiet);
+  if( root -> mss != def_out   ) MS_Free( def_out   );
+  
+  if( root != ret) ROOT_Free( root);
+  
+  return root;
 }
 
 
@@ -167,7 +159,7 @@ main( const int argc, const char** argv){
   int ret = -1;
   MS_root *root;
   
-  if unlikely( ( root              = ROOT_Init( argc, argv)       ) == NULL) goto end;
+  root = ROOT_Init( argc, argv);
   if unlikely( ( root -> GW        = GW_Init(   root             )) == NULL) goto end;
   if unlikely( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto end;
   
