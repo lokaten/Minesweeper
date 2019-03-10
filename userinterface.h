@@ -13,7 +13,7 @@ extern "C" {
 
   
   typedef struct{
-    int ( *func)( void *);
+    void ( *func)( void *);
     void *data;
   }action;
   
@@ -28,19 +28,17 @@ extern "C" {
     bool gameover;
     bool no_resize;
     u32 seed;
-    int( *quit)( void *);
+    void( *quit)( void *);
   }MS_root;
   
   
-  static inline int
-  LOCALE_( take_action)( ComandStream *actionque, int ( *func)( void *), void *data){
-    int ret = 0;
+  static inline void
+  LOCALE_( take_action)( ComandStream *actionque, void( *func)( void *), void *data){
     action *pact;
     pact = ( action *)CS_Fetch( actionque);
     pact -> func = func;
     pact -> data = data;
     CS_Push( actionque, pact);
-    return ret;
   }
 #define take_action LOCALE_( take_action)
   

@@ -15,14 +15,14 @@
 #include "OPT.h"
 
 
-int quit( void *);
+void quit( void *);
 MS_root *ROOT_Init( const int, const char **);
 void ROOT_Free( MS_root *);
 int swap_flag( MS_field *, int, int);
 static inline void printtime( FILE *, u64);
 
 
-int
+void
 quit( void *data){
   int ret = 0;
   MS_root *root = ( MS_root *)data;
@@ -185,7 +185,7 @@ main( const int argc, const char** argv){
       while likely( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
 	dassert( act -> func != NULL);
 	dassert( act -> data != NULL);
-	ret = act -> func( act -> data);
+	act -> func( act -> data);
 	CS_Finish( root -> actionque, act);
       }
       

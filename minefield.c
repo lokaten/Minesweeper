@@ -8,9 +8,9 @@
 #include "ComandStream.h"
 #include "minefield.h"
 
-INLINE __uint8_t uncover_element( MS_field, MS_pos, MS_mstr *);
-INLINE __uint8_t setmine_element( __uint8_t *, MS_mstr *);
-INLINE int addelement( MS_field *, signed long, signed long);
+static inline __uint8_t uncover_element( MS_field, MS_pos, MS_mstr *);
+static inline __uint8_t setmine_element( __uint8_t *, MS_mstr *);
+static inline void addelement( MS_field *, signed long, signed long);
 
 
 MS_field *
@@ -46,10 +46,8 @@ MF_Init( MS_field *minefield){
 }
 
 
-int
+void
 setminefield( void *args){
-  int ret = 0;
-  
   MS_field  *minefield = ( ( setminefieldargs *)args) -> minefield;
   MS_stream *mss       = ( ( setminefieldargs *)args) -> mss;
   MS_video   video     = ( ( setminefieldargs *)args) -> video;
@@ -96,7 +94,6 @@ setminefield( void *args){
   MS_print( mss -> deb, "\rSeed: %08x   \n", minefield -> mine -> seed);
   
   MS_Free( args);
-  return ret;
 }
 
 
@@ -111,9 +108,8 @@ MF_Free( MS_field *minefield){
   }
 }
 
-INLINE int
+static inline void
 addelement( MS_field *minefield, signed long x, signed long y){
-  int ret = 0;
   /* check that ECOVER is true, to not uncover the same element twice, and also skip if EFLAG is true
    */
   if( ( *acse( *minefield, x, y) & ECOVER) && ( *acse( *minefield, x, y) & EFLAG) ^ EFLAG){
@@ -123,16 +119,12 @@ addelement( MS_field *minefield, signed long x, signed long y){
     *acse( *minefield, x, y) &= ~ECOVER;
     CS_Push( minefield -> uncovque, pos);
   }
-  
-  return ret;
 }
 
 
 
-int
+void
 uncov( void *args){
-  int ret = 0;
-  
   MS_field *minefield = ( ( uncovargs *)args) -> minefield;
   MS_pos *element;
   
@@ -159,10 +151,9 @@ uncov( void *args){
   }
   
   MS_Free( args);
-  return ret;
 }
 
-INLINE __uint8_t
+static inline __uint8_t
 uncover_element( MS_field minefield, MS_pos postion, MS_mstr *mine){
   
   /* chech that it hasnt been uncover yet, becuse elements are set to ECOVER | ECOUNT and ECOVER alaredy is down;
@@ -190,7 +181,7 @@ uncover_element( MS_field minefield, MS_pos postion, MS_mstr *mine){
 }
 
 
-INLINE __uint8_t
+static inline __uint8_t
 setmine_element( __uint8_t *element, MS_mstr *mine){
   if( !( ( *element) & ESET)){
     __uint8_t u;
@@ -210,10 +201,8 @@ setmine_element( __uint8_t *element, MS_mstr *mine){
 }
 
 
-int
+void
 uncov_elements( void *args){
-  int ret = 0;
-  
   MS_field *minefield = ( ( uncov_elementsargs *)args) -> minefield;
   MS_video  vid       = ( ( uncov_elementsargs *)args) -> vid;
   
@@ -226,18 +215,15 @@ uncov_elements( void *args){
     x = ( s32)( i % vid.width) + vid.xdiff;
     y = ( s32)( i / vid.width) + vid.ydiff;
     
-    ret = addelement( minefield, x, y);
+    addelement( minefield, x, y);
   }
   
   MS_Free( args);
-  return ret;
 }
 
 
-int
+void
 setzero( void *args){
-  int ret = 0;
-  
   MS_field *minefield = ( ( setzeroargs *)args) -> minefield;
   MS_video  vid       = ( ( setzeroargs *)args) -> vid;
   
@@ -259,5 +245,4 @@ setzero( void *args){
   }
   
   MS_Free( args);
-  return ret;
 }
