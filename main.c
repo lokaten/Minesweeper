@@ -57,9 +57,9 @@ ROOT_Init( const int argc, const char **argv){
   
   root = MS_CreateEmpty( MS_root);
   root -> actionque = CS_Create( action);
-
-  assert( root -> mss       == def_out);
-  assert( root -> minefield == field_beginner);
+  
+  root -> mss = def_out;
+  root -> minefield = field_beginner;
   
   {
     MS_options opt[] = {
@@ -101,8 +101,8 @@ ROOT_Init( const int argc, const char **argv){
 #ifndef NO_TERM
     if( root -> mss -> hlp){
       help( root -> mss -> hlp, opt);
-      ret = root;
       take_action( root -> actionque, quit, ( void *)root);
+      goto end;
     }
 #endif
   }
@@ -135,8 +135,6 @@ ROOT_Init( const int argc, const char **argv){
   
   if( root -> mss != very_quiet) MS_Free( very_quiet);
   if( root -> mss != def_out   ) MS_Free( def_out   );
-  
-  if( root != ret) ROOT_Free( root);
   
   return root;
 }
