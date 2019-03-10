@@ -22,113 +22,97 @@ typedef struct{
   char *push;
   char *releas;
   char *finish;
-  __uint16_t efetch;
-  __uint16_t epush;
-  __uint16_t ereleas;
-  __uint16_t efinish;
 }ComandStream;
 
 
-INLINE ComandStream *LOCALE_( CS_Create)( size_t);
-INLINE void *LOCALE_( CS_Fetch)( ComandStream *);
-INLINE void LOCALE_( CS_Push)( ComandStream *, void *);
-INLINE void *LOCALE_( CS_Releas)( ComandStream *);
-INLINE void LOCALE_( CS_Finish)( ComandStream *, void *);
-INLINE void LOCALE_( CS_Free)( ComandStream *);
+static inline ComandStream *LOCALE_( CS_Create)( size_t);
+static inline void *LOCALE_( CS_Fetch)( ComandStream *);
+static inline void LOCALE_( CS_Push)( ComandStream *, void *);
+static inline void *LOCALE_( CS_Releas)( ComandStream *);
+static inline void LOCALE_( CS_Finish)( ComandStream *, void *);
+static inline void LOCALE_( CS_Free)( ComandStream *);
 
 _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
 _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 
 #define NC 4096
 
-ComandStream *
+static inline ComandStream *
 LOCALE_( CS_Create)( size_t size){
   ComandStream *ret = NULL;
-  ComandStream *CS = MS_CreateEmpty( ComandStream);
+  ComandStream *Stream = MS_CreateEmpty( ComandStream);
   char *ptr;
   
-  if( CS == NULL) goto end;
+  if( Stream == NULL) goto end;
   
-  CS -> blk_size = NC * size;
+  Stream -> blk_size = NC * size;
   
-  assert( CS -> blk_size);
+  assert( Stream -> blk_size);
   
-  ptr = ( char *)malloc( CS -> blk_size + sizeof( char *));
+  ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
   
   if( ptr == NULL) goto end;
   
-  *( char **)( ptr + CS -> blk_size) = ptr;
+  *( char **)( ptr + Stream -> blk_size) = ptr;
     
-  CS -> size = size;
+  Stream -> size = size;
   
-  CS -> blk_fetch  = ptr;
-  CS -> blk_push   = ptr;
-  CS -> blk_releas = ptr;
-  CS -> blk_finish = ptr;
+  Stream -> blk_fetch  = ptr;
+  Stream -> blk_push   = ptr;
+  Stream -> blk_releas = ptr;
+  Stream -> blk_finish = ptr;
     
-  CS -> fetch  = ptr;
-  CS -> push   = ptr;
-  CS -> releas = ptr;
-  CS -> finish = ptr;
-  
-  CS -> efetch  = 0;
-  CS -> epush   = 0;
-  CS -> ereleas = 0;
-  CS -> efinish = 0;
+  Stream -> fetch  = ptr;
+  Stream -> push   = ptr;
+  Stream -> releas = ptr;
+  Stream -> finish = ptr;
 
-  ret = CS;
+  ret = Stream;
  end:
-  if( ret != CS) LOCALE_( CS_Free)( CS);
+  if( ret != Stream) LOCALE_( CS_Free)( Stream);
   return ret;
 }
 #define CS_Create( type) LOCALE_( CS_Create)( sizeof( type))
 
 
-INLINE void *
-LOCALE_( CS_Fetch)( ComandStream *CS){
+static inline void *
+LOCALE_( CS_Fetch)( ComandStream *Stream){
   void *ret = NULL;
-  assert( CS != NULL);
-  if unlikely( ( *CS).efetch >= NC){
-    if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) == ( *CS).blk_finish){
-      char *ptr = ( char *)malloc( ( *CS).blk_size + sizeof( char *));
-      if unlikely( ptr == NULL){
-	goto end;
-      }
+  assert( Stream != NULL);
+  if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
+    if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
+      char *ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
+      if unlikely( ptr == NULL) goto end;
       /*lock*/
-      *( char **)( ptr + ( *CS).blk_size) = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
-      *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) = ptr;
+      *( char **)( ptr + Stream -> blk_size) = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
+      *( char **)( Stream -> blk_fetch + Stream -> blk_size) = ptr;
       /*unlock*/
     }
-    ( *CS).blk_fetch = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
-    ( *CS).fetch  = ( *CS).blk_fetch;
-    ( *CS).efetch = 0;
+    Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
+    Stream -> fetch  = Stream -> blk_fetch;
   }
   
-  ret = ( *CS).fetch;
-  ( *CS).fetch = ( *CS).fetch + ( *CS).size;
-  ++( *CS).efetch;
+  ret = Stream -> fetch;
+  Stream -> fetch = Stream -> fetch + Stream -> size;
   
  end:
-  
   return ret;
 }
 #define CS_Fetch LOCALE_( CS_Fetch)
 
 
-INLINE void
-LOCALE_( CS_Push)( ComandStream *CS, void *ptr){
-  assert( CS != NULL);
+static inline void
+LOCALE_( CS_Push)( ComandStream *Stream, void *ptr){
+  assert( Stream != NULL);
   
-  if unlikely( ( *CS).epush >= NC){
-    ( *CS).blk_push = *( char **)( ( *CS).blk_push + ( *CS).blk_size);
-    ( *CS).push = ( *CS).blk_push;
-    ( *CS).epush = 0;
+  if unlikely( Stream -> push == Stream -> blk_push + Stream -> blk_size){
+    Stream -> blk_push = *( char **)( Stream -> blk_push + Stream -> blk_size);
+    Stream -> push = Stream -> blk_push;
   }
   
-  assert( ptr == CS -> push);
+  assert( ptr == Stream -> push);
   
-  ( *CS).push = ( *CS).push + ( *CS).size;
-  ++( *CS).epush;
+  Stream -> push = Stream -> push + Stream -> size;
 }
 #define CS_Push LOCALE_( CS_Push)
 
@@ -136,49 +120,46 @@ LOCALE_( CS_Push)( ComandStream *CS, void *ptr){
 /* 
  * return a pointer to the next element in the stream
  */
-INLINE void *
-LOCALE_( CS_Releas)( ComandStream *CS){
+static inline void *
+LOCALE_( CS_Releas)( ComandStream *Stream){
   void *ret = NULL;
   
-  assert( CS != NULL);
-  if likely( ( *CS).push != ( *CS).releas){
-    if unlikely( ( *CS).ereleas >= NC){
-      ( *CS).blk_releas = *( char **)( ( *CS).blk_releas + ( *CS).blk_size);
-      ( *CS).releas = ( *CS).blk_releas;
-      ( *CS).ereleas = 0;
-    }
-    
-    ret = ( *CS).releas;
-    ( *CS).releas = ( *CS).releas + ( *CS).size;
-    ++( *CS).ereleas;
+  assert( Stream != NULL);
+  if unlikely( Stream -> push == Stream -> releas) goto end;
+  
+  if unlikely( Stream -> releas == Stream -> blk_releas + Stream -> blk_size){
+    Stream -> blk_releas = *( char **)( Stream -> blk_releas + Stream -> blk_size);
+    Stream -> releas = Stream -> blk_releas;
   }
-      
+  
+  ret = Stream -> releas;
+  Stream -> releas = Stream -> releas + Stream -> size;
+  
+ end:
   return ret;
 }
 #define CS_Releas LOCALE_( CS_Releas)
   
 
-INLINE void
-LOCALE_( CS_Finish)( ComandStream *CS, void *ptr){
-  assert( CS != NULL);
+static inline void
+LOCALE_( CS_Finish)( ComandStream *Stream, void *ptr){
+  assert( Stream != NULL);
   
-  if unlikely( ( *CS).efinish >= NC){
-    if unlikely( *( char **)( ( *CS).blk_fetch + ( *CS).blk_size) != ( *CS).blk_finish){
+  if unlikely( Stream -> finish == Stream -> blk_finish + Stream -> blk_size){
+    if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) != Stream -> blk_finish){
       /*lock*/
-      char *lptr =  *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
-      *( char **)( ( *CS).blk_fetch + ( ( *CS).blk_size)) = *( char **)( lptr + ( *CS).blk_size);
+      char *lptr =  *( char **)( Stream -> blk_fetch + Stream -> blk_size);
+      *( char **)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( char **)( lptr + Stream -> blk_size);
       /*unlock*/
       free( lptr);
     }
-    ( *CS).blk_finish = *( char **)( ( *CS).blk_finish + ( *CS).blk_size);
-    ( *CS).finish = ( *CS).blk_finish;
-    ( *CS).efinish = 0;
+    Stream -> blk_finish = *( char **)( Stream -> blk_finish + Stream -> blk_size);
+    Stream -> finish = Stream -> blk_finish;
   }
   
-  assert( ptr == CS -> finish);
+  assert( ptr == Stream -> finish);
   
-  ( *CS).finish = ( *CS).finish + ( *CS).size;
-  ++( *CS).efinish;
+  Stream -> finish = Stream -> finish + Stream -> size;
 }
 #define CS_Finish LOCALE_( CS_Finish)
 
@@ -186,20 +167,20 @@ LOCALE_( CS_Finish)( ComandStream *CS, void *ptr){
 /*
  * free all block...
  */
-void
-LOCALE_( CS_Free)( ComandStream *CS){
-  if likely( CS != NULL){
-    char *ptr = ( *CS).blk_fetch;
-    ( *CS).blk_fetch = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
-    *( char **)( ptr + ( *CS).blk_size) = NULL;
+static inline void
+LOCALE_( CS_Free)( ComandStream *Stream){
+  if likely( Stream != NULL){
+    char *ptr = Stream -> blk_fetch;
+    Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
+    *( char **)( ptr + Stream -> blk_size) = NULL;
    
-    while( ( *CS).blk_fetch != NULL){
-      ptr = ( *CS).blk_fetch;
-      ( *CS).blk_fetch = *( char **)( ( *CS).blk_fetch + ( *CS).blk_size);
+    while( Stream -> blk_fetch != NULL){
+      ptr = Stream -> blk_fetch;
+      Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
       free( ptr);
     }
     
-    free( CS);
+    free( Stream);
   }
 }
 #define CS_Free LOCALE_( CS_Free)
