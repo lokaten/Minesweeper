@@ -15,12 +15,11 @@ INLINE int addelement( MS_field *, signed long, signed long);
 
 MS_field *
 MF_Init( MS_field *minefield){
-  MS_field *ret = NULL;
   
-  if unlikely( minefield == NULL) goto end;
+  dassert( minefield);
   
-  if unlikely( ( minefield -> mine     = MS_CreateEmpty( MS_mstr)) == NULL) goto end;
-  if unlikely( ( minefield -> uncovque = CS_Create(      MS_pos )) == NULL) goto end;
+  minefield -> mine = MS_CreateEmpty( MS_mstr);
+  minefield -> uncovque = CS_Create( MS_pos);
   
   minefield -> mine -> noelements = minefield -> width * minefield -> height;
   
@@ -37,16 +36,13 @@ MF_Init( MS_field *minefield){
   
   minefield -> data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield -> width * minefield -> height);
   
-  if unlikely( minefield -> data == NULL) goto end;
+  assert( minefield -> data != NULL);
   
   if( !minefield -> global){
     memset( minefield -> data, ESET, minefield -> width * minefield -> height);
   }
   
-  ret = minefield;
- end:
-  if unlikely( ret == NULL)MF_Free( minefield);
-  return ret;
+  return minefield;
 }
 
 

@@ -157,8 +157,7 @@ main( const int argc, const char** argv){
   
   root = ROOT_Init( argc, argv);
   if unlikely( ( root -> GW        = GW_Init(   root             )) == NULL) goto end;
-  if unlikely( ( root -> minefield = MF_Init(   root -> minefield)) == NULL) goto end;
-  
+  root -> minefield = MF_Init( root -> minefield);
   
   take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, root -> minefield, root -> mss, ( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight}));
   
