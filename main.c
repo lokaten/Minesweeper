@@ -18,7 +18,6 @@
 void quit( void *);
 MS_root *ROOT_Init( const int, const char **);
 void ROOT_Free( MS_root *);
-int swap_flag( MS_field *, int, int);
 static inline void printtime( FILE *, u64);
 
 
@@ -152,11 +151,9 @@ ROOT_Free( MS_root *root){
 
 int
 main( const int argc, const char** argv){
-  int ret = -1;
   MS_root *root;
   
   root = ROOT_Init( argc, argv);
-  if unlikely( ( root -> GW        = GW_Init(   root             )) == NULL) goto end;
   root -> minefield = MF_Init( root -> minefield);
   
   take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, root -> minefield, root -> mss, ( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight}));
@@ -174,6 +171,8 @@ main( const int argc, const char** argv){
     take_action( root -> actionque, uncov_elements    ,  MS_Create( uncov_elementsargs, root -> minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1}));
     take_action( root -> actionque, uncov             ,  MS_Create( uncovargs         , root -> minefield));
     take_action( root -> actionque, quit              , root);
+  }else{
+    root -> GW = GW_Init( root);
   }
   
   while( TRUE){
@@ -192,7 +191,7 @@ main( const int argc, const char** argv){
       dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
       dassert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
       
-      ret = draw( root -> GW, *root -> minefield);
+      draw( root -> GW, *root -> minefield);
     }
     
     {
@@ -229,10 +228,9 @@ main( const int argc, const char** argv){
     }
   }
   
- end:
   ROOT_Free( root);
   fprintf( stdout, "\r"); /* we never want this line to be optimazie out */
-  return ret;
+  return -1;
 }
 
 

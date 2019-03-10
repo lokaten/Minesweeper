@@ -42,10 +42,10 @@ extern "C" {
   }
 #define take_action LOCALE_( take_action)
   
-  int event_dispatch( void *);
+  void event_dispatch( void *);
   void *GW_Init( MS_root *);
   void GW_Free( void *);
-  int draw( void *, MS_field);
+  void draw( void *, MS_field);
   
 #ifdef __cplusplus
 }

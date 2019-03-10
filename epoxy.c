@@ -15,23 +15,21 @@ typedef struct{
 
 void *
 GW_Init( MS_root *root){
-  assert( root != NULL);
+  dassert( root != NULL);
   return MS_CreateEmpty( char);
 }
 
 
-int
+void
 event_dispatch( void *root_void){
-  (void)root_void;
-  return 0;
+  dassert( root_void != NULL);
 }
 
 
-int
+void
 draw( void *context_void, MS_field field){
-  (void)context_void;
+  dassert( context_void != NULL);
   (void)field;
-  return 0;
 }
 
 

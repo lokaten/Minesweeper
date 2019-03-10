@@ -45,14 +45,14 @@ SDL_Texture *drawelement( GraphicWraper *, __uint8_t);
 void MS_scale( SDL_Surface *, SDL_Surface *, signed long, signed long, unsigned long, unsigned long);
 
 
-int
+void
 event_dispatch( void *data){
-  int ret = 1;
-  
   MS_root       *root      = data;
   MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = root -> GW;
   SDL_Event event;
+  
+  if unlikely( GW == NULL) return;
   
   root -> tutime = getnanosec();
   if( !minefield -> mine -> uncoverd || root -> gameover){
@@ -68,7 +68,9 @@ event_dispatch( void *data){
   
   if( SDL_WaitEventTimeout( &event, 1)){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
-    case SDL_QUIT: take_action( root -> actionque, root -> quit, root); goto end;
+    case SDL_QUIT:
+      take_action( root -> actionque, root -> quit, root);
+      break;
     case SDL_KEYDOWN:
       {
 	switch( event.key.keysym.sym){
@@ -80,7 +82,6 @@ event_dispatch( void *data){
 	  root -> gameover = FALSE;
 	  if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
 	    take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, minefield, root -> mss, GW -> mfvid));
-	    ret = 1;
 	  }
 	  break;
 	case SDLK_F3:
@@ -143,11 +144,9 @@ event_dispatch( void *data){
 	    if( *element & EFLAG){
 	      *element &= ~EFLAG;
 	      --minefield -> mine -> flaged;
-	      ret = 1;
 	    }else if( *element & ECOVER){
 	      *element|= EFLAG;
 	      ++minefield -> mine -> flaged;
-	      ret = 1;
 	    }
 	  }
 	default:
@@ -160,9 +159,6 @@ event_dispatch( void *data){
     
     root -> nextframe = root -> tutime;
   }
-  
- end:
-  return ret;
 }
 
 
@@ -203,22 +199,21 @@ MS_OpenImage( SDL_Renderer *render, const char *str){
 
 int
 MS_BlitTex( SDL_Renderer *renderer, SDL_Texture *tex, int dx, int dy, int w, int h, int sx, int sy){
-  assert( renderer != NULL);
-  assert(      tex != NULL);
+  dassert( renderer != NULL);
+  dassert(      tex != NULL);
   return SDL_RenderCopyEx( renderer, tex, &( SDL_Rect){ .x = sx, .y = sy, .w = w, .h = h}, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
 }
 
 int
 MS_BlitTile( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, int h){
-  assert( renderer != NULL);
-  assert(     tile != NULL);
+  dassert( renderer != NULL);
+  dassert(     tile != NULL);
   return SDL_RenderCopyEx( renderer, tile, NULL, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
 }
 
 
-int
+void
 draw( void *gw_void, MS_field minefield){
-  int ret = 0;
   MS_pos element;
   unsigned long i;
   SDL_Texture *tile;
@@ -239,11 +234,6 @@ draw( void *gw_void, MS_field minefield){
       element.y = ( GW -> real.ydiff + i / w);
       
       tile = drawelement( GW, *acse( minefield, element.x, element.y));
-      
-      if( tile == NULL){
-        ret = -3;
-        continue;
-      }
     }
     
     MS_BlitTile( GW -> renderer, tile,
@@ -265,8 +255,6 @@ draw( void *gw_void, MS_field minefield){
   SDL_RenderPresent( GW -> renderer);
   
   SDL_ShowWindow( GW -> window);
-  
-  return ret;
 }
 
 
@@ -309,16 +297,14 @@ drawelement( GraphicWraper *GW, __uint8_t element){
 
 void *
 GW_Init( MS_root *root){
-  GraphicWraper *GW = NULL;
-  
-  if unlikely( ( GW = MS_CreateEmpty( GraphicWraper)) == NULL) goto end;
+  GraphicWraper *GW = MS_CreateEmpty( GraphicWraper);
   
   GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
   
   GW -> global = root -> minefield -> global;
   
-  GW -> mfvid.width  = root -> minefield -> width;
-  GW -> mfvid.height = root -> minefield -> height;
+  GW -> mfvid.width  = root -> minefield -> subwidth;
+  GW -> mfvid.height = root -> minefield -> subheight;
   
   GW -> real.realwidth  = GW -> real.realwidth ? GW -> real.realwidth : GW -> mfvid.width  * GW -> real.element_width;
   GW -> real.realheight = GW -> real.realheight? GW -> real.realheight: GW -> mfvid.height * GW -> real.element_height;
@@ -329,16 +315,16 @@ GW_Init( MS_root *root){
   GW -> mfvid.realwidth  = GW -> mfvid.width  * GW -> real.element_width;
   GW -> mfvid.realheight = GW -> mfvid.height * GW -> real.element_height;
   
-  if unlikely( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)) goto end;
+  assert( !SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER));
   
   GW -> window = SDL_CreateWindow( root -> minefield -> title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 				   GW -> real.realwidth, GW -> real.realheight, SDL_WINDOW_HIDDEN);
   
-  if unlikely( GW -> window   == NULL) goto end;
+  assert( GW -> window != NULL);
   
   GW -> renderer = SDL_CreateRenderer( GW -> window, -1, 0);
   
-  if unlikely( GW -> renderer == NULL) goto end;
+  assert( GW -> renderer != NULL);
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
   SDL_RenderSetLogicalSize( GW -> renderer, GW -> real.realwidth, GW -> real.realheight);
@@ -369,9 +355,6 @@ GW_Init( MS_root *root){
   SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
   SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
 
-  return GW;
- end:
-  GW_Free( GW);
   return GW;
 }
 
