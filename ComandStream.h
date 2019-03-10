@@ -50,7 +50,8 @@ LOCALE_( CS_Create)( size_t size){
   assert( Stream -> blk_size);
   
   ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
-  
+
+  assert( ptr != NULL);
   if( ptr == NULL) goto end;
   
   *( char **)( ptr + Stream -> blk_size) = ptr;
@@ -82,6 +83,7 @@ LOCALE_( CS_Fetch)( ComandStream *Stream){
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
       char *ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
+      assert( ptr != NULL);
       if unlikely( ptr == NULL) goto end;
       /*lock*/
       *( char **)( ptr + Stream -> blk_size) = *( char **)( Stream -> blk_fetch + Stream -> blk_size);

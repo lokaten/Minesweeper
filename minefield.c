@@ -122,14 +122,10 @@ addelement( MS_field *minefield, signed long x, signed long y){
    */
   if( ( *acse( *minefield, x, y) & ECOVER) && ( *acse( *minefield, x, y) & EFLAG) ^ EFLAG){
     MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
-    if likely( pos != NULL){
-      pos -> x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
-      pos -> y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
-      *acse( *minefield, x, y) &= ~ECOVER;
-      CS_Push( minefield -> uncovque, pos);
-    }else{
-      ret = -2;
-    }
+    pos -> x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
+    pos -> y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
+    *acse( *minefield, x, y) &= ~ECOVER;
+    CS_Push( minefield -> uncovque, pos);
   }
   
   return ret;
@@ -150,8 +146,7 @@ uncov( void *args){
     
     /* check if elemnt has no suronding mines and if that is the case continue whit uncovering the neigburing elemnts
      */
-    if( ( uncover_element( *minefield, *element, minefield -> mine) & ECOUNT) == 0){
-      
+    if likely( ( uncover_element( *minefield, *element, minefield -> mine) & ECOUNT) == 0){
       addelement( minefield, element -> x + 1, element -> y + 1);
       addelement( minefield, element -> x - 1, element -> y + 1);
       addelement( minefield, element -> x    , element -> y + 1);
@@ -161,7 +156,7 @@ uncov( void *args){
       addelement( minefield, element -> x    , element -> y - 1);
       
       addelement( minefield, element -> x + 1, element -> y    );
-      ret = addelement( minefield, element -> x - 1, element -> y    );
+      addelement( minefield, element -> x - 1, element -> y    );
     }
     
     CS_Finish( minefield -> uncovque, element);

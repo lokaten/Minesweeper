@@ -163,6 +163,7 @@ LOCALE_( MS_Create)( size_t alo_size, u16 num_elements, ...){
   va_list data;
   assert( alo_size);
   va_start( data, num_elements); /* no goto before this line */
+  assert( ptr != NULL);
   if( ptr == NULL) goto end;
   ret = ptr;
   while( num_elements--){
