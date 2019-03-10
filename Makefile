@@ -33,10 +33,6 @@ ifeq ($(NO_TERM), yes)
 CFLAGS += -DNO_TERM
 endif
 
-ifeq ($(UNSAFE),yes)
-CFLAGS += -DUNSAFE
-endif
-
 ifeq ($(GCC), yes)
 CFLAGS += -Wlogical-op -faggressive-loop-optimizations
 else

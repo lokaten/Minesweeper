@@ -140,7 +140,7 @@ uncov( void *args){
   MS_field *minefield = ( ( uncovargs *)args) -> minefield;
   MS_pos *element;
   
-  assert( minefield != NULL);
+  dassert( minefield != NULL);
   
   while likely( ( element = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
     

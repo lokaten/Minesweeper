@@ -37,9 +37,10 @@ extern "C" {
 #endif
 #endif
 
-#ifdef UNSAFE
-#undef assert
-#define assert( exp) (void)( exp)
+#ifdef DEBUG
+#define dassert( exp) assert( exp)
+#else
+#define dassert( exp) (void)( exp)
 #endif
 
 #ifdef INLINE 
@@ -161,7 +162,7 @@ LOCALE_( MS_Create)( size_t alo_size, u16 num_elements, ...){
   void *ret = NULL;
   void *ptr = ( void *)malloc( alo_size * ( num_elements ? num_elements: 1));
   va_list data;
-  assert( alo_size);
+  dassert( alo_size);
   va_start( data, num_elements); /* no goto before this line */
   assert( ptr != NULL);
   if( ptr == NULL) goto end;
@@ -200,7 +201,7 @@ LOCALE_( gen_divobj)( u32 a){
 static inline u32
 LOCALE_( mol_)( u32 b, u32 a, u32 divobj){
   u32 ret = ( (u64)( ( b * divobj) & U32C( 0xffffffff)) * (u64)a) >> 32;
-  assert( LOCALE_( div_)( b, a, divobj) * a + ret == b);
+  dassert( LOCALE_( div_)( b, a, divobj) * a + ret == b);
   return ret;
 }
 #define mol_ LOCALE_( mol_)
@@ -211,7 +212,7 @@ LOCALE_( mol_)( u32 b, u32 a, u32 divobj){
 static inline u32
 LOCALE_( div_)( u32 b, u32 a, u32 divobj){
   u32 ret = ( (u64)b * (u64)divobj) >> 32;
-  assert( ret * a <= b && ret * a + a > b);
+  dassert( ret * a <= b && ret * a + a > b);
   return ret;
 }
 #define div_ LOCALE_( div_)
@@ -288,7 +289,7 @@ LOCALE_( print)( FILE *stream, const char * format, ...){
 #ifdef DEBUG
 #define DEBUG_PRINT LOCALE_( print)
 #else
-#define DEBUG_PRINT( ...) 0
+#define DEBUG_PRINT( ...) (void)0
 #endif
 
 /*

@@ -52,8 +52,8 @@ ROOT_Init( const int argc, const char **argv){
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
 
-  assert( opt_true);
-  assert( !opt_false);
+  dassert( opt_true);
+  dassert( !opt_false);
   
   root = MS_CreateEmpty( MS_root);
   root -> actionque = CS_Create( action);
@@ -79,9 +79,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_CPY, TERM("Mimic windows minesweeper beginner mode"), "beginner"       , 'b', &root -> minefield         , field_beginner },
       { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &root -> minefield         , field_advanced },
       { OPTSW_CPY, TERM("Mimic windows minesweeper expert mode"  ), "expert"         , 'e', &root -> minefield         , field_expert   },
-#ifdef DEBUG
       { OPTSW_CPY, TERM(""                                       ), "benchmark"      , 'B', &root -> minefield         , field_benchmark},
-#endif
 #ifndef NO_TERM
       { OPTSW_GRP, TERM("Output"                                 ), ""               , 0  , NULL                       , NULL},
       { OPTSW_CPY, TERM("Print generic help mesage"              ), "help"           , 'h', &( def_out -> hlp         ), stdout},
@@ -186,14 +184,14 @@ main( const int argc, const char** argv){
       event_dispatch( root);
       
       while likely( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
-	assert( act -> func != NULL);
-	assert( act -> data != NULL);
+	dassert( act -> func != NULL);
+	dassert( act -> data != NULL);
 	ret = act -> func( act -> data);
 	CS_Finish( root -> actionque, act);
       }
       
-      assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
-      assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
+      dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
+      dassert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
       
       ret = draw( root -> GW, *root -> minefield);
     }

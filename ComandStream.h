@@ -39,23 +39,19 @@ _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 
 static inline ComandStream *
 LOCALE_( CS_Create)( size_t size){
-  ComandStream *ret = NULL;
   ComandStream *Stream = MS_CreateEmpty( ComandStream);
   char *ptr;
   
-  if( Stream == NULL) goto end;
-  
   Stream -> blk_size = NC * size;
   
-  assert( Stream -> blk_size);
+  dassert( Stream -> blk_size);
   
   ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
-
+  
   assert( ptr != NULL);
-  if( ptr == NULL) goto end;
   
   *( char **)( ptr + Stream -> blk_size) = ptr;
-    
+  
   Stream -> size = size;
   
   Stream -> blk_fetch  = ptr;
@@ -67,11 +63,8 @@ LOCALE_( CS_Create)( size_t size){
   Stream -> push   = ptr;
   Stream -> releas = ptr;
   Stream -> finish = ptr;
-
-  ret = Stream;
- end:
-  if( ret != Stream) LOCALE_( CS_Free)( Stream);
-  return ret;
+  
+  return Stream;
 }
 #define CS_Create( type) LOCALE_( CS_Create)( sizeof( type))
 
@@ -79,7 +72,7 @@ LOCALE_( CS_Create)( size_t size){
 static inline void *
 LOCALE_( CS_Fetch)( ComandStream *Stream){
   void *ret = NULL;
-  assert( Stream != NULL);
+  dassert( Stream != NULL);
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
       char *ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
@@ -105,7 +98,7 @@ LOCALE_( CS_Fetch)( ComandStream *Stream){
 
 static inline void
 LOCALE_( CS_Push)( ComandStream *Stream, void *ptr){
-  assert( Stream != NULL);
+  dassert( Stream != NULL);
   
   if unlikely( Stream -> push == Stream -> blk_push + Stream -> blk_size){
     Stream -> blk_push = *( char **)( Stream -> blk_push + Stream -> blk_size);
@@ -126,7 +119,7 @@ static inline void *
 LOCALE_( CS_Releas)( ComandStream *Stream){
   void *ret = NULL;
   
-  assert( Stream != NULL);
+  dassert( Stream != NULL);
   if unlikely( Stream -> push == Stream -> releas) goto end;
   
   if unlikely( Stream -> releas == Stream -> blk_releas + Stream -> blk_size){
@@ -145,7 +138,7 @@ LOCALE_( CS_Releas)( ComandStream *Stream){
 
 static inline void
 LOCALE_( CS_Finish)( ComandStream *Stream, void *ptr){
-  assert( Stream != NULL);
+  dassert( Stream != NULL);
   
   if unlikely( Stream -> finish == Stream -> blk_finish + Stream -> blk_size){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) != Stream -> blk_finish){
@@ -159,7 +152,7 @@ LOCALE_( CS_Finish)( ComandStream *Stream, void *ptr){
     Stream -> finish = Stream -> blk_finish;
   }
   
-  assert( ptr == Stream -> finish);
+  dassert( ptr == Stream -> finish);
   
   Stream -> finish = Stream -> finish + Stream -> size;
 }
