@@ -73,7 +73,8 @@ setminefield( MS_field  *minefield,
     
     *acse( *minefield, element.x, element.y) = ENUT;
     
-    drawelement( GW, minefield, element.x, element.y);
+    if( GW != NULL)
+      drawelement( GW, minefield, element.x, element.y);
   }
   
   
@@ -173,8 +174,9 @@ uncover_element( MS_field minefield, void *GW, MS_pos postion, MS_mstr *mine){
     *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x + 1, postion.y    ), mine) & EMINE) >> SMINE;
     *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x - 1, postion.y    ), mine) & EMINE) >> SMINE;
   }
-  
-  drawelement( GW, &minefield, postion.x, postion.y);
+
+  if( GW != NULL)
+    drawelement( GW, &minefield, postion.x, postion.y);
   
   return *acse( minefield, postion.x, postion.y);
 }
