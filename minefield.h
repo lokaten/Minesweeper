@@ -50,13 +50,16 @@ extern "C" {
 #define acse LOCALE_( acse)
   
 #endif
-
+  
   void setzero( MS_field *, MS_video);
   MS_field *MF_Init( MS_field *);
-  void setminefield( MS_field *, MS_stream *, MS_video);
+  void setminefield( MS_field *, void*, MS_stream *, MS_video);
   void MF_Free( MS_field *);
-  void uncov( MS_field *);
+  void uncov( MS_field *, void *);
   void uncov_elements( MS_field *,  MS_video);
+  
+  /**/
+  void drawelement( void *, MS_field *, u16, u16);
   
 #ifdef __cplusplus
 }

@@ -152,9 +152,7 @@ main( const int argc, const char** argv){
   
   root = ROOT_Init( argc, argv);
   root -> minefield = MF_Init( root -> minefield);
-  
-  setminefield( root -> minefield, root -> mss,
-		( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight});
+  root -> GW = GW_Init( root);
   
   root -> seed = MS_rand_seed();
   
@@ -167,11 +165,14 @@ main( const int argc, const char** argv){
   if( strstr( root -> minefield -> title, "benchmark")){
     setzero( root -> minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3});
     uncov_elements( root -> minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1});
-    uncov( root -> minefield);
+    uncov( root -> minefield, root -> GW);
     quit( root);
-  }else{
-    root -> GW = GW_Init( root);
   }
+  
+  draw( root -> GW, *root -> minefield);
+  
+  setminefield( root -> minefield, root -> GW, root -> mss,
+		( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight});
   
   while( TRUE){
     {

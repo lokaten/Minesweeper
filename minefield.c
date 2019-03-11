@@ -8,7 +8,7 @@
 #include "ComandStream.h"
 #include "minefield.h"
 
-static inline __uint8_t uncover_element( MS_field, MS_pos, MS_mstr *);
+static inline __uint8_t uncover_element( MS_field, void *, MS_pos, MS_mstr *);
 static inline __uint8_t setmine_element( __uint8_t *, MS_mstr *);
 static inline void addelement( MS_field *, signed long, signed long);
 
@@ -48,29 +48,34 @@ MF_Init( MS_field *minefield){
 
 void
 setminefield( MS_field  *minefield,
+	      void *GW,
 	      MS_stream *mss,
 	      MS_video   video){
   
   int i;
-  u32 x;
   
-  i = ( int)video.height;
+  MS_pos element;
+  
+  int w = video.width;
+  int h = video.height;
   
   video.xdiff = ( int)( ( u32)( video.xdiff + ( int)video.width ) % video.width );
   video.ydiff = ( int)( ( u32)( video.ydiff + ( int)video.height) % video.height);
   
-  x = minefield -> subwidth - ( u32)video.xdiff;
-  x = x < video.width? x: video.width;
+  i = w * h;
   
-  if( x) while( i--){
-    memset( minefield -> data + ( video.xdiff + ( int)( ( ( u32)( video.ydiff + i) % minefield -> subheight) * minefield -> width)), ENUT, x);
+  while( i--){
+    
+    {
+      element.x = ( video.xdiff + i % w);
+      element.y = ( video.ydiff + i / w);
+    }
+    
+    *acse( *minefield, element.x, element.y) = ENUT;
+    
+    drawelement( GW, minefield, element.x, element.y);
   }
   
-  i = ( int)video.height;
-  
-  if( video.width - x) while( i--){
-    memset( minefield -> data + ( ( u32)( video.ydiff + i) % minefield -> subheight) * minefield -> width, ENUT, video.width - x);
-  }
   
   minefield -> mine -> level = minefield -> level;
   
@@ -119,18 +124,16 @@ addelement( MS_field *minefield, signed long x, signed long y){
 }
 
 
-
 void
-uncov( MS_field *minefield){
+uncov( MS_field *minefield, void *GW){
   MS_pos *element;
   
   dassert( minefield != NULL);
   
   while likely( ( element = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
-    
     /* check if elemnt has no suronding mines and if that is the case continue whit uncovering the neigburing elemnts
      */
-    if likely( ( uncover_element( *minefield, *element, minefield -> mine) & ECOUNT) == 0){
+    if likely( ( uncover_element( *minefield, GW, *element, minefield -> mine) & ECOUNT) == 0){
       addelement( minefield, element -> x + 1, element -> y + 1);
       addelement( minefield, element -> x - 1, element -> y + 1);
       addelement( minefield, element -> x    , element -> y + 1);
@@ -148,7 +151,7 @@ uncov( MS_field *minefield){
 }
 
 static inline __uint8_t
-uncover_element( MS_field minefield, MS_pos postion, MS_mstr *mine){
+uncover_element( MS_field minefield, void *GW, MS_pos postion, MS_mstr *mine){
   
   /* chech that it hasnt been uncover yet, becuse elements are set to ECOVER | ECOUNT and ECOVER alaredy is down;
    */
@@ -170,6 +173,8 @@ uncover_element( MS_field minefield, MS_pos postion, MS_mstr *mine){
     *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x + 1, postion.y    ), mine) & EMINE) >> SMINE;
     *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x - 1, postion.y    ), mine) & EMINE) >> SMINE;
   }
+  
+  drawelement( GW, &minefield, postion.x, postion.y);
   
   return *acse( minefield, postion.x, postion.y);
 }

@@ -41,7 +41,6 @@ int window_scroll( GraphicWraper *, MS_diff);
 SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
 int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
 int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
-SDL_Texture *drawelement( GraphicWraper *, __uint8_t);
 void MS_scale( SDL_Surface *, SDL_Surface *, signed long, signed long, unsigned long, unsigned long);
 
 
@@ -63,7 +62,7 @@ event_dispatch( void *data){
     MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = minefield -> subwidth, .height = minefield -> subheight};
     uncov_elements( minefield, mfvid);
     
-    uncov( minefield);
+    uncov( minefield, GW);
   }
   
   if( SDL_WaitEventTimeout( &event, 1)){
@@ -81,7 +80,7 @@ event_dispatch( void *data){
 	case 'r':
 	  root -> gameover = FALSE;
 	  if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
-	    setminefield( minefield, root -> mss, GW -> mfvid);
+	    setminefield( minefield, GW, root -> mss, GW -> mfvid);
 	  }
 	  break;
 	case SDLK_F3:
@@ -89,7 +88,7 @@ event_dispatch( void *data){
 	  if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
 	    uncov_elements( minefield, GW -> mfvid);
 	  }
-	  uncov( minefield);
+	  uncov( minefield, GW);
 	  break;
 	default:
 	  break;
@@ -135,7 +134,7 @@ event_dispatch( void *data){
 	    
 	    uncov_elements( minefield, vid);
 	    
-	    uncov( minefield);
+	    uncov( minefield, GW);
 	    break;
 	  }
 	case SDL_BUTTON_RIGHT:
@@ -148,6 +147,8 @@ event_dispatch( void *data){
 	      *element|= EFLAG;
 	      ++minefield -> mine -> flaged;
 	    }
+
+	    drawelement( GW, minefield, postion.x, postion.y);
 	  }
 	default:
 	  break;
@@ -214,37 +215,9 @@ MS_BlitTile( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, i
 
 void
 draw( void *gw_void, MS_field minefield){
-  MS_pos element;
-  unsigned long i;
-  SDL_Texture *tile;
-
   GraphicWraper *GW = gw_void;
+  (void)minefield;
   
-  int w = GW -> real.realwidth  / GW -> real.element_width  + 1;
-  int h = GW -> real.realheight / GW -> real.element_height + 1;
-
-  SDL_SetRenderTarget( GW -> renderer, GW -> target);
-  
-  i = w * h;
-  
-  while( i--){
-    
-    {
-      element.x = ( GW -> real.xdiff + i % w);
-      element.y = ( GW -> real.ydiff + i / w);
-      
-      tile = drawelement( GW, *acse( minefield, element.x, element.y));
-    }
-    
-    MS_BlitTile( GW -> renderer, tile,
-                 i % w * GW -> real.element_width  - GW -> real.realxdiff % GW -> real.element_width,
-                 i / w * GW -> real.element_height - GW -> real.realydiff % GW -> real.element_height,
-                 GW -> real.element_width,
-                 GW -> real.element_height);
-  }
-  
-  SDL_SetRenderTarget( GW -> renderer, NULL);
-
   {
     int ax = GW -> real.realxdiff % GW -> real.realwidth, ay = GW -> real.realydiff % GW -> real.realheight, cx = GW -> real.realwidth - ax, cy = GW -> real.realheight - ay;
     
@@ -257,10 +230,11 @@ draw( void *gw_void, MS_field minefield){
   SDL_ShowWindow( GW -> window);
 }
 
-
-SDL_Texture *
-drawelement( GraphicWraper *GW, __uint8_t element){
+void
+drawelement( void *VGW, MS_field *minefield, u16 w, u16 h){
+  GraphicWraper *GW = ( GraphicWraper *)VGW;
   SDL_Texture *tile = NULL;
+  __uint8_t element = *acse( *minefield, w, h);
   
   if( element & EFLAG){
     tile =  GW -> flag;
@@ -290,8 +264,16 @@ drawelement( GraphicWraper *GW, __uint8_t element){
       break;
     }
   }
+
+  SDL_SetRenderTarget( GW -> renderer, GW -> target);
   
-  return tile;
+  MS_BlitTile( GW -> renderer, tile,
+	       ( w - GW -> real.xdiff) * GW -> real.element_width  - GW -> real.realxdiff % GW -> real.element_width,
+	       ( h - GW -> real.ydiff) * GW -> real.element_height - GW -> real.realydiff % GW -> real.element_height,
+	       GW -> real.element_width,
+	       GW -> real.element_height);
+  
+  SDL_SetRenderTarget( GW -> renderer, NULL);
 }
 
 
