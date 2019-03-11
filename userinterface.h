@@ -19,6 +19,7 @@ extern "C" {
   
   typedef struct{
     void *GW;
+    MS_video real;
     MS_field *minefield;
     MS_stream *mss;
     ComandStream *actionque;

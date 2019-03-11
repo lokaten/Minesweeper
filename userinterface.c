@@ -299,15 +299,15 @@ void *
 GW_Init( MS_root *root){
   GraphicWraper *GW = MS_CreateEmpty( GraphicWraper);
   
-  GW -> real = ( MS_video){ .element_width = 15, .element_height = 15};
-  
   GW -> global = root -> minefield -> global;
+  
+  GW -> real = root -> real;
   
   GW -> mfvid.width  = root -> minefield -> subwidth;
   GW -> mfvid.height = root -> minefield -> subheight;
   
-  GW -> real.realwidth  = GW -> real.realwidth ? GW -> real.realwidth : GW -> mfvid.width  * GW -> real.element_width;
-  GW -> real.realheight = GW -> real.realheight? GW -> real.realheight: GW -> mfvid.height * GW -> real.element_height;
+  GW -> real.realwidth  = root -> real.realwidth ? root -> real.realwidth : GW -> mfvid.width  * GW -> real.element_width;
+  GW -> real.realheight = root -> real.realheight? root -> real.realheight: GW -> mfvid.height * GW -> real.element_height;
   
   GW -> real.width  = ( GW -> real.realwidth ) / GW -> real.element_width ;
   GW -> real.height = ( GW -> real.realheight) / GW -> real.element_height;

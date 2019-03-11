@@ -71,8 +71,12 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_X  , TERM("Generate Minefield based on this seed"  ), "seed"           , 0  , &( field_custom -> reseed ), NULL},
       { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &( field_custom -> global ), &opt_true},
 #endif
-      { OPTSW_GRP, TERM("Video"                                  ), ""               , 0  , NULL                                 , NULL},
-      { OPTSW_CPY, TERM("Resize don't work well with all system" ), "no-resize"      , 'R', &( root -> no_resize          ), &opt_true},
+      { OPTSW_GRP, TERM("Video"                                  ), ""               , 0  , NULL                        , NULL},
+      { OPTSW_LU , TERM(""                                       ), "window-width"   , 0  , &root -> real.realwidth     , NULL},
+      { OPTSW_LU , TERM(""                                       ), "window-height"  , 0  , &root -> real.realheight    , NULL},
+      { OPTSW_LU , TERM(""                                       ), "element-width"  , 0  , &root -> real.element_width , NULL},
+      { OPTSW_LU , TERM(""                                       ), "element-height" , 0  , &root -> real.element_height, NULL},
+      { OPTSW_CPY, TERM("Resize don't work well with all system" ), "no-resize"      , 'R', &root -> no_resize          , &opt_true},
       { OPTSW_GRP, TERM("Mode"                                   ), ""               , 0  , NULL                       , NULL},
       { OPTSW_CPY, TERM("customaise your own"                    ), "custom"         , 'b', &root -> minefield         , field_custom   },
       { OPTSW_CPY, TERM("Mimic windows minesweeper beginner mode"), "beginner"       , 'b', &root -> minefield         , field_beginner },
@@ -90,7 +94,7 @@ ROOT_Init( const int argc, const char **argv){
 #endif
       { OPTSW_NUL, TERM(""/* Last elemnt is a NULL termination */), ""               , 0  , NULL                       , NULL}};
     
-    
+    root -> real = (MS_video){ .element_width = 15, .element_height = 15};
     
     if( procopt( root -> mss, opt, argc, argv)){
       MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");

@@ -35,7 +35,7 @@ static inline void LOCALE_( CS_Free)( ComandStream *);
 _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
 _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 
-#define NC 4096
+#define NC 1024
 
 static inline ComandStream *
 LOCALE_( CS_Create)( size_t size){
@@ -77,7 +77,6 @@ LOCALE_( CS_Fetch)( ComandStream *Stream){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
       char *ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
       assert( ptr != NULL);
-      if unlikely( ptr == NULL) goto end;
       /*lock*/
       *( char **)( ptr + Stream -> blk_size) = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
       *( char **)( Stream -> blk_fetch + Stream -> blk_size) = ptr;
@@ -90,7 +89,6 @@ LOCALE_( CS_Fetch)( ComandStream *Stream){
   ret = Stream -> fetch;
   Stream -> fetch = Stream -> fetch + Stream -> size;
   
- end:
   return ret;
 }
 #define CS_Fetch LOCALE_( CS_Fetch)
