@@ -25,10 +25,6 @@ void
 quit( void *data){
   int ret = 0;
   MS_root *root = ( MS_root *)data;
-  action *act;
-  while( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
-    CS_Finish( root -> actionque, act);
-  }
   MS_print( root -> mss -> out, "\rBye!                                \n");
   ROOT_Free( root);
   exit( ret);
@@ -55,7 +51,6 @@ ROOT_Init( const int argc, const char **argv){
   dassert( !opt_false);
   
   root = MS_CreateEmpty( MS_root);
-  root -> actionque = CS_Create( action);
   
   root -> mss = def_out;
   root -> minefield = field_beginner;
@@ -102,8 +97,7 @@ ROOT_Init( const int argc, const char **argv){
 #ifndef NO_TERM
     if( root -> mss -> hlp){
       help( root -> mss -> hlp, opt);
-      take_action( root -> actionque, quit, ( void *)root);
-      goto end;
+      quit( root);
     }
 #endif
   }
@@ -127,7 +121,6 @@ ROOT_Init( const int argc, const char **argv){
   DEBUG_PRINT( root -> mss -> deb, "\r\t\theight: %lu   ", root -> minefield -> height);
   DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
   
- end:
   if( root -> minefield != field_custom   ) MS_Free( field_custom   );
   if( root -> minefield != field_beginner ) MS_Free( field_beginner );
   if( root -> minefield != field_advanced ) MS_Free( field_advanced );
@@ -160,7 +153,8 @@ main( const int argc, const char** argv){
   root = ROOT_Init( argc, argv);
   root -> minefield = MF_Init( root -> minefield);
   
-  take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, root -> minefield, root -> mss, ( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight}));
+  setminefield( root -> minefield, root -> mss,
+		( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight});
   
   root -> seed = MS_rand_seed();
   
@@ -171,26 +165,17 @@ main( const int argc, const char** argv){
   root -> gameover = FALSE;
   
   if( strstr( root -> minefield -> title, "benchmark")){
-    take_action( root -> actionque, setzero           ,  MS_Create( setzeroargs       , root -> minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3}));
-    take_action( root -> actionque, uncov_elements    ,  MS_Create( uncov_elementsargs, root -> minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1}));
-    take_action( root -> actionque, uncov             ,  MS_Create( uncovargs         , root -> minefield));
-    take_action( root -> actionque, quit              , root);
+    setzero( root -> minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3});
+    uncov_elements( root -> minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1});
+    uncov( root -> minefield);
+    quit( root);
   }else{
     root -> GW = GW_Init( root);
   }
   
   while( TRUE){
     {
-      action *act;
-      
       event_dispatch( root);
-      
-      while likely( ( act = ( action *)CS_Releas( root -> actionque)) != NULL){
-	dassert( act -> func != NULL);
-	dassert( act -> data != NULL);
-	act -> func( act -> data);
-	CS_Finish( root -> actionque, act);
-      }
       
       dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
       dassert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);

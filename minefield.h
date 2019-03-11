@@ -51,16 +51,12 @@ extern "C" {
   
 #endif
 
-  typedef struct{ MS_field *minefield; MS_video vid;}setzeroargs;
-  void setzero( void *args);
+  void setzero( MS_field *, MS_video);
   MS_field *MF_Init( MS_field *);
-  typedef struct{ MS_field *minefield; MS_stream *mss; MS_video video;}setminefieldargs;
-  void setminefield( void *);
+  void setminefield( MS_field *, MS_stream *, MS_video);
   void MF_Free( MS_field *);
-  typedef struct{ MS_field *minefield;}uncovargs;
-  void uncov( void *);
-  typedef struct{ MS_field *minefield;  MS_video vid;}uncov_elementsargs;  
-  void uncov_elements( void *args);
+  void uncov( MS_field *);
+  void uncov_elements( MS_field *,  MS_video);
   
 #ifdef __cplusplus
 }

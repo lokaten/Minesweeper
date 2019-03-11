@@ -47,10 +47,9 @@ MF_Init( MS_field *minefield){
 
 
 void
-setminefield( void *args){
-  MS_field  *minefield = ( ( setminefieldargs *)args) -> minefield;
-  MS_stream *mss       = ( ( setminefieldargs *)args) -> mss;
-  MS_video   video     = ( ( setminefieldargs *)args) -> video;
+setminefield( MS_field  *minefield,
+	      MS_stream *mss,
+	      MS_video   video){
   
   int i;
   u32 x;
@@ -92,8 +91,6 @@ setminefield( void *args){
   }
   
   MS_print( mss -> deb, "\rSeed: %08x   \n", minefield -> mine -> seed);
-  
-  MS_Free( args);
 }
 
 
@@ -124,8 +121,7 @@ addelement( MS_field *minefield, signed long x, signed long y){
 
 
 void
-uncov( void *args){
-  MS_field *minefield = ( ( uncovargs *)args) -> minefield;
+uncov( MS_field *minefield){
   MS_pos *element;
   
   dassert( minefield != NULL);
@@ -149,8 +145,6 @@ uncov( void *args){
     
     CS_Finish( minefield -> uncovque, element);
   }
-  
-  MS_Free( args);
 }
 
 static inline __uint8_t
@@ -202,9 +196,8 @@ setmine_element( __uint8_t *element, MS_mstr *mine){
 
 
 void
-uncov_elements( void *args){
-  MS_field *minefield = ( ( uncov_elementsargs *)args) -> minefield;
-  MS_video  vid       = ( ( uncov_elementsargs *)args) -> vid;
+uncov_elements( MS_field *minefield,
+		MS_video  vid){
   
   unsigned long i;
   int x, y;
@@ -217,15 +210,12 @@ uncov_elements( void *args){
     
     addelement( minefield, x, y);
   }
-  
-  MS_Free( args);
 }
 
 
 void
-setzero( void *args){
-  MS_field *minefield = ( ( setzeroargs *)args) -> minefield;
-  MS_video  vid       = ( ( setzeroargs *)args) -> vid;
+setzero( MS_field *minefield,
+	 MS_video  vid){
   
   unsigned long i;
   int x, y;
@@ -243,6 +233,4 @@ setzero( void *args){
     }
     
   }
-  
-  MS_Free( args);
 }

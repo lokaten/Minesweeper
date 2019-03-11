@@ -10,12 +10,6 @@ extern "C" {
   
 #include "MS_util.h"
 #include "minefield.h"
-
-  
-  typedef struct{
-    void ( *func)( void *);
-    void *data;
-  }action;
   
   typedef struct{
     void *GW;
@@ -31,17 +25,6 @@ extern "C" {
     u32 seed;
     void( *quit)( void *);
   }MS_root;
-  
-  
-  static inline void
-  LOCALE_( take_action)( ComandStream *actionque, void( *func)( void *), void *data){
-    action *pact;
-    pact = ( action *)CS_Fetch( actionque);
-    pact -> func = func;
-    pact -> data = data;
-    CS_Push( actionque, pact);
-  }
-#define take_action LOCALE_( take_action)
   
   void event_dispatch( void *);
   void *GW_Init( MS_root *);

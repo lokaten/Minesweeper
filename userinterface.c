@@ -61,35 +61,35 @@ event_dispatch( void *data){
   
   if unlikely( minefield -> mine -> hit){
     MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = minefield -> subwidth, .height = minefield -> subheight};
-    take_action( root -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, mfvid));
+    uncov_elements( minefield, mfvid);
     
-    take_action( root -> actionque,  uncov,  MS_Create( uncovargs, minefield));
+    uncov( minefield);
   }
   
   if( SDL_WaitEventTimeout( &event, 1)){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
-      take_action( root -> actionque, root -> quit, root);
+      root -> quit( root);
       break;
     case SDL_KEYDOWN:
       {
 	switch( event.key.keysym.sym){
 	case SDLK_ESCAPE:
-	  take_action( root -> actionque, root -> quit, ( void *)root);
+	  root -> quit( root);
 	  break;
 	case SDLK_F2:
 	case 'r':
 	  root -> gameover = FALSE;
 	  if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
-	    take_action( root -> actionque, setminefield, MS_Create( setminefieldargs, minefield, root -> mss, GW -> mfvid));
+	    setminefield( minefield, root -> mss, GW -> mfvid);
 	  }
 	  break;
 	case SDLK_F3:
 	case 'e':
 	  if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
-	    take_action( root -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, GW -> mfvid));
+	    uncov_elements( minefield, GW -> mfvid);
 	  }
-	  take_action( root -> actionque,  uncov,  MS_Create( uncovargs, minefield));
+	  uncov( minefield);
 	  break;
 	default:
 	  break;
@@ -130,12 +130,12 @@ event_dispatch( void *data){
 	    
 	    if( minefield -> mine -> set == 0){
 	      /*let's play "Texas Sharpshooter"*/
-	      take_action( root -> actionque,  setzero,  MS_Create( setzeroargs, minefield, vid));
+	      setzero( minefield, vid);
 	    }
 	    
-	    take_action( root -> actionque,  uncov_elements,  MS_Create( uncov_elementsargs, minefield, vid));
+	    uncov_elements( minefield, vid);
 	    
-	    take_action( root -> actionque,  uncov,  MS_Create( uncovargs, minefield));
+	    uncov( minefield);
 	    break;
 	  }
 	case SDL_BUTTON_RIGHT:
