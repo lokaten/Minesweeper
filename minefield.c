@@ -71,10 +71,13 @@ setminefield( MS_field  *minefield,
       element.y = ( video.ydiff + i / w);
     }
     
-    *acse( *minefield, element.x, element.y) = ENUT;
-    
-    if( GW != NULL)
-      drawelement( GW, minefield, element.x, element.y);
+    if( *acse( *minefield, element.x, element.y) != ENUT){
+      
+      *acse( *minefield, element.x, element.y) = ENUT;
+      
+      if( GW != NULL)
+	drawelement( GW, minefield, element.x, element.y);
+    }
   }
   
   
