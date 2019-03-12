@@ -37,7 +37,6 @@ typedef struct{
 
 
 int drawtemp( void *, MS_video, __uint8_t);
-int window_scroll( GraphicWraper *, MS_diff);
 SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
 int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
 int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
@@ -160,29 +159,6 @@ event_dispatch( void *data){
     
     root -> nextframe = root -> tutime;
   }
-}
-
-
-int
-window_scroll( GraphicWraper *GW, MS_diff diff){
-  int ret = 0;
-  if( !GW -> global){
-    diff.x = ( signed long)GW -> real.realxdiff > diff.x? diff.x: ( signed long)GW -> real.realxdiff;
-    diff.y = ( signed long)GW -> real.realydiff > diff.y? diff.y: ( signed long)GW -> real.realydiff;
-    diff.x = ( GW -> real.realxdiff + GW -> real.realwidth  - diff.x) < ( GW -> mfvid.realwidth ) ? diff.x: -( signed long)( GW -> mfvid.realwidth  - ( GW -> real.realxdiff + GW -> real.realwidth ));
-    diff.y = ( GW -> real.realydiff + GW -> real.realheight - diff.y) < ( GW -> mfvid.realheight) ? diff.y: -( signed long)( GW -> mfvid.realheight - ( GW -> real.realydiff + GW -> real.realheight));
-  }
-  
-  if( ( diff.x) || ( diff.y)){
-    GW -> real.realxdiff = ( GW -> real.realxdiff + GW -> mfvid.realwidth  - diff.x) % GW -> mfvid.realwidth ;
-    GW -> real.realydiff = ( GW -> real.realydiff + GW -> mfvid.realheight - diff.y) % GW -> mfvid.realheight;
-    
-    GW -> real.xdiff = GW -> real.realxdiff / GW -> real.element_width;
-    GW -> real.ydiff = GW -> real.realydiff / GW -> real.element_height;
-    ret = 1;
-  }
-  
-  return ret;
 }
 
 SDL_Texture *
