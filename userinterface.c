@@ -14,11 +14,13 @@ typedef struct{
 }MS_diff;
 
 typedef struct{
+  MS_video mfvid;
+  MS_video real;
+  u16 global;
+  u16 no_resize;
   SDL_Window *window;
   SDL_Texture *target;
   SDL_Renderer *renderer;
-  MS_video mfvid;
-  MS_video real;
   SDL_Texture *cover;
   SDL_Texture *clear;
   SDL_Texture *flag;
@@ -31,8 +33,6 @@ typedef struct{
   SDL_Texture *six;
   SDL_Texture *seven;
   SDL_Texture *eight;
-  u16 global;
-  u16 no_resize;
 }GraphicWraper;
 
 SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
@@ -107,12 +107,12 @@ void
 event_dispatch( void *data){
   MS_root       *root      = data;
   MS_field      *minefield = root -> minefield;
-  GraphicWraper *GW        = root -> GW;
+  GraphicWraper *GW        = ( GraphicWraper *)root -> GW;
   SDL_Event event;
   
   if unlikely( GW == NULL) return;
     
-  if( SDL_WaitEventTimeout( &event, 1)){
+  if( SDL_WaitEventTimeout( &event, 1000)){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
       root -> quit( root);
@@ -158,7 +158,7 @@ void mousebuttondown( MS_root * root,
 		      SDL_Event event){
   
   MS_field      *minefield = root -> minefield;
-  GraphicWraper *GW        = root -> GW;
+  GraphicWraper *GW        = ( GraphicWraper *)root -> GW;
   
   MS_pos postion;
   
