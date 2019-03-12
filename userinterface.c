@@ -35,13 +35,72 @@ typedef struct{
   u16 no_resize;
 }GraphicWraper;
 
-
-int drawtemp( void *, MS_video, __uint8_t);
 SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
 int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
 int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
-void MS_scale( SDL_Surface *, SDL_Surface *, signed long, signed long, unsigned long, unsigned long);
 
+void *
+GW_Init( MS_root *root){
+  GraphicWraper *GW = MS_CreateEmpty( GraphicWraper);
+  
+  GW -> global = root -> minefield -> global;
+  
+  GW -> real = root -> real;
+  
+  GW -> mfvid.width  = root -> minefield -> subwidth;
+  GW -> mfvid.height = root -> minefield -> subheight;
+  
+  GW -> real.realwidth  = root -> real.realwidth ? root -> real.realwidth : GW -> mfvid.width  * GW -> real.element_width;
+  GW -> real.realheight = root -> real.realheight? root -> real.realheight: GW -> mfvid.height * GW -> real.element_height;
+  
+  GW -> real.width  = ( GW -> real.realwidth ) / GW -> real.element_width ;
+  GW -> real.height = ( GW -> real.realheight) / GW -> real.element_height;
+  
+  GW -> mfvid.realwidth  = GW -> mfvid.width  * GW -> real.element_width;
+  GW -> mfvid.realheight = GW -> mfvid.height * GW -> real.element_height;
+  
+  assert( !SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER));
+  
+  GW -> window = SDL_CreateWindow( root -> minefield -> title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+				   GW -> real.realwidth, GW -> real.realheight, SDL_WINDOW_HIDDEN);
+  
+  assert( GW -> window != NULL);
+  
+  GW -> renderer = SDL_CreateRenderer( GW -> window, -1, 0);
+  
+  assert( GW -> renderer != NULL);
+  
+  SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+  SDL_RenderSetLogicalSize( GW -> renderer, GW -> real.realwidth, GW -> real.realheight);
+  SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
+  
+  SDL_SetWindowResizable( GW ->  window, (SDL_bool)!root -> no_resize);
+  
+  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> real.realwidth, GW -> real.realheight);
+  
+  GW -> clear = MS_OpenImage( GW -> renderer, "nola.png");
+  GW -> one   = MS_OpenImage( GW -> renderer, "etta.png");
+  GW -> two   = MS_OpenImage( GW -> renderer, "tvaa.png");
+  GW -> three = MS_OpenImage( GW -> renderer, "trea.png");
+  GW -> four  = MS_OpenImage( GW -> renderer, "fyra.png");
+  GW -> five  = MS_OpenImage( GW -> renderer, "fema.png");
+  GW -> six   = MS_OpenImage( GW -> renderer, "sexa.png");
+  GW -> seven = MS_OpenImage( GW -> renderer, "sjua.png");
+  GW -> eight = MS_OpenImage( GW -> renderer, "ataa.png");
+  
+  GW -> mine  = MS_OpenImage( GW -> renderer, "mina.png");
+  GW -> cover = MS_OpenImage( GW -> renderer, "plata.png");
+  GW -> flag  = MS_OpenImage( GW -> renderer, "flaga.png");
+  
+  SDL_EventState( SDL_JOYAXISMOTION, SDL_IGNORE);
+  SDL_EventState( SDL_JOYBALLMOTION, SDL_IGNORE);
+  SDL_EventState( SDL_JOYBUTTONDOWN, SDL_IGNORE);
+  SDL_EventState( SDL_JOYBUTTONUP  , SDL_IGNORE);
+  SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
+  SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
+
+  return GW;
+}
 
 void
 event_dispatch( void *data){
@@ -161,34 +220,6 @@ event_dispatch( void *data){
   }
 }
 
-SDL_Texture *
-MS_OpenImage( SDL_Renderer *render, const char *str){
-  SDL_Texture *tex = NULL;
-  SDL_Surface *img = NULL;
-  assert( render != NULL);
-  assert(    str != NULL);
-  if unlikely( ( img = IMG_Load( str                            )) == NULL) goto bail;
-  if unlikely( ( tex = SDL_CreateTextureFromSurface( render, img)) == NULL) goto bail;
- bail:
-  if( img != NULL) SDL_free( img);
-  return tex;
-}
-
-int
-MS_BlitTex( SDL_Renderer *renderer, SDL_Texture *tex, int dx, int dy, int w, int h, int sx, int sy){
-  dassert( renderer != NULL);
-  dassert(      tex != NULL);
-  return SDL_RenderCopyEx( renderer, tex, &( SDL_Rect){ .x = sx, .y = sy, .w = w, .h = h}, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
-}
-
-int
-MS_BlitTile( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, int h){
-  dassert( renderer != NULL);
-  dassert(     tile != NULL);
-  return SDL_RenderCopyEx( renderer, tile, NULL, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
-}
-
-
 void
 draw( void *gw_void, MS_field minefield){
   GraphicWraper *GW = gw_void;
@@ -252,70 +283,6 @@ drawelement( void *VGW, MS_field *minefield, u16 w, u16 h){
   SDL_SetRenderTarget( GW -> renderer, NULL);
 }
 
-
-void *
-GW_Init( MS_root *root){
-  GraphicWraper *GW = MS_CreateEmpty( GraphicWraper);
-  
-  GW -> global = root -> minefield -> global;
-  
-  GW -> real = root -> real;
-  
-  GW -> mfvid.width  = root -> minefield -> subwidth;
-  GW -> mfvid.height = root -> minefield -> subheight;
-  
-  GW -> real.realwidth  = root -> real.realwidth ? root -> real.realwidth : GW -> mfvid.width  * GW -> real.element_width;
-  GW -> real.realheight = root -> real.realheight? root -> real.realheight: GW -> mfvid.height * GW -> real.element_height;
-  
-  GW -> real.width  = ( GW -> real.realwidth ) / GW -> real.element_width ;
-  GW -> real.height = ( GW -> real.realheight) / GW -> real.element_height;
-  
-  GW -> mfvid.realwidth  = GW -> mfvid.width  * GW -> real.element_width;
-  GW -> mfvid.realheight = GW -> mfvid.height * GW -> real.element_height;
-  
-  assert( !SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER));
-  
-  GW -> window = SDL_CreateWindow( root -> minefield -> title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-				   GW -> real.realwidth, GW -> real.realheight, SDL_WINDOW_HIDDEN);
-  
-  assert( GW -> window != NULL);
-  
-  GW -> renderer = SDL_CreateRenderer( GW -> window, -1, 0);
-  
-  assert( GW -> renderer != NULL);
-  
-  SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-  SDL_RenderSetLogicalSize( GW -> renderer, GW -> real.realwidth, GW -> real.realheight);
-  SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
-  
-  SDL_SetWindowResizable( GW ->  window, (SDL_bool)!root -> no_resize);
-  
-  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> real.realwidth, GW -> real.realheight);
-  
-  GW -> clear = MS_OpenImage( GW -> renderer, "nola.png");
-  GW -> one   = MS_OpenImage( GW -> renderer, "etta.png");
-  GW -> two   = MS_OpenImage( GW -> renderer, "tvaa.png");
-  GW -> three = MS_OpenImage( GW -> renderer, "trea.png");
-  GW -> four  = MS_OpenImage( GW -> renderer, "fyra.png");
-  GW -> five  = MS_OpenImage( GW -> renderer, "fema.png");
-  GW -> six   = MS_OpenImage( GW -> renderer, "sexa.png");
-  GW -> seven = MS_OpenImage( GW -> renderer, "sjua.png");
-  GW -> eight = MS_OpenImage( GW -> renderer, "ataa.png");
-  
-  GW -> mine  = MS_OpenImage( GW -> renderer, "mina.png");
-  GW -> cover = MS_OpenImage( GW -> renderer, "plata.png");
-  GW -> flag  = MS_OpenImage( GW -> renderer, "flaga.png");
-  
-  SDL_EventState( SDL_JOYAXISMOTION, SDL_IGNORE);
-  SDL_EventState( SDL_JOYBALLMOTION, SDL_IGNORE);
-  SDL_EventState( SDL_JOYBUTTONDOWN, SDL_IGNORE);
-  SDL_EventState( SDL_JOYBUTTONUP  , SDL_IGNORE);
-  SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
-  SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
-
-  return GW;
-}
-
 void
 GW_Free( void *GW){
   if( GW != NULL){
@@ -324,3 +291,32 @@ GW_Free( void *GW){
     free( GW);
   }
 }
+
+SDL_Texture *
+MS_OpenImage( SDL_Renderer *render, const char *str){
+  SDL_Texture *tex = NULL;
+  SDL_Surface *img = NULL;
+  assert( render != NULL);
+  assert(    str != NULL);
+  if unlikely( ( img = IMG_Load( str                            )) == NULL) goto bail;
+  if unlikely( ( tex = SDL_CreateTextureFromSurface( render, img)) == NULL) goto bail;
+ bail:
+  if( img != NULL) SDL_free( img);
+  return tex;
+}
+
+int
+MS_BlitTex( SDL_Renderer *renderer, SDL_Texture *tex, int dx, int dy, int w, int h, int sx, int sy){
+  dassert( renderer != NULL);
+  dassert(      tex != NULL);
+  return SDL_RenderCopyEx( renderer, tex, &( SDL_Rect){ .x = sx, .y = sy, .w = w, .h = h}, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
+}
+
+int
+MS_BlitTile( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, int h){
+  dassert( renderer != NULL);
+  dassert(     tile != NULL);
+  return SDL_RenderCopyEx( renderer, tile, NULL, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
+}
+
+
