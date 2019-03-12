@@ -179,7 +179,19 @@ main( const int argc, const char** argv){
   
   while( TRUE){
     {
-      event_dispatch( root);
+      root -> tutime = getnanosec();
+      if( !root -> minefield -> mine -> uncoverd || root -> gameover){
+	root -> gamestart = root -> tutime;
+      }
+      
+      if unlikely( root -> minefield -> mine -> hit){
+	MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> subwidth, .height = root -> minefield -> subheight};
+	uncov_elements( root -> minefield, mfvid);
+	
+	uncov( root -> minefield, root -> GW);
+      }else{
+	event_dispatch( root);
+      }
       
       dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
       dassert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);

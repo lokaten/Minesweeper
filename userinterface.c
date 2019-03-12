@@ -38,6 +38,7 @@ typedef struct{
 SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
 int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
 int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
+void mousebuttondown( MS_root *, SDL_Event);
 
 void *
 GW_Init( MS_root *root){
@@ -110,19 +111,7 @@ event_dispatch( void *data){
   SDL_Event event;
   
   if unlikely( GW == NULL) return;
-  
-  root -> tutime = getnanosec();
-  if( !minefield -> mine -> uncoverd || root -> gameover){
-    root -> gamestart = root -> tutime;
-  }
-  
-  if unlikely( minefield -> mine -> hit){
-    MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = minefield -> subwidth, .height = minefield -> subheight};
-    uncov_elements( minefield, mfvid);
     
-    uncov( minefield, GW);
-  }
-  
   if( SDL_WaitEventTimeout( &event, 1)){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
@@ -154,69 +143,78 @@ event_dispatch( void *data){
 	break;
       }
     case SDL_MOUSEBUTTONDOWN:
-      {
-	MS_pos postion;
-	
-	{
-	  MS_video video = ( ( GraphicWraper *)( root -> GW)) -> real;
-	  postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
-	  postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
-	}
-	
-	switch( event.button.button){
-	case SDL_BUTTON_LEFT:
-	case SDL_BUTTON_MIDDLE:
-	  {
-	    MS_video vid;
-	    MS_pos *el;
-	    
-	    while( ( el = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
-	      *acse( *minefield, el -> x, el -> y) |= ECOVER;
-	      CS_Finish( minefield -> uncovque, el);
-	    }
-	    
-	    if( ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level)) || ( minefield -> mine -> hit)){
-	      break;
-	    }
-	    
-	    vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
-	    
-	    if( event.button.button == SDL_BUTTON_MIDDLE){
-	      vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
-	    }
-	    
-	    if( minefield -> mine -> set == 0){
-	      /*let's play "Texas Sharpshooter"*/
-	      setzero( minefield, vid);
-	    }
-	    
-	    uncov_elements( minefield, vid);
-	    
-	    uncov( minefield, GW);
-	    break;
-	  }
-	case SDL_BUTTON_RIGHT:
-	  {
-	    __uint8_t *element = acse( *minefield, postion.x, postion.y);
-	    if( *element & EFLAG){
-	      *element &= ~EFLAG;
-	      --minefield -> mine -> flaged;
-	    }else if( *element & ECOVER){
-	      *element|= EFLAG;
-	      ++minefield -> mine -> flaged;
-	    }
-
-	    drawelement( GW, minefield, postion.x, postion.y);
-	  }
-	default:
-	  break;
-	}
-	break;
-      }
-    default: break;
+      mousebuttondown( root, event);
+      break;
+    default:
+      break;
     }
     
     root -> nextframe = root -> tutime;
+  }
+}
+
+
+void mousebuttondown( MS_root * root,
+		      SDL_Event event){
+  
+  MS_field      *minefield = root -> minefield;
+  GraphicWraper *GW        = root -> GW;
+  
+  MS_pos postion;
+  
+  {
+    MS_video video = ( ( GraphicWraper *)( root -> GW)) -> real;
+    postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
+    postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
+  }
+  
+  switch( event.button.button){
+  case SDL_BUTTON_LEFT:
+  case SDL_BUTTON_MIDDLE:
+    {
+      MS_video vid;
+      MS_pos *el;
+      
+      while( ( el = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
+	*acse( *minefield, el -> x, el -> y) |= ECOVER;
+	CS_Finish( minefield -> uncovque, el);
+      }
+      
+      if( ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level)) || ( minefield -> mine -> hit)){
+	break;
+      }
+      
+      vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
+      
+      if( event.button.button == SDL_BUTTON_MIDDLE){
+	vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
+      }
+      
+      if( minefield -> mine -> set == 0){
+	/*let's play "Texas Sharpshooter"*/
+	setzero( minefield, vid);
+      }
+      
+      uncov_elements( minefield, vid);
+      
+      uncov( minefield, GW);
+      break;
+    }
+  case SDL_BUTTON_RIGHT:
+    {
+      __uint8_t *element = acse( *minefield, postion.x, postion.y);
+      if( *element & EFLAG){
+	*element &= ~EFLAG;
+	--minefield -> mine -> flaged;
+      }else if( *element & ECOVER){
+	*element|= EFLAG;
+	++minefield -> mine -> flaged;
+      }
+      
+      drawelement( GW, minefield, postion.x, postion.y);
+    }
+  default:
+    break;
   }
 }
 
