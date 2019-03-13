@@ -180,13 +180,13 @@ main( const int argc, const char** argv){
 	root -> gamestart = root -> tutime;
       }
       
+      event_dispatch( root);
+      
       if unlikely( root -> minefield -> mine -> hit){
 	MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> subwidth, .height = root -> minefield -> subheight};
 	uncov_elements( root -> minefield, mfvid);
 	
 	uncov( root -> minefield, root -> GW);
-      }else{
-	event_dispatch( root);
       }
       
       dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
