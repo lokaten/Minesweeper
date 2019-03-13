@@ -42,8 +42,9 @@ LOCALE_( CS_Create)( size_t size){
   ComandStream *Stream = MS_CreateEmpty( ComandStream);
   char *ptr;
   
-  Stream -> blk_size = NC * size;
-  
+  Stream -> blk_size = ( ( NC - sizeof( char *)) / size) * size;
+
+  dassert( Stream -> blk_size % size == 0);
   dassert( Stream -> blk_size);
   
   ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
@@ -72,7 +73,8 @@ LOCALE_( CS_Create)( size_t size){
 static inline void *
 LOCALE_( CS_Fetch)( ComandStream *Stream){
   void *ret = NULL;
-  dassert( Stream != NULL);
+  assert( Stream != NULL);
+  
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
       char *ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
@@ -96,7 +98,7 @@ LOCALE_( CS_Fetch)( ComandStream *Stream){
 
 static inline void
 LOCALE_( CS_Push)( ComandStream *Stream, void *ptr){
-  dassert( Stream != NULL);
+  assert( Stream != NULL);
   
   if unlikely( Stream -> push == Stream -> blk_push + Stream -> blk_size){
     Stream -> blk_push = *( char **)( Stream -> blk_push + Stream -> blk_size);
@@ -116,8 +118,8 @@ LOCALE_( CS_Push)( ComandStream *Stream, void *ptr){
 static inline void *
 LOCALE_( CS_Releas)( ComandStream *Stream){
   void *ret = NULL;
+  assert( Stream != NULL);
   
-  dassert( Stream != NULL);
   if unlikely( Stream -> push == Stream -> releas) goto end;
   
   if unlikely( Stream -> releas == Stream -> blk_releas + Stream -> blk_size){
@@ -136,7 +138,7 @@ LOCALE_( CS_Releas)( ComandStream *Stream){
 
 static inline void
 LOCALE_( CS_Finish)( ComandStream *Stream, void *ptr){
-  dassert( Stream != NULL);
+  assert( Stream != NULL);
   
   if unlikely( Stream -> finish == Stream -> blk_finish + Stream -> blk_size){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) != Stream -> blk_finish){

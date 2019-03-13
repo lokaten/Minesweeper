@@ -20,9 +20,9 @@ extern "C" {
     u64 tutime;
     u64 nextframe;
     u64 gamestart;
+    u32 seed;
     bool gameover;
     bool no_resize;
-    u32 seed;
   }MS_root;
   
   void event_dispatch( MS_root *);

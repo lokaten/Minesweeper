@@ -15,8 +15,7 @@ static inline void addelement( MS_field *, s16, s16);
 
 MS_field *
 MF_Init( MS_field *minefield){
-  
-  dassert( minefield);
+  assert( minefield != NULL);
   
   minefield -> mine = MS_CreateEmpty( MS_mstr);
   minefield -> uncovque = CS_Create( MS_pos);
@@ -131,8 +130,7 @@ addelement( MS_field *minefield, s16 x, s16 y){
 void
 uncov( MS_field *minefield, void *GW){
   MS_pos *element;
-  
-  dassert( minefield != NULL);
+  assert( minefield != NULL);
   
   while likely( ( element = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
     /* check if elemnt has no suronding mines and if that is the case continue whit uncovering the neigburing elemnts

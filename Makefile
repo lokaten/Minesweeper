@@ -21,6 +21,7 @@ endif
 
 ifeq ($(DEBUG), yes)
 CFLAGS = -Og -ggdb -DDEBUG -v
+CC += -v
 endif
 
 ifeq ($(SMALL), yes)
@@ -38,12 +39,12 @@ CFLAGS += -Wlogical-op -faggressive-loop-optimizations
 else
 ifeq ($(GPP), yes)
 else
-CFLAGS = -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
+CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
 endif
 endif
 
 ifeq ($(DEV), yes)
-CFLAGS += -Werror -DDEBUG -pg
+CFLAGS += -Werror -DDEBUG -pg -ftrapv
 ifeq ($(CLANG), yes)
 else
 ifeq ($(CLANGPP), yes)
@@ -57,7 +58,7 @@ ifeq ($(NATIVE), yes)
 CC += -march=native
 endif
 
-CFLAGS += -Wall -Wextra -Wformat-security -Werror=format-security
+CFLAGS += -Wall -Wextra -Wformat-security -Werror=format-security -Wno-c99-extensions
 CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -fdiagnostics-show-option
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo
@@ -70,7 +71,7 @@ CFLAGS += -pedantic -Wold-style-definition -Wmissing-prototypes -Wstrict-prototy
 endif
 
 ifeq ($(CLANGPP), yes)
-CFLAGS += -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary
+CFLAGS += -Wno-old-style-cast -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary
 endif
 
 PFLAGS =
@@ -134,7 +135,7 @@ endif
 	$(CC) $(CFLAGS) $(PFLAGS) $(LTO_FLAGS) -c -o $@ $<
 
 # Dependencies
-main.o:          main.c           MS_util.h userinterface.h             ComandStream.h OPT.h
+main.o:          main.c           MS_util.h userinterface.h                            OPT.h
 userinterface.o: userinterface.c  MS_util.h userinterface.h minefield.h
 epoxy.o:         epoxy.c          MS_util.h userinterface.h minefield.h
 minefield.o:     minefield.c      MS_util.h                 minefield.h ComandStream.h

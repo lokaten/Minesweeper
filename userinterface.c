@@ -217,7 +217,7 @@ void mousebuttondown( MS_root * root,
 
 void
 draw( void *gw_void, MS_field minefield){
-  GraphicWraper *GW = gw_void;
+  GraphicWraper *GW = (GraphicWraper *)gw_void;
   (void)minefield;
   
   {

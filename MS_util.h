@@ -54,7 +54,10 @@ extern "C" {
 #define TERM( string) string
 #endif
 
-#ifndef __cplusplus
+#ifdef __cplusplus
+#undef NULL
+#define NULL nullptr
+#else
 typedef _Bool bool;
 #endif
 
