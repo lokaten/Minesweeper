@@ -23,14 +23,15 @@ extern "C" {
     bool gameover;
     bool no_resize;
     u32 seed;
-    void( *quit)( void *);
   }MS_root;
   
-  void event_dispatch( void *);
+  void event_dispatch( MS_root *);
   void *GW_Init( MS_root *);
   void GW_Free( void *);
   void draw( void *, MS_field);
-  
+
+  /**/
+  void quit( MS_root *) __attribute__((noreturn));
 #ifdef __cplusplus
 }
 #endif

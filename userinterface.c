@@ -104,8 +104,7 @@ GW_Init( MS_root *root){
 }
 
 void
-event_dispatch( void *data){
-  MS_root       *root      = data;
+event_dispatch( MS_root *root){
   MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = ( GraphicWraper *)root -> GW;
   SDL_Event event;
@@ -115,14 +114,12 @@ event_dispatch( void *data){
   if( SDL_WaitEventTimeout( &event, 1000)){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
-      root -> quit( root);
-      break;
+      quit( root);
     case SDL_KEYDOWN:
       {
 	switch( event.key.keysym.sym){
 	case SDLK_ESCAPE:
-	  root -> quit( root);
-	  break;
+	  quit( root);
 	case SDLK_F2:
 	case 'r':
 	  root -> gameover = FALSE;

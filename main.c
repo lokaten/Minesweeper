@@ -15,16 +15,14 @@
 #include "OPT.h"
 
 
-void quit( void *) __attribute__((noreturn));
 MS_root *ROOT_Init( const int, const char **);
 void ROOT_Free( MS_root *);
 static inline void printtime( FILE *, u64);
 
 
 void
-quit( void *data){
+quit( MS_root *root){
   int ret = 0;
-  MS_root *root = ( MS_root *)data;
   MS_print( root -> mss -> out, "\rBye!                                \n");
   ROOT_Free( root);
   exit( ret);
@@ -103,8 +101,6 @@ ROOT_Init( const int argc, const char **argv){
   }
   
   root -> minefield -> reseed = field_custom -> reseed;
-  
-  root -> quit = quit;
   
   if( root -> minefield -> level >= ( root -> minefield -> width * root -> minefield -> height)){
     root -> minefield -> level = ( root -> minefield -> width * root -> minefield -> height + 1) / 3;
