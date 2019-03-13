@@ -8,6 +8,12 @@ extern "C" {
 #endif
   
 #include "ComandStream.h"
+
+  typedef struct{
+    s16 x;
+    s16 y;
+  }MS_pos;
+
   
   typedef struct{
     u32 uncoverd;
@@ -59,7 +65,7 @@ extern "C" {
   void uncov_elements( MS_field *,  MS_video);
   
   /**/
-  void drawelement( void *, MS_field *, u16, u16);
+  void drawelement( void *, MS_field *, s16, s16);
   
 #ifdef __cplusplus
 }

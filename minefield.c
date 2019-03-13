@@ -10,7 +10,7 @@
 
 static inline __uint8_t uncover_element( MS_field, void *, MS_pos, MS_mstr *);
 static inline __uint8_t setmine_element( __uint8_t *, MS_mstr *);
-static inline void addelement( MS_field *, signed long, signed long);
+static inline void addelement( MS_field *, s16, s16);
 
 
 MS_field *
@@ -52,12 +52,12 @@ setminefield( MS_field  *minefield,
 	      MS_stream *mss,
 	      MS_video   video){
   
-  int i;
+  u32 i;
   
   MS_pos element;
   
-  int w = video.width;
-  int h = video.height;
+  u16 w = video.width;
+  u16 h = video.height;
   
   video.xdiff = ( int)( ( u32)( video.xdiff + ( int)video.width ) % video.width );
   video.ydiff = ( int)( ( u32)( video.ydiff + ( int)video.height) % video.height);
@@ -67,8 +67,8 @@ setminefield( MS_field  *minefield,
   while( i--){
     
     {
-      element.x = ( video.xdiff + i % w);
-      element.y = ( video.ydiff + i / w);
+      element.x = (s16)( (u16)video.xdiff + i % w);
+      element.y = (s16)( (u16)video.ydiff + i / w);
     }
     
     if( *acse( *minefield, element.x, element.y) != ENUT){
@@ -115,7 +115,7 @@ MF_Free( MS_field *minefield){
 }
 
 static inline void
-addelement( MS_field *minefield, signed long x, signed long y){
+addelement( MS_field *minefield, s16 x, s16 y){
   /* check that ECOVER is true, to not uncover the same element twice, and also skip if EFLAG is true
    */
   if( ( *acse( *minefield, x, y) & ECOVER) && ( *acse( *minefield, x, y) & EFLAG) ^ EFLAG){

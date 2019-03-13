@@ -90,10 +90,6 @@ typedef int_fast8_t   s8;
 #define S16C( exp)   ( s16)INT16_C( exp)
 #define S8C(  exp)   ( s8 )INT8_C(  exp)
 
-typedef struct{
-  s16 x;
-  s16 y;
-}MS_pos;
 
     
 typedef struct{

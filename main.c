@@ -15,7 +15,7 @@
 #include "OPT.h"
 
 
-void quit( void *);
+void quit( void *) __attribute__((noreturn));
 MS_root *ROOT_Init( const int, const char **);
 void ROOT_Free( MS_root *);
 static inline void printtime( FILE *, u64);
@@ -232,10 +232,6 @@ main( const int argc, const char** argv){
 #endif
     }
   }
-  
-  ROOT_Free( root);
-  fprintf( stdout, "\r"); /* we never want this line to be optimazie out */
-  return -1;
 }
 
 
