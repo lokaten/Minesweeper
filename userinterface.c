@@ -63,7 +63,7 @@ GW_Init( MS_root *root){
   assert( !SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER));
   
   GW -> window = SDL_CreateWindow( root -> minefield -> title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-				   GW -> real.realwidth, GW -> real.realheight, SDL_WINDOW_HIDDEN);
+				   (int)GW -> real.realwidth, (int)GW -> real.realheight, SDL_WINDOW_HIDDEN);
   
   assert( GW -> window != NULL);
   
@@ -72,12 +72,12 @@ GW_Init( MS_root *root){
   assert( GW -> renderer != NULL);
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-  SDL_RenderSetLogicalSize( GW -> renderer, GW -> real.realwidth, GW -> real.realheight);
+  SDL_RenderSetLogicalSize( GW -> renderer, (int)GW -> real.realwidth, (int)GW -> real.realheight);
   SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
   
   SDL_SetWindowResizable( GW ->  window, (SDL_bool)!root -> no_resize);
   
-  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> real.realwidth, GW -> real.realheight);
+  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)GW -> real.realwidth, (int)GW -> real.realheight);
   
   GW -> clear = MS_OpenImage( GW -> renderer, "nola.png");
   GW -> one   = MS_OpenImage( GW -> renderer, "etta.png");
@@ -164,8 +164,8 @@ void mousebuttondown( MS_root * root,
   
   {
     MS_video video = ( ( GraphicWraper *)( root -> GW)) -> real;
-    postion.x = ( ( unsigned long)( ( ( event.button.x + video.realxdiff) * video.width ) / video.realwidth )) % minefield -> width;
-    postion.y = ( ( unsigned long)( ( ( event.button.y + video.realydiff) * video.height) / video.realheight)) % minefield -> height;
+    postion.x = (s16)( ( ( (u16)( event.button.x + video.realxdiff) * video.width ) / video.realwidth ) % minefield -> width );
+    postion.y = (s16)( ( ( (u16)( event.button.y + video.realydiff) * video.height) / video.realheight) % minefield -> height);
   }
   
   switch( event.button.button){
@@ -224,7 +224,11 @@ draw( void *gw_void, MS_field minefield){
   (void)minefield;
   
   {
-    int ax = GW -> real.realxdiff % GW -> real.realwidth, ay = GW -> real.realydiff % GW -> real.realheight, cx = GW -> real.realwidth - ax, cy = GW -> real.realheight - ay;
+    int
+      ax = (int)( (u16)( GW -> real.realxdiff + (s16)GW -> real.realwidth ) % GW -> real.realwidth ),
+      ay = (int)( (u16)( GW -> real.realydiff + (s16)GW -> real.realheight) % GW -> real.realheight),
+      cx = (int)GW -> real.realwidth  - ax,
+      cy = (int)GW -> real.realheight - ay;
     
     MS_BlitTex( GW -> renderer, GW -> target, 0 , 0 , ax, ay, cx, cy);
     MS_BlitTex( GW -> renderer, GW -> target, ax, ay, cx, cy, 0 , 0 );
@@ -236,7 +240,7 @@ draw( void *gw_void, MS_field minefield){
 }
 
 void
-drawelement( void *VGW, MS_field *minefield, u16 w, u16 h){
+drawelement( void *VGW, MS_field *minefield, s16 w, s16 h){
   GraphicWraper *GW = ( GraphicWraper *)VGW;
   SDL_Texture *tile = NULL;
   __uint8_t element = *acse( *minefield, w, h);
@@ -273,10 +277,10 @@ drawelement( void *VGW, MS_field *minefield, u16 w, u16 h){
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
   
   MS_BlitTile( GW -> renderer, tile,
-	       ( w - GW -> real.xdiff) * GW -> real.element_width  - GW -> real.realxdiff % GW -> real.element_width,
-	       ( h - GW -> real.ydiff) * GW -> real.element_height - GW -> real.realydiff % GW -> real.element_height,
-	       GW -> real.element_width,
-	       GW -> real.element_height);
+	       ( ( w - GW -> real.xdiff)) * (s16)GW -> real.element_width  - (int)( (u16)( GW -> real.realxdiff + (s16)GW -> real.realwidth ) % GW -> real.element_width),
+	       ( ( h - GW -> real.ydiff)) * (s16)GW -> real.element_height - (int)( (u16)( GW -> real.realydiff + (s16)GW -> real.realheight) % GW -> real.element_height),
+	       (int)GW -> real.element_width,
+	       (int)GW -> real.element_height);
   
   SDL_SetRenderTarget( GW -> renderer, NULL);
 }
