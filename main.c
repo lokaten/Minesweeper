@@ -21,10 +21,9 @@ static inline void printtime( FILE *, u64);
 
 
 void
-quit( MS_root *root){
+quit( const MS_root *root){
   int ret = 0;
   MS_print( root -> mss -> out, "\rBye!                                \n");
-  ROOT_Free( root);
   exit( ret);
 }
 
@@ -146,8 +145,6 @@ ROOT_Init( const int argc, const char **argv){
 		      .mss = mss,
 		      .no_resize = no_resize);
     
-    root -> gameover = FALSE;
-    
     root -> GW = GW_Init( root);
     
     draw( root -> GW, *root -> minefield);
@@ -172,20 +169,20 @@ ROOT_Free( MS_root *root){
 
 int
 main( const int argc, const char** argv){
-  MS_root *root;
-  
+  const MS_root *root = ROOT_Init( argc, argv);
+
+  bool gameover;
   u64 tutime;
   u64 gamestart;
   
-  root = ROOT_Init( argc, argv);
-  
+  gameover  = FALSE;
   tutime    = getnanosec();
   gamestart = tutime;
   
   while( TRUE){
     {
       tutime = getnanosec();
-      if( !root -> minefield -> mine -> uncoverd || root -> gameover){
+      if( !root -> minefield -> mine -> uncoverd || gameover){
 	gamestart = tutime;
       }
       
@@ -196,6 +193,10 @@ main( const int argc, const char** argv){
 	uncov_elements( root -> minefield, mfvid);
 	
 	uncov( root -> minefield, root -> GW);
+      }
+      
+      if( gameover && !root -> minefield -> mine -> set){
+	gameover = FALSE;
       }
       
       dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
@@ -217,18 +218,18 @@ main( const int argc, const char** argv){
       }
 #endif
       
-      if( !root -> gameover){
+      if( !gameover){
 	if unlikely( minefield -> mine -> hit){
 	  printtime( mss -> out, ( tutime - gamestart) / 1000000);
 	  MS_print( mss -> out, "\r\t\t\t Mine!!               \n");
-	  root -> gameover = TRUE;
+	  gameover = TRUE;
 	}else if unlikely( ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level))){
 	  printtime( mss -> out, ( tutime - gamestart) / 1000000);
 	  MS_print( mss -> out, "\r\t\t\t Win!!         \n");
-	  root -> gameover = TRUE;
+	  gameover = TRUE;
 	}
 	
-	if( !root -> gameover){
+	if( !gameover){
 	  MS_print( mss -> out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
 	}
       }

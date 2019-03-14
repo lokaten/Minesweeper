@@ -38,7 +38,7 @@ typedef struct{
 SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
 int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
 int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
-void mousebuttondown( MS_root *, SDL_Event);
+void mousebuttondown( const MS_root *, SDL_Event);
 
 void *
 GW_Init( MS_root *root){
@@ -104,9 +104,9 @@ GW_Init( MS_root *root){
 }
 
 void
-event_dispatch( MS_root *root){
-  const MS_field      *minefield = root -> minefield;
-  GraphicWraper *GW        = ( GraphicWraper *)root -> GW;
+event_dispatch( const MS_root *root){
+  const MS_field *minefield = root -> minefield;
+  GraphicWraper *GW         = ( GraphicWraper *)root -> GW;
   SDL_Event event;
   
   if unlikely( GW == NULL) return;
@@ -122,7 +122,6 @@ event_dispatch( MS_root *root){
 	  quit( root);
 	case SDLK_F2:
 	case 'r':
-	  root -> gameover = FALSE;
 	  if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
 	    setminefield( minefield, GW, root -> mss, GW -> mfvid);
 	  }
@@ -149,11 +148,11 @@ event_dispatch( MS_root *root){
 }
 
 
-void mousebuttondown( MS_root * root,
+void mousebuttondown( const MS_root * root,
 		      SDL_Event event){
   
-  const MS_field      *minefield = root -> minefield;
-  GraphicWraper *GW        = ( GraphicWraper *)root -> GW;
+  const MS_field *minefield = root -> minefield;
+  GraphicWraper *GW         = ( GraphicWraper *)root -> GW;
   
   MS_pos postion;
   
