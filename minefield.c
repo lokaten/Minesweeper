@@ -39,10 +39,11 @@ MF_Init( MS_field *proto){
   assert( minefield -> data != NULL);
   
   if( !minefield -> global){
-    int i = minefield -> width * minefield -> height;
+    int i = (int)( minefield -> width * minefield -> height);
     
     while( i--){
-      ( minefield -> data + i) -> set = 1;
+      ( minefield -> data + i) -> set  = 1;
+      ( minefield -> data + i) -> mine = 0;
     }
   }
   
