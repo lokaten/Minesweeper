@@ -16,7 +16,7 @@ extern "C" {
     __uint8_t flag:1;
     __uint8_t set:1;
   }MS_element;
-  //static_assert( sizeof( MS_element) == 1);
+  static_assert( sizeof( MS_element) == 1, "");
   
   typedef struct{
     s16 x;

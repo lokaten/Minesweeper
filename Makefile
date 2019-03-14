@@ -1,11 +1,11 @@
 
 ifeq ($(CLANG), yes)
-CC = clang -std=c99
+CC = clang -std=c11
 CXX = clang++ -std=c++11
 endif
 
 ifeq ($(GCC), yes)
-CC = gcc -std=c99
+CC = gcc -std=c11
 CXX = g++ -std=c++2a
 endif
 
@@ -71,7 +71,7 @@ CFLAGS += -pedantic -Wold-style-definition -Wmissing-prototypes -Wstrict-prototy
 endif
 
 ifeq ($(CLANGPP), yes)
-CFLAGS += -Wno-old-style-cast -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary
+CFLAGS += -Wno-old-style-cast -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary
 endif
 
 PFLAGS =
