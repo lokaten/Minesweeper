@@ -241,18 +241,11 @@ drawelement( void *VGW, const MS_field *minefield, s16 w, s16 h){
   
   if( element -> flag){
     tile =  GW -> flag;
-  }
-  
-  if( tile == NULL && element -> cover){
+  }else if( element -> cover){
     tile =  GW -> cover;
-  }
-  
-  if( tile == NULL && element -> mine  && element -> count != 15){
+  }else if( element -> mine){
     tile =  GW -> mine;
-  }
-
-  if( tile == NULL){
-    switch( element -> count){
+  }else switch( element -> count){
     case 0: tile =  GW -> clear; break;
     case 1: tile =  GW -> one; break;
     case 2: tile =  GW -> two; break;
@@ -262,21 +255,21 @@ drawelement( void *VGW, const MS_field *minefield, s16 w, s16 h){
     case 6: tile =  GW -> six; break;
     case 7: tile =  GW -> seven; break;
     case 8: tile =  GW -> eight; break;
-    case 0xf:  tile =  GW -> clear;break;
     default:
       break;
     }
+  
+  if likely( tile != NULL){
+    SDL_SetRenderTarget( GW -> renderer, GW -> target);
+    
+    MS_BlitTile( GW -> renderer, tile,
+		 ( ( w - GW -> real.xdiff)) * (s16)GW -> real.element_width  - (int)( (u16)( GW -> real.realxdiff + (s16)GW -> real.realwidth ) % GW -> real.element_width),
+		 ( ( h - GW -> real.ydiff)) * (s16)GW -> real.element_height - (int)( (u16)( GW -> real.realydiff + (s16)GW -> real.realheight) % GW -> real.element_height),
+		 (int)GW -> real.element_width,
+		 (int)GW -> real.element_height);
+    
+    SDL_SetRenderTarget( GW -> renderer, NULL);
   }
-
-  SDL_SetRenderTarget( GW -> renderer, GW -> target);
-  
-  MS_BlitTile( GW -> renderer, tile,
-	       ( ( w - GW -> real.xdiff)) * (s16)GW -> real.element_width  - (int)( (u16)( GW -> real.realxdiff + (s16)GW -> real.realwidth ) % GW -> real.element_width),
-	       ( ( h - GW -> real.ydiff)) * (s16)GW -> real.element_height - (int)( (u16)( GW -> real.realydiff + (s16)GW -> real.realheight) % GW -> real.element_height),
-	       (int)GW -> real.element_width,
-	       (int)GW -> real.element_height);
-  
-  SDL_SetRenderTarget( GW -> renderer, NULL);
 }
 
 void
