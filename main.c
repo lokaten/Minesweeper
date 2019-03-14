@@ -37,7 +37,6 @@ ROOT_Init( const int argc, const char **argv){
   MS_stream *mss;
   bool no_resize;
   
-  MS_field *field_custom    = MS_Create( MS_field, .title = "custom"   , .width =    0, .height =    0, .level =  0, .global = 0, .reseed = 0);
   MS_field *field_beginner  = MS_Create( MS_field, .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0);
   MS_field *field_advanced  = MS_Create( MS_field, .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0);
   MS_field *field_expert    = MS_Create( MS_field, .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0);
@@ -59,13 +58,14 @@ ROOT_Init( const int argc, const char **argv){
     MS_options opt[] = {
       { OPTSW_GRP, TERM("Options"                                ), ""               , 0  , NULL                        , NULL},
       { OPTSW_GRP, TERM("Minefield"                              ), ""               , 0  , NULL                        , NULL},
+      /*
       { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &( field_custom -> width   ), NULL},
       { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &( field_custom -> height  ), NULL},
       { OPTSW_LU , TERM("Number of mines"                        ), "level"          , 0  , &( field_custom -> level   ), NULL},
 #ifdef DEBUG
-      { OPTSW_X  , TERM("Generate Minefield based on this seed"  ), "seed"           , 0  , &( field_custom -> reseed  ), NULL},
       { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &( field_custom -> global  ), &opt_true},
 #endif
+      */
       { OPTSW_GRP, TERM("Video"                                  ), ""               , 0  , NULL                        , NULL},
       { OPTSW_LU , TERM(""                                       ), "window-width"   , 0  , &real.realwidth             , NULL},
       { OPTSW_LU , TERM(""                                       ), "window-height"  , 0  , &real.realheight            , NULL},
@@ -73,7 +73,9 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_LU , TERM(""                                       ), "element-height" , 0  , &real.element_height        , NULL},
       { OPTSW_CPY, TERM("Resize don't work well with all system" ), "no-resize"      , 'R', &no_resize                  , &opt_true},
       { OPTSW_GRP, TERM("Mode"                                   ), ""               , 0  , NULL                        , NULL},
+      /*
       { OPTSW_CPY, TERM("customaise your own"                    ), "custom"         , 'b', &minefield                  , field_custom   },
+      */
       { OPTSW_CPY, TERM("Mimic windows minesweeper beginner mode"), "beginner"       , 'b', &minefield                  , field_beginner },
       { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &minefield                  , field_advanced },
       { OPTSW_CPY, TERM("Mimic windows minesweeper expert mode"  ), "expert"         , 'e', &minefield                  , field_expert   },
@@ -103,24 +105,19 @@ ROOT_Init( const int argc, const char **argv){
 #endif
   }
   
-  minefield -> reseed = field_custom -> reseed;
-  
+  /*
   if( minefield -> level >= ( minefield -> width * minefield -> height)){
     minefield -> level = ( minefield -> width * minefield -> height + 1) / 3;
     MS_print( mss -> err, "\rMore mines then elments!\n");
   }
-  
-  
-  DEBUG_PRINT( mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
-  DEBUG_PRINT( mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
-  
+  */
+    
   MS_print( mss -> out, "\rMode: %s\n", minefield -> title);
   
   DEBUG_PRINT( mss -> deb, "\rwidth: %lu   ", minefield -> width);
   DEBUG_PRINT( mss -> deb, "\r\t\theight: %lu   ", minefield -> height);
   DEBUG_PRINT( mss -> deb, "\r\t\t\t\tlevel: %lu   \n", minefield -> level);
   
-  if( minefield != field_custom   ) MS_Free( field_custom   );
   if( minefield != field_beginner ) MS_Free( field_beginner );
   if( minefield != field_advanced ) MS_Free( field_advanced );
   if( minefield != field_expert   ) MS_Free( field_expert   );

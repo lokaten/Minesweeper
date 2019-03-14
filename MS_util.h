@@ -115,24 +115,6 @@ typedef struct{
   FILE *deb;
   FILE *hlp;
 }MS_stream;
-  
-/*ENUT     0b00101111*/
-#define ENUT     0x2f
-
-/*ESET     0b10000000*/
-#define ESET     0x80
-#define SSET     7
-/*EFLAG    0b01000000*/
-#define EFLAG    0x40
-#define SFLAG    6
-/*ECOVER   0b00100000*/
-#define ECOVER   0x20
-#define SCOVER   5
-/*EMINE    0b00010000*/
-#define EMINE    0x10
-#define SMINE    4
-/*ECOUNT   0b00001111*/
-#define ECOUNT   0x0f
 
 #define MS_RAND_MAX   U32C( 0xffffffff)
   /*

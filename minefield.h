@@ -8,7 +8,16 @@ extern "C" {
 #endif
   
 #include "ComandStream.h"
-
+  
+  typedef struct{
+    __uint8_t count:4;
+    __uint8_t mine:1;
+    __uint8_t cover:1;
+    __uint8_t flag:1;
+    __uint8_t set:1;
+  }MS_element;
+  //static_assert( sizeof( MS_element) == 1);
+  
   typedef struct{
     s16 x;
     s16 y;
@@ -28,26 +37,26 @@ extern "C" {
 
   
   typedef struct{
-    __uint8_t *data;
+    MS_element *data;
     const char *title;
     ComandStream *uncovque;
     MS_mstr *mine;
-    u32 width;
-    u32 width_divobj;
-    u32 height;
-    u32 height_divobj;
-    u32 subwidth;
-    u32 subheight;
-    u32 level;
-    u32 global;
+    const u32 width;
+    const u32 width_divobj;
+    const u32 height;
+    const u32 height_divobj;
+    const u32 subwidth;
+    const u32 subheight;
+    const u32 level;
+    const u32 global;
     u32 reseed;
   }MS_field;
   
   
 #ifdef LOCALE_
-  static inline __uint8_t *LOCALE_( acse)( const MS_field, int, int);
+  static inline MS_element *LOCALE_( acse)( const MS_field, int, int);
   
-  static inline __uint8_t *
+  static inline MS_element *
   LOCALE_( acse)( const MS_field field, int x, int y){
     return field.data + ( mol_( (u32)( x + (int)field.width ), field.width , field.width_divobj ) +
 			  mol_( (u32)( y + (int)field.height), field.height, field.height_divobj) * field.width);

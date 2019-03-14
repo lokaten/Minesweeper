@@ -8,37 +8,38 @@
 #include "ComandStream.h"
 #include "minefield.h"
 
-static inline __uint8_t uncover_element( const MS_field, void *, MS_pos, MS_mstr *);
-static inline __uint8_t setmine_element( __uint8_t *, MS_mstr *);
+static inline MS_element *uncover_element( const MS_field, void *, MS_pos, MS_mstr *);
+static inline MS_element *setmine_element( MS_element *, MS_mstr *);
 static inline void addelement( const MS_field *, s16, s16);
 
 
 const MS_field *
-MF_Init( MS_field *minefield){
-  assert( minefield != NULL);
+MF_Init( MS_field *proto){
+  MS_field *minefield;
+  assert( proto != NULL);
+  
+  minefield = MS_Create( MS_field,
+			 .width = proto -> width + !proto -> global,
+			 .width_divobj = gen_divobj( proto -> width + !proto -> global),
+			 .height = proto -> height + !proto -> global,
+			 .height_divobj  = gen_divobj( proto -> height + !proto -> global),
+			 .subwidth  = proto -> width,
+			 .subheight = proto -> height,
+			 .level = proto -> level,
+			 .global = proto -> global,
+			 .reseed = 0);
   
   minefield -> mine = MS_CreateEmpty( MS_mstr);
   minefield -> uncovque = CS_Create( MS_pos);
   
   minefield -> mine -> noelements = minefield -> width * minefield -> height;
   
-  minefield -> subwidth  = minefield -> width;
-  minefield -> subheight = minefield -> height;
-  
-  if( !minefield -> global){
-    minefield -> width  += 1;
-    minefield -> height += 1;
-  }
-  
-  minefield -> width_divobj  = gen_divobj( minefield -> width );
-  minefield -> height_divobj = gen_divobj( minefield -> height);
-  
-  minefield -> data = ( __uint8_t *)malloc( sizeof( __uint8_t) * minefield -> width * minefield -> height);
+  minefield -> data = ( MS_element *)malloc( sizeof( MS_element) * minefield -> width * minefield -> height);
   
   assert( minefield -> data != NULL);
   
   if( !minefield -> global){
-    memset( minefield -> data, ESET, minefield -> width * minefield -> height);
+    memset( minefield -> data, 0x80, minefield -> width * minefield -> height);
   }
   
   return minefield;
@@ -70,9 +71,9 @@ setminefield( const MS_field  *minefield,
       element.y = (s16)( (u16)video.ydiff + i / w);
     }
     
-    if( *acse( *minefield, element.x, element.y) != ENUT){
+    if( acse( *minefield, element.x, element.y) -> count != 15){
       
-      *acse( *minefield, element.x, element.y) = ENUT;
+      *acse( *minefield, element.x, element.y) = (MS_element){ .count = 15, .cover = 1};
       
       if( GW != NULL)
 	drawelement( GW, minefield, element.x, element.y);
@@ -116,11 +117,11 @@ static inline void
 addelement( const MS_field *minefield, s16 x, s16 y){
   /* check that ECOVER is true, to not uncover the same element twice, and also skip if EFLAG is true
    */
-  if( ( *acse( *minefield, x, y) & ECOVER) && ( *acse( *minefield, x, y) & EFLAG) ^ EFLAG){
+  if( acse( *minefield, x, y) -> cover && !acse( *minefield, x, y) -> flag){
     MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
     pos -> x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
     pos -> y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
-    *acse( *minefield, x, y) &= ~ECOVER;
+    acse( *minefield, x, y) -> cover = 0;
     CS_Push( minefield -> uncovque, pos);
   }
 }
@@ -134,7 +135,7 @@ uncov( const MS_field *minefield, void *GW){
   while likely( ( element = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
     /* check if elemnt has no suronding mines and if that is the case continue whit uncovering the neigburing elemnts
      */
-    if likely( ( uncover_element( *minefield, GW, *element, minefield -> mine) & ECOUNT) == 0){
+    if likely( uncover_element( *minefield, GW, *element, minefield -> mine) -> count == 0){
       addelement( minefield, element -> x + 1, element -> y + 1);
       addelement( minefield, element -> x - 1, element -> y + 1);
       addelement( minefield, element -> x    , element -> y + 1);
@@ -151,54 +152,49 @@ uncov( const MS_field *minefield, void *GW){
   }
 }
 
-static inline __uint8_t
+static inline MS_element *
 uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mine){
   
-  /* chech that it hasnt been uncover yet, becuse elements are set to ECOVER | ECOUNT and ECOVER alaredy is down;
-   */
-  if likely( ( *acse( minefield, postion.x, postion.y) & ECOUNT) == ECOUNT){
-    ( *mine).uncoverd += 1;
+  if likely( acse( minefield, postion.x, postion.y) -> count == 15){
+    mine -> uncoverd += 1;
     
-    *acse( minefield, postion.x, postion.y) &= ~ECOUNT;
+    acse( minefield, postion.x, postion.y) -> count = 0;
     
-    ( *mine).hit += ( ( *acse( minefield, postion.x, postion.y) = setmine_element( acse( minefield, postion.x, postion.y), mine)) & EMINE) >> SMINE; 
+    mine -> hit += setmine_element( acse( minefield, postion.x, postion.y), mine) -> mine;
     
-    *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x + 1, postion.y + 1), mine) & EMINE) >> SMINE;
-    *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x - 1, postion.y + 1), mine) & EMINE) >> SMINE;
-    *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x    , postion.y + 1), mine) & EMINE) >> SMINE;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( acse( minefield, postion.x + 1, postion.y + 1), mine) -> mine;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( acse( minefield, postion.x - 1, postion.y + 1), mine) -> mine;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( acse( minefield, postion.x    , postion.y + 1), mine) -> mine;
     
-    *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x + 1, postion.y - 1), mine) & EMINE) >> SMINE;
-    *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x - 1, postion.y - 1), mine) & EMINE) >> SMINE;
-    *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x    , postion.y - 1), mine) & EMINE) >> SMINE;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( acse( minefield, postion.x + 1, postion.y - 1), mine) -> mine;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( acse( minefield, postion.x - 1, postion.y - 1), mine) -> mine;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( acse( minefield, postion.x    , postion.y - 1), mine) -> mine;
     
-    *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x + 1, postion.y    ), mine) & EMINE) >> SMINE;
-    *acse( minefield, postion.x, postion.y) += ( setmine_element( acse( minefield, postion.x - 1, postion.y    ), mine) & EMINE) >> SMINE;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( acse( minefield, postion.x + 1, postion.y    ), mine) -> mine;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( acse( minefield, postion.x - 1, postion.y    ), mine) -> mine;
   }
 
   if( GW != NULL)
     drawelement( GW, &minefield, postion.x, postion.y);
   
-  return *acse( minefield, postion.x, postion.y);
+  return acse( minefield, postion.x, postion.y);
 }
 
 
-static inline __uint8_t
-setmine_element( __uint8_t *element, MS_mstr *mine){
-  if( !( ( *element) & ESET)){
-    __uint8_t u;
+static inline MS_element *
+setmine_element( MS_element *element, MS_mstr *mine){
+  if( !element -> set){
+    element -> mine = ( ( ( __uint64_t)( ( *mine).noelements - ( *mine).set  ) * ( __uint64_t)( ( *mine).seed = MS_rand( ( *mine).seed))) <
+			( ( __uint64_t)( ( *mine).level      - ( *mine).mines) * ( __uint64_t)MS_RAND_MAX));
     
-    u = ( ( ( __uint64_t)( ( *mine).noelements - ( *mine).set  ) * ( __uint64_t)( ( *mine).seed = MS_rand( ( *mine).seed))) <
-	  ( ( __uint64_t)( ( *mine).level      - ( *mine).mines) * ( __uint64_t)MS_RAND_MAX));
+    ++mine -> set;
     
-    ++( *mine).set;
-    
-    ( *element) |= u << SMINE;
-    ( *mine).mines += u;
-    
-    ( *element) |= ESET;
+    mine -> mines += element -> mine;
+
+    element -> set = 1;
   }
   
-  return *element;
+  return element;
 }
 
 
@@ -233,9 +229,9 @@ setzero( const MS_field *minefield,
     x = ( s32)( i % vid.width) + vid.xdiff;
     y = ( s32)( i / vid.width) + vid.ydiff;
 
-    if( !( *acse( *minefield, x, y) & ESET ) &&
-        !( *acse( *minefield, x, y) & EFLAG)){
-      *acse( *minefield, x, y) |= ESET;
+    if( !acse( *minefield, x, y) -> set &&
+        !acse( *minefield, x, y) -> flag){
+      acse( *minefield, x, y) -> set = 1;
       ++minefield -> mine ->  set;
     }
     

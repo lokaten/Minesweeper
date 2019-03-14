@@ -170,7 +170,7 @@ void mousebuttondown( const MS_root * root,
       MS_pos *el;
       
       while( ( el = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
-	*acse( *minefield, el -> x, el -> y) |= ECOVER;
+	acse( *minefield, el -> x, el -> y) -> cover = 1;
 	CS_Finish( minefield -> uncovque, el);
       }
       
@@ -196,12 +196,12 @@ void mousebuttondown( const MS_root * root,
     }
   case SDL_BUTTON_RIGHT:
     {
-      __uint8_t *element = acse( *minefield, postion.x, postion.y);
-      if( *element & EFLAG){
-	*element &= ~EFLAG;
+      MS_element *element = acse( *minefield, postion.x, postion.y);
+      if( element -> flag){
+	element -> flag = 0;
 	--minefield -> mine -> flaged;
-      }else if( *element & ECOVER){
-	*element|= EFLAG;
+      }else if( element -> cover){
+	element -> flag = 1;
 	++minefield -> mine -> flaged;
       }
       
@@ -237,22 +237,22 @@ void
 drawelement( void *VGW, const MS_field *minefield, s16 w, s16 h){
   GraphicWraper *GW = ( GraphicWraper *)VGW;
   SDL_Texture *tile = NULL;
-  __uint8_t element = *acse( *minefield, w, h);
+  MS_element *element = acse( *minefield, w, h);
   
-  if( element & EFLAG){
+  if( element -> flag){
     tile =  GW -> flag;
   }
   
-  if( tile == NULL && ( element & ECOVER)){
+  if( tile == NULL && element -> cover){
     tile =  GW -> cover;
   }
   
-  if( tile == NULL && ( element & EMINE) && ( element & ECOUNT) != ECOUNT){
+  if( tile == NULL && element -> mine  && element -> count != 15){
     tile =  GW -> mine;
   }
 
   if( tile == NULL){
-    switch( ECOUNT & element){
+    switch( element -> count){
     case 0: tile =  GW -> clear; break;
     case 1: tile =  GW -> one; break;
     case 2: tile =  GW -> two; break;
