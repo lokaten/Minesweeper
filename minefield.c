@@ -8,12 +8,12 @@
 #include "ComandStream.h"
 #include "minefield.h"
 
-static inline __uint8_t uncover_element( MS_field, void *, MS_pos, MS_mstr *);
+static inline __uint8_t uncover_element( const MS_field, void *, MS_pos, MS_mstr *);
 static inline __uint8_t setmine_element( __uint8_t *, MS_mstr *);
-static inline void addelement( MS_field *, s16, s16);
+static inline void addelement( const MS_field *, s16, s16);
 
 
-MS_field *
+const MS_field *
 MF_Init( MS_field *minefield){
   assert( minefield != NULL);
   
@@ -46,9 +46,9 @@ MF_Init( MS_field *minefield){
 
 
 void
-setminefield( MS_field  *minefield,
+setminefield( const MS_field  *minefield,
 	      void *GW,
-	      MS_stream *mss,
+	      const MS_stream *mss,
 	      MS_video   video){
   
   u32 i;
@@ -103,18 +103,17 @@ setminefield( MS_field  *minefield,
 
 
 void
-MF_Free( MS_field *minefield){
+MF_Free( const MS_field *minefield){
   if( minefield != NULL){
     MS_Free( minefield -> data);
     MS_Free( minefield -> mine);
     
     CS_Free( minefield -> uncovque);
-    MS_Free( minefield);
   }
 }
 
 static inline void
-addelement( MS_field *minefield, s16 x, s16 y){
+addelement( const MS_field *minefield, s16 x, s16 y){
   /* check that ECOVER is true, to not uncover the same element twice, and also skip if EFLAG is true
    */
   if( ( *acse( *minefield, x, y) & ECOVER) && ( *acse( *minefield, x, y) & EFLAG) ^ EFLAG){
@@ -128,7 +127,7 @@ addelement( MS_field *minefield, s16 x, s16 y){
 
 
 void
-uncov( MS_field *minefield, void *GW){
+uncov( const MS_field *minefield, void *GW){
   MS_pos *element;
   assert( minefield != NULL);
   
@@ -153,7 +152,7 @@ uncov( MS_field *minefield, void *GW){
 }
 
 static inline __uint8_t
-uncover_element( MS_field minefield, void *GW, MS_pos postion, MS_mstr *mine){
+uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mine){
   
   /* chech that it hasnt been uncover yet, becuse elements are set to ECOVER | ECOUNT and ECOVER alaredy is down;
    */
@@ -204,7 +203,7 @@ setmine_element( __uint8_t *element, MS_mstr *mine){
 
 
 void
-uncov_elements( MS_field *minefield,
+uncov_elements( const MS_field *minefield,
 		MS_video  vid){
   
   unsigned long i;
@@ -222,7 +221,7 @@ uncov_elements( MS_field *minefield,
 
 
 void
-setzero( MS_field *minefield,
+setzero( const MS_field *minefield,
 	 MS_video  vid){
   
   unsigned long i;

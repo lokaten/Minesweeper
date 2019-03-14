@@ -45,10 +45,10 @@ extern "C" {
   
   
 #ifdef LOCALE_
-  static inline __uint8_t *LOCALE_( acse)( MS_field, int, int);
+  static inline __uint8_t *LOCALE_( acse)( const MS_field, int, int);
   
   static inline __uint8_t *
-  LOCALE_( acse)( MS_field field, int x, int y){
+  LOCALE_( acse)( const MS_field field, int x, int y){
     return field.data + ( mol_( (u32)( x + (int)field.width ), field.width , field.width_divobj ) +
 			  mol_( (u32)( y + (int)field.height), field.height, field.height_divobj) * field.width);
   }
@@ -57,15 +57,15 @@ extern "C" {
   
 #endif
   
-  void setzero( MS_field *, MS_video);
-  MS_field *MF_Init( MS_field *);
-  void setminefield( MS_field *, void*, MS_stream *, MS_video);
-  void MF_Free( MS_field *);
-  void uncov( MS_field *, void *);
-  void uncov_elements( MS_field *,  MS_video);
+  void setzero( const MS_field *, MS_video);
+  const MS_field *MF_Init( MS_field *);
+  void setminefield( const MS_field *, void*, const MS_stream *, MS_video);
+  void MF_Free( const MS_field *);
+  void uncov( const MS_field *, void *);
+  void uncov_elements( const MS_field *,  MS_video);
   
   /**/
-  void drawelement( void *, MS_field *, s16, s16);
+  void drawelement( void *, const MS_field *, s16, s16);
   
 #ifdef __cplusplus
 }

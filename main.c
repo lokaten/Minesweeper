@@ -33,6 +33,11 @@ MS_root *
 ROOT_Init( const int argc, const char **argv){
   MS_root *root;
   
+  MS_video real;
+  MS_field *minefield;
+  MS_stream *mss;
+  bool no_resize;
+  
   MS_field *field_custom    = MS_Create( MS_field, .title = "custom"   , .width =    0, .height =    0, .level =  0, .global = 0, .reseed = 0);
   MS_field *field_beginner  = MS_Create( MS_field, .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0);
   MS_field *field_advanced  = MS_Create( MS_field, .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0);
@@ -44,87 +49,112 @@ ROOT_Init( const int argc, const char **argv){
   
   unsigned long opt_true  = TRUE;
   unsigned long opt_false = FALSE;
-
+  
   dassert( opt_true);
   dassert( !opt_false);
   
-  root = MS_CreateEmpty( MS_root);
-  
-  root -> mss = def_out;
-  root -> minefield = field_beginner;
+  mss = def_out;
+  minefield = field_beginner;
   
   {
     MS_options opt[] = {
-      { OPTSW_GRP, TERM("Options"                                ), ""               , 0  , NULL                       , NULL},
-      { OPTSW_GRP, TERM("Minefield"                              ), ""               , 0  , NULL                       , NULL},
-      { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &( field_custom -> width  ), NULL},
-      { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &( field_custom -> height ), NULL},
-      { OPTSW_LU , TERM("Number of mines"                        ), "level"          , 0  , &( field_custom -> level  ), NULL},
+      { OPTSW_GRP, TERM("Options"                                ), ""               , 0  , NULL                        , NULL},
+      { OPTSW_GRP, TERM("Minefield"                              ), ""               , 0  , NULL                        , NULL},
+      { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &( field_custom -> width   ), NULL},
+      { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &( field_custom -> height  ), NULL},
+      { OPTSW_LU , TERM("Number of mines"                        ), "level"          , 0  , &( field_custom -> level   ), NULL},
 #ifdef DEBUG
-      { OPTSW_X  , TERM("Generate Minefield based on this seed"  ), "seed"           , 0  , &( field_custom -> reseed ), NULL},
-      { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &( field_custom -> global ), &opt_true},
+      { OPTSW_X  , TERM("Generate Minefield based on this seed"  ), "seed"           , 0  , &( field_custom -> reseed  ), NULL},
+      { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &( field_custom -> global  ), &opt_true},
 #endif
       { OPTSW_GRP, TERM("Video"                                  ), ""               , 0  , NULL                        , NULL},
-      { OPTSW_LU , TERM(""                                       ), "window-width"   , 0  , &root -> real.realwidth     , NULL},
-      { OPTSW_LU , TERM(""                                       ), "window-height"  , 0  , &root -> real.realheight    , NULL},
-      { OPTSW_LU , TERM(""                                       ), "element-width"  , 0  , &root -> real.element_width , NULL},
-      { OPTSW_LU , TERM(""                                       ), "element-height" , 0  , &root -> real.element_height, NULL},
-      { OPTSW_CPY, TERM("Resize don't work well with all system" ), "no-resize"      , 'R', &root -> no_resize          , &opt_true},
-      { OPTSW_GRP, TERM("Mode"                                   ), ""               , 0  , NULL                       , NULL},
-      { OPTSW_CPY, TERM("customaise your own"                    ), "custom"         , 'b', &root -> minefield         , field_custom   },
-      { OPTSW_CPY, TERM("Mimic windows minesweeper beginner mode"), "beginner"       , 'b', &root -> minefield         , field_beginner },
-      { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &root -> minefield         , field_advanced },
-      { OPTSW_CPY, TERM("Mimic windows minesweeper expert mode"  ), "expert"         , 'e', &root -> minefield         , field_expert   },
-      { OPTSW_CPY, TERM(""                                       ), "benchmark"      , 'B', &root -> minefield         , field_benchmark},
+      { OPTSW_LU , TERM(""                                       ), "window-width"   , 0  , &real.realwidth             , NULL},
+      { OPTSW_LU , TERM(""                                       ), "window-height"  , 0  , &real.realheight            , NULL},
+      { OPTSW_LU , TERM(""                                       ), "element-width"  , 0  , &real.element_width         , NULL},
+      { OPTSW_LU , TERM(""                                       ), "element-height" , 0  , &real.element_height        , NULL},
+      { OPTSW_CPY, TERM("Resize don't work well with all system" ), "no-resize"      , 'R', &no_resize                  , &opt_true},
+      { OPTSW_GRP, TERM("Mode"                                   ), ""               , 0  , NULL                        , NULL},
+      { OPTSW_CPY, TERM("customaise your own"                    ), "custom"         , 'b', &minefield                  , field_custom   },
+      { OPTSW_CPY, TERM("Mimic windows minesweeper beginner mode"), "beginner"       , 'b', &minefield                  , field_beginner },
+      { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &minefield                  , field_advanced },
+      { OPTSW_CPY, TERM("Mimic windows minesweeper expert mode"  ), "expert"         , 'e', &minefield                  , field_expert   },
+      { OPTSW_CPY, TERM(""                                       ), "benchmark"      , 'B', &minefield                  , field_benchmark},
 #ifndef NO_TERM
       { OPTSW_GRP, TERM("Output"                                 ), ""               , 0  , NULL                       , NULL},
       { OPTSW_CPY, TERM("Print generic help mesage"              ), "help"           , 'h', &( def_out -> hlp         ), stdout},
       { OPTSW_CPY, TERM("Supres reguler output"                  ), "quiet"          , 'q', &( def_out -> out         ), NULL},
-      { OPTSW_CPY, TERM("Supres all output"                      ), "very-quiet"     , 'Q', &root -> mss               , very_quiet},
+      { OPTSW_CPY, TERM("Supres all output"                      ), "very-quiet"     , 'Q', &(mss                     ), very_quiet},
 #ifdef DEBUG
       { OPTSW_CPY, TERM("Debug data"                             ), "debug"          , 'd', &( def_out -> deb         ), stdout},
 #endif
 #endif
       { OPTSW_NUL, TERM(""/* Last elemnt is a NULL termination */), ""               , 0  , NULL                       , NULL}};
     
-    root -> real = (MS_video){ .element_width = 15, .element_height = 15};
+    real = (MS_video){ .element_width = 15, .element_height = 15};
     
-    if( procopt( root -> mss, opt, argc, argv)){
-      MS_print( root -> mss -> err, "\rWRong or broken input, pleas refer to --help\n");
+    if( procopt( mss, opt, argc, argv)){
+      MS_print( mss -> err, "\rWRong or broken input, pleas refer to --help\n");
     }
 #ifndef NO_TERM
-    if( root -> mss -> hlp){
-      help( root -> mss -> hlp, opt);
-      quit( root);
+    if( mss -> hlp){
+      help( mss -> hlp, opt);
+      
+      quit( NULL);
     }
 #endif
   }
   
-  root -> minefield -> reseed = field_custom -> reseed;
+  minefield -> reseed = field_custom -> reseed;
   
-  if( root -> minefield -> level >= ( root -> minefield -> width * root -> minefield -> height)){
-    root -> minefield -> level = ( root -> minefield -> width * root -> minefield -> height + 1) / 3;
-    MS_print( root -> mss -> err, "\rMore mines then elments!\n");
+  if( minefield -> level >= ( minefield -> width * minefield -> height)){
+    minefield -> level = ( minefield -> width * minefield -> height + 1) / 3;
+    MS_print( mss -> err, "\rMore mines then elments!\n");
   }
   
   
-  DEBUG_PRINT( root -> mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
-  DEBUG_PRINT( root -> mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
+  DEBUG_PRINT( mss -> deb, "\rseed is printed when setminefield is called so that you can re run spcific minefield whit help of --seed\n");
+  DEBUG_PRINT( mss -> deb, "\rNOTE: user input changes how the minfield is generated.\n");
   
-  MS_print( root -> mss -> out, "\rMode: %s\n", root -> minefield -> title);
+  MS_print( mss -> out, "\rMode: %s\n", minefield -> title);
   
-  DEBUG_PRINT( root -> mss -> deb, "\rwidth: %lu   ", root -> minefield -> width);
-  DEBUG_PRINT( root -> mss -> deb, "\r\t\theight: %lu   ", root -> minefield -> height);
-  DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\tlevel: %lu   \n", root -> minefield -> level);
+  DEBUG_PRINT( mss -> deb, "\rwidth: %lu   ", minefield -> width);
+  DEBUG_PRINT( mss -> deb, "\r\t\theight: %lu   ", minefield -> height);
+  DEBUG_PRINT( mss -> deb, "\r\t\t\t\tlevel: %lu   \n", minefield -> level);
   
-  if( root -> minefield != field_custom   ) MS_Free( field_custom   );
-  if( root -> minefield != field_beginner ) MS_Free( field_beginner );
-  if( root -> minefield != field_advanced ) MS_Free( field_advanced );
-  if( root -> minefield != field_expert   ) MS_Free( field_expert   );
-  if( root -> minefield != field_benchmark) MS_Free( field_benchmark);
+  if( minefield != field_custom   ) MS_Free( field_custom   );
+  if( minefield != field_beginner ) MS_Free( field_beginner );
+  if( minefield != field_advanced ) MS_Free( field_advanced );
+  if( minefield != field_expert   ) MS_Free( field_expert   );
+  if( minefield != field_benchmark) MS_Free( field_benchmark);
   
-  if( root -> mss != very_quiet) MS_Free( very_quiet);
-  if( root -> mss != def_out   ) MS_Free( def_out   );
+  if( mss != very_quiet) MS_Free( very_quiet);
+  if( mss != def_out   ) MS_Free( def_out   );
+  
+  if( strstr( minefield -> title, "benchmark")){
+    setminefield( minefield, NULL, mss,
+		  ( MS_video){ .width = minefield -> subwidth, .height = minefield -> subheight});
+    setzero( minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3});
+    uncov_elements( minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1});
+    uncov( minefield, NULL);
+    MF_Free( minefield);
+    MS_Free( mss);
+    quit( NULL);
+  }else{
+    root = MS_Create( MS_root,
+		      .real = real,
+		      .minefield = MF_Init( minefield),
+		      .mss = mss,
+		      .no_resize = no_resize);
+    
+    root -> gameover = FALSE;
+    
+    root -> GW = GW_Init( root);
+    
+    draw( root -> GW, *root -> minefield);
+    
+    setminefield( root -> minefield, root -> GW, root -> mss,
+		  ( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight});
+  }
   
   return root;
 }
@@ -135,8 +165,6 @@ ROOT_Free( MS_root *root){
   if( root != NULL){
     MF_Free( root -> minefield);
     GW_Free( root -> GW);
-    MS_Free( root -> mss);
-    CS_Free( root -> actionque);
     MS_Free( root);
   }
 }
@@ -146,38 +174,19 @@ int
 main( const int argc, const char** argv){
   MS_root *root;
   
+  u64 tutime;
+  u64 gamestart;
+  
   root = ROOT_Init( argc, argv);
-  root -> minefield = MF_Init( root -> minefield);
   
-  root -> seed = MS_rand_seed();
-  
-  root -> tutime    = getnanosec();
-  root -> gamestart = root -> tutime;
-  root -> nextframe = root -> tutime;
-    
-  root -> gameover = FALSE;
-  
-  if( strstr( root -> minefield -> title, "benchmark")){
-    setminefield( root -> minefield, NULL, root -> mss,
-		  ( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight});
-    setzero( root -> minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3});
-    uncov_elements( root -> minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1});
-    uncov( root -> minefield, NULL);
-    quit( root);
-  }else{
-    root -> GW = GW_Init( root);
-    
-    draw( root -> GW, *root -> minefield);
-    
-    setminefield( root -> minefield, root -> GW, root -> mss,
-		  ( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight});
-  }
+  tutime    = getnanosec();
+  gamestart = tutime;
   
   while( TRUE){
     {
-      root -> tutime = getnanosec();
+      tutime = getnanosec();
       if( !root -> minefield -> mine -> uncoverd || root -> gameover){
-	root -> gamestart = root -> tutime;
+	gamestart = tutime;
       }
       
       event_dispatch( root);
@@ -197,12 +206,12 @@ main( const int argc, const char** argv){
     
     {
 #ifndef NO_TERM
-      MS_stream     *mss       = root -> mss;
-      MS_field      *minefield = root -> minefield;
+      const MS_stream *mss       = root -> mss;
+      const MS_field  *minefield = root -> minefield;
       
 #ifdef DEBUG
       if( mss -> deb != NULL){
-	__uint64_t mytime = getnanosec() - root -> tutime;
+	__uint64_t mytime = getnanosec() - tutime;
 	
 	DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
       }
@@ -210,11 +219,11 @@ main( const int argc, const char** argv){
       
       if( !root -> gameover){
 	if unlikely( minefield -> mine -> hit){
-	  printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
+	  printtime( mss -> out, ( tutime - gamestart) / 1000000);
 	  MS_print( mss -> out, "\r\t\t\t Mine!!               \n");
 	  root -> gameover = TRUE;
 	}else if unlikely( ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level))){
-	  printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
+	  printtime( mss -> out, ( tutime - gamestart) / 1000000);
 	  MS_print( mss -> out, "\r\t\t\t Win!!         \n");
 	  root -> gameover = TRUE;
 	}
@@ -224,7 +233,7 @@ main( const int argc, const char** argv){
 	}
       }
       
-      printtime( mss -> out, ( root -> tutime - root -> gamestart) / 1000000);
+      printtime( mss -> out, ( tutime - gamestart) / 1000000);
 #endif
     }
   }

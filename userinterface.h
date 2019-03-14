@@ -13,16 +13,11 @@ extern "C" {
   
   typedef struct{
     void *GW;
-    MS_video real;
-    MS_field *minefield;
-    MS_stream *mss;
-    ComandStream *actionque;
-    u64 tutime;
-    u64 nextframe;
-    u64 gamestart;
-    u32 seed;
+    const MS_video real;
+    const MS_field *minefield;
+    const MS_stream *mss;
     bool gameover;
-    bool no_resize;
+    const bool no_resize;
   }MS_root;
   
   void event_dispatch( MS_root *);

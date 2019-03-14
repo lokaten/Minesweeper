@@ -105,7 +105,7 @@ GW_Init( MS_root *root){
 
 void
 event_dispatch( MS_root *root){
-  MS_field      *minefield = root -> minefield;
+  const MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = ( GraphicWraper *)root -> GW;
   SDL_Event event;
   
@@ -145,8 +145,6 @@ event_dispatch( MS_root *root){
     default:
       break;
     }
-    
-    root -> nextframe = root -> tutime;
   }
 }
 
@@ -154,7 +152,7 @@ event_dispatch( MS_root *root){
 void mousebuttondown( MS_root * root,
 		      SDL_Event event){
   
-  MS_field      *minefield = root -> minefield;
+  const MS_field      *minefield = root -> minefield;
   GraphicWraper *GW        = ( GraphicWraper *)root -> GW;
   
   MS_pos postion;
@@ -237,7 +235,7 @@ draw( void *gw_void, MS_field minefield){
 }
 
 void
-drawelement( void *VGW, MS_field *minefield, s16 w, s16 h){
+drawelement( void *VGW, const MS_field *minefield, s16 w, s16 h){
   GraphicWraper *GW = ( GraphicWraper *)VGW;
   SDL_Texture *tile = NULL;
   __uint8_t element = *acse( *minefield, w, h);
