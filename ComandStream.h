@@ -12,8 +12,8 @@ extern "C" {
 #include "MS_util.h"
 
 typedef struct{
-  size_t blk_size;
-  size_t size;
+  const size_t blk_size;
+  const size_t size;
   char *blk_fetch;
   char *blk_push;
   char *blk_releas;
@@ -25,11 +25,11 @@ typedef struct{
 }ComandStream;
 
 
-static inline ComandStream *LOCALE_( CS_Create)( size_t);
+static inline ComandStream *LOCALE_( CS_Create)( const size_t);
 static inline void *LOCALE_( CS_Fetch)( ComandStream *);
-static inline void LOCALE_( CS_Push)( ComandStream *, void *);
+static inline void LOCALE_( CS_Push)( ComandStream *, const void *);
 static inline void *LOCALE_( CS_Releas)( ComandStream *);
-static inline void LOCALE_( CS_Finish)( ComandStream *, void *);
+static inline void LOCALE_( CS_Finish)( ComandStream *, const void *);
 static inline void LOCALE_( CS_Free)( ComandStream *);
 
 _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
@@ -38,22 +38,25 @@ _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 #define NC 1024
 
 static inline ComandStream *
-LOCALE_( CS_Create)( size_t size){
-  ComandStream *Stream = MS_CreateEmpty( ComandStream);
+LOCALE_( CS_Create)( const size_t size){
+  ComandStream *Stream;
   char *ptr;
   
-  Stream -> blk_size = ( ( NC - sizeof( char *)) / size) * size;
-
-  dassert( Stream -> blk_size % size == 0);
-  dassert( Stream -> blk_size);
+  size_t  blk_size = ( ( NC - sizeof( char *)) / size) * size;
+  
+  dassert( blk_size % size == 0);
+  dassert( blk_size);
+  dassert( size);
+  
+  Stream = MS_Create( ComandStream,
+		      .blk_size = blk_size,
+		      .size = size);
   
   ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
   
   assert( ptr != NULL);
   
   *( char **)( ptr + Stream -> blk_size) = ptr;
-  
-  Stream -> size = size;
   
   Stream -> blk_fetch  = ptr;
   Stream -> blk_push   = ptr;
@@ -97,7 +100,7 @@ LOCALE_( CS_Fetch)( ComandStream *Stream){
 
 
 static inline void
-LOCALE_( CS_Push)( ComandStream *Stream, void *ptr){
+LOCALE_( CS_Push)( ComandStream *Stream, const void *ptr){
   assert( Stream != NULL);
   
   if unlikely( Stream -> push == Stream -> blk_push + Stream -> blk_size){
@@ -137,7 +140,7 @@ LOCALE_( CS_Releas)( ComandStream *Stream){
   
 
 static inline void
-LOCALE_( CS_Finish)( ComandStream *Stream, void *ptr){
+LOCALE_( CS_Finish)( ComandStream *Stream, const void *ptr){
   assert( Stream != NULL);
   
   if unlikely( Stream -> finish == Stream -> blk_finish + Stream -> blk_size){
