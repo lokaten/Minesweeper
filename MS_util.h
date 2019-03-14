@@ -141,7 +141,7 @@ typedef struct{
   */
 #ifdef LOCALE_
 
-static inline void *LOCALE_( MS_Create)( size_t, u16, ...);
+static inline void *LOCALE_( MS_Create)( size_t, void *);
 INLINE int LOCALE_( MS_Free)( void *);
 static inline u32 LOCALE_( gen_divobj)( u32);
 static inline u32 LOCALE_( mol_)( u32, u32, u32);
@@ -157,26 +157,16 @@ INLINE __uint64_t LOCALE_( getmicrosec)( void);
 INLINE __uint64_t LOCALE_( getnanosec)( void);
 
 static inline void *
-LOCALE_( MS_Create)( size_t alo_size, u16 num_elements, ...){
-  void *ret = NULL;
-  void *ptr = ( void *)malloc( alo_size * ( num_elements ? num_elements: 1));
-  va_list data;
+LOCALE_( MS_Create)( size_t alo_size, void *vptr){
+  void *ptr = ( void *)malloc( alo_size);
   dassert( alo_size);
-  va_start( data, num_elements); /* no goto before this line */
   assert( ptr != NULL);
-  if( ptr == NULL) goto end;
-  ret = ptr;
-  while( num_elements--){
-    memcpy( ptr, va_arg( data, void *), alo_size);
-    ptr = ( char *)ptr + alo_size;
-  }
- end:
-  va_end( data);
-  return ret;
+  memcpy( ptr, vptr, alo_size);
+  return ptr;
 }
-#define MS_Create( type, ...) ( type *)LOCALE_( MS_Create)( sizeof( type), 1, ( void *)&( ( type){ __VA_ARGS__}))
-#define MS_CreateEmpty( type) ( type *)LOCALE_( MS_Create)( sizeof( type), 0)
-#define MS_CreateCopy( type, src) ( type *)LOCALE_( MS_Create)( sizeof( type), 1, ( void *)src)
+#define MS_Create( type, ...) ( type *)LOCALE_( MS_Create)( sizeof( type), &( type){ __VA_ARGS__})
+#define MS_CreateEmpty( type) ( type *)LOCALE_( MS_Create)( sizeof( type), &( type){0})
+
 
 INLINE int
 LOCALE_( MS_Free)( void *ptr){
