@@ -1,11 +1,11 @@
 
 ifeq ($(CLANG), yes)
-CC = clang -std=c11
+CC = clang -std=c99
 CXX = clang++ -std=c++11
 endif
 
 ifeq ($(GCC), yes)
-CC = gcc -std=c11
+CC = gcc -std=c99
 CXX = g++ -std=c++2a
 endif
 

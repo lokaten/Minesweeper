@@ -10,13 +10,13 @@ extern "C" {
 #include "ComandStream.h"
   
   typedef struct{
-    __uint8_t count:4;
-    __uint8_t mine:1;
-    __uint8_t cover:1;
-    __uint8_t flag:1;
-    __uint8_t set:1;
+    u8 count:4;
+    u8 mine:1;
+    u8 cover:1;
+    u8 flag:1;
+    u8 set:1;
   }MS_element;
-  static_assert( sizeof( MS_element) == 1, "");
+  
   
   typedef struct{
     s16 x;

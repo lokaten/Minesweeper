@@ -39,7 +39,11 @@ MF_Init( MS_field *proto){
   assert( minefield -> data != NULL);
   
   if( !minefield -> global){
-    memset( minefield -> data, 0x80, minefield -> width * minefield -> height);
+    int i = minefield -> width * minefield -> height;
+    
+    while( i--){
+      ( minefield -> data + i) -> set = 1;
+    }
   }
   
   return minefield;
