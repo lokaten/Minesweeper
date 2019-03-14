@@ -32,7 +32,7 @@ MF_Init( MS_field *proto){
   minefield -> mine = MS_CreateEmpty( MS_mstr);
   minefield -> uncovque = CS_Create( MS_pos);
   
-  minefield -> mine -> noelements = minefield -> width * minefield -> height;
+  minefield -> mine -> noelements = minefield -> subwidth * minefield -> subheight;
   
   minefield -> data = ( MS_element *)malloc( sizeof( MS_element) * minefield -> width * minefield -> height);
   
@@ -76,7 +76,8 @@ setminefield( const MS_field  *minefield,
       element.y = (s16)( (u16)video.ydiff + i / w);
     }
     
-    if( acse( *minefield, element.x, element.y) -> count != 15){
+    if( acse( *minefield, element.x, element.y) -> count != 15 ||
+	acse( *minefield, element.x, element.y) -> flag  == 1){
       
       *acse( *minefield, element.x, element.y) = (MS_element){ .count = 15, .cover = 1};
       
