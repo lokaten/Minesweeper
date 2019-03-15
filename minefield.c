@@ -13,20 +13,20 @@ static inline MS_element *setmine_element( MS_element *, MS_mstr *);
 static inline void addelement( const MS_field *, s16, s16);
 
 
-const MS_field *
-MF_Init( MS_field *proto){
+MS_field *
+MF_CreateFieldFromRef( MS_field proto){
   MS_field *minefield;
-  assert( proto != NULL);
   
   minefield = MS_Create( MS_field,
-			 .width = proto -> width + !proto -> global,
-			 .width_divobj = gen_divobj( proto -> width + !proto -> global),
-			 .height = proto -> height + !proto -> global,
-			 .height_divobj  = gen_divobj( proto -> height + !proto -> global),
-			 .subwidth  = proto -> width,
-			 .subheight = proto -> height,
-			 .level = proto -> level,
-			 .global = proto -> global,
+			 .title = proto.title,
+			 .width = proto.width + !proto.global,
+			 .width_divobj = gen_divobj( proto.width + !proto.global),
+			 .height = proto.height + !proto.global,
+			 .height_divobj  = gen_divobj( proto.height + !proto.global),
+			 .subwidth  = proto.width,
+			 .subheight = proto.height,
+			 .level = proto.level,
+			 .global = proto.global,
 			 .reseed = 0);
   
   minefield -> mine = MS_CreateEmpty( MS_mstr);

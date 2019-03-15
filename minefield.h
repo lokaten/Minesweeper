@@ -67,7 +67,8 @@ extern "C" {
 #endif
   
   void setzero( const MS_field *, MS_video);
-  const MS_field *MF_Init( MS_field *);
+  MS_field *MF_CreateFieldFromRef( MS_field);
+#define MF_CreateField( ...) MF_CreateFieldFromRef( ( MS_field){__VA_ARGS__})
   void setminefield( const MS_field *, void*, const MS_stream *, MS_video);
   void MF_Free( const MS_field *);
   void uncov( const MS_field *, void *);
