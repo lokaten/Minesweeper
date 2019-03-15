@@ -14,20 +14,20 @@ static inline void addelement( const MS_field *, s16, s16);
 
 
 MS_field *
-MF_CreateFieldFromRef( MS_field proto){
+MF_CreateFieldFromRef( MS_field *proto){
   MS_field *minefield;
   
   minefield = MS_Create( MS_field,
-			 .title = proto.title,
-			 .width = proto.width + !proto.global,
-			 .width_divobj = gen_divobj( proto.width + !proto.global),
-			 .height = proto.height + !proto.global,
-			 .height_divobj  = gen_divobj( proto.height + !proto.global),
-			 .subwidth  = proto.width,
-			 .subheight = proto.height,
-			 .level = proto.level,
-			 .global = proto.global,
-			 .reseed = 0);
+			 .title = proto -> title,
+			 .width = proto -> width + !proto -> global,
+			 .width_divobj = gen_divobj( proto -> width + !proto -> global),
+			 .height = proto -> height + !proto -> global,
+			 .height_divobj  = gen_divobj( proto -> height + !proto -> global),
+			 .subwidth  = proto -> width,
+			 .subheight = proto -> height,
+			 .level = proto -> level,
+			 .global = proto -> global,
+			 .reseed = proto -> reseed);
   
   minefield -> mine = MS_CreateEmpty( MS_mstr);
   minefield -> uncovque = CS_Create( MS_pos);
