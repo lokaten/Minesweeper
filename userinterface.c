@@ -133,6 +133,24 @@ event_dispatch( const MS_root *root){
 	  }
 	  uncov( minefield, GW);
 	  break;
+#ifdef DEBUG
+	case SDLK_LEFT:
+	case 'h':
+	  GW -> real.realxdiff = ( GW -> real.realxdiff - GW -> real.element_width + GW -> mfvid.realwidth) % GW -> mfvid.realwidth;
+	  break;
+	case SDLK_DOWN:
+	case 'j':
+	  GW -> real.realydiff = ( GW -> real.realydiff + GW -> real.element_height + GW -> mfvid.realheight) % GW -> mfvid.realheight;
+	  break;
+	case SDLK_UP:
+	case 'k':
+	  GW -> real.realydiff = ( GW -> real.realydiff - GW -> real.element_height + GW -> mfvid.realheight) % GW -> mfvid.realheight;
+	  break;
+	case SDLK_RIGHT:
+	case 'l':
+	  GW -> real.realxdiff = ( GW -> real.realxdiff + GW -> real.element_width + GW -> mfvid.realwidth) % GW -> mfvid.realwidth;
+	  break;
+#endif
 	default:
 	  break;
 	}
@@ -156,11 +174,8 @@ void mousebuttondown( const MS_root * root,
   
   MS_pos postion;
   
-  {
-    MS_video video = ( ( GraphicWraper *)( root -> GW)) -> real;
-    postion.x = (s16)( ( ( (u16)( event.button.x + video.realxdiff) * video.width ) / video.realwidth ) % minefield -> width );
-    postion.y = (s16)( ( ( (u16)( event.button.y + video.realydiff) * video.height) / video.realheight) % minefield -> height);
-  }
+  postion.x = (s16)( ( ( event.button.x - GW -> real.realxdiff) / (int)GW -> real.element_width ) + minefield -> subwidth ) % minefield -> subwidth;
+  postion.y = (s16)( ( ( event.button.y - GW -> real.realydiff) / (int)GW -> real.element_height) + minefield -> subheight) % minefield -> subheight;
   
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
@@ -225,6 +240,8 @@ draw( void *gw_void, MS_field minefield){
       cy = (int)GW -> real.realheight - ay;
     
     MS_BlitTex( GW -> renderer, GW -> target, 0 , 0 , ax, ay, cx, cy);
+    MS_BlitTex( GW -> renderer, GW -> target, ax, 0 , cx, ay, 0 , cy);
+    MS_BlitTex( GW -> renderer, GW -> target, 0 , ay, ax, cy, cx, 0 );
     MS_BlitTex( GW -> renderer, GW -> target, ax, ay, cx, cy, 0 , 0 );
   }
   
