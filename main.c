@@ -36,6 +36,12 @@ ROOT_Init( const int argc, const char **argv){
   MS_field *minefield;
   MS_stream *mss;
   bool no_resize;
+
+  bool custom = FALSE;
+  bool custom_global = FALSE;
+  u16 custom_width;
+  u16 custom_height;
+  u16 custom_level;
   
   MS_field *field_beginner  = MF_CreateField( .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0);
   MS_field *field_advanced  = MF_CreateField( .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0);
@@ -57,15 +63,13 @@ ROOT_Init( const int argc, const char **argv){
   {
     MS_options opt[] = {
       { OPTSW_GRP, TERM("Options"                                ), ""               , 0  , NULL                        , NULL},
-      { OPTSW_GRP, TERM("Minefield"                              ), ""               , 0  , NULL                        , NULL},
-      /*
-      { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &( field_custom -> width   ), NULL},
-      { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &( field_custom -> height  ), NULL},
-      { OPTSW_LU , TERM("Number of mines"                        ), "level"          , 0  , &( field_custom -> level   ), NULL},
+      { OPTSW_GRP, TERM("Custom"                                 ), ""               , 0  , NULL                        , NULL},
+      { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &custom_width               , NULL},
+      { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &custom_height              , NULL},
+      { OPTSW_LU , TERM("Number of mines"                        ), "level"          , 0  , &custom_level               , NULL},
 #ifdef DEBUG
-      { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &( field_custom -> global  ), &opt_true},
+      { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &custom_global              , &opt_true},
 #endif
-      */
       { OPTSW_GRP, TERM("Video"                                  ), ""               , 0  , NULL                        , NULL},
       { OPTSW_LU , TERM(""                                       ), "window-width"   , 0  , &real.realwidth             , NULL},
       { OPTSW_LU , TERM(""                                       ), "window-height"  , 0  , &real.realheight            , NULL},
@@ -73,9 +77,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_LU , TERM(""                                       ), "element-height" , 0  , &real.element_height        , NULL},
       { OPTSW_CPY, TERM("Resize don't work well with all system" ), "no-resize"      , 'R', &no_resize                  , &opt_true},
       { OPTSW_GRP, TERM("Mode"                                   ), ""               , 0  , NULL                        , NULL},
-      /*
-      { OPTSW_CPY, TERM("customaise your own"                    ), "custom"         , 'b', &minefield                  , field_custom   },
-      */
+      { OPTSW_CPY, TERM("customaise your own"                    ), "custom"         , 0  , &custom                     , &opt_true},
       { OPTSW_CPY, TERM("Mimic windows minesweeper beginner mode"), "beginner"       , 'b', &minefield                  , field_beginner },
       { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &minefield                  , field_advanced },
       { OPTSW_CPY, TERM("Mimic windows minesweeper expert mode"  ), "expert"         , 'e', &minefield                  , field_expert   },
@@ -105,20 +107,24 @@ ROOT_Init( const int argc, const char **argv){
 #endif
   }
   
-  /*
-  if( minefield -> level >= ( minefield -> width * minefield -> height)){
-    minefield -> level = ( minefield -> width * minefield -> height + 1) / 3;
-    MS_print( mss -> err, "\rMore mines then elments!\n");
+  if( custom){
+    if( custom_level >= ( custom_width * custom_height)){
+      custom_level = ( custom_width * custom_height + 1) / 3;
+      MS_print( mss -> err, "\rMore mines then elments!\n");
+    }
+    
+    minefield  = MF_CreateField( .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
   }
-  */
   
   assert( minefield -> title != NULL);
   
   MS_print( mss -> out, "\rMode: %s\n", minefield -> title);
   
-  DEBUG_PRINT( mss -> deb, "\rwidth: %lu   ", minefield -> width);
-  DEBUG_PRINT( mss -> deb, "\r\t\theight: %lu   ", minefield -> height);
-  DEBUG_PRINT( mss -> deb, "\r\t\t\t\tlevel: %lu   \n", minefield -> level);
+  if( custom){
+    MS_print( mss -> out, "\rwidth: %lu   ", minefield -> width);
+    MS_print( mss -> out, "\r\t\theight: %lu   ", minefield -> height);
+    MS_print( mss -> out, "\r\t\t\t\tlevel: %lu   \n", minefield -> level);
+  }
   
   if( minefield != field_beginner ) MS_Free( field_beginner );
   if( minefield != field_advanced ) MS_Free( field_advanced );
