@@ -39,12 +39,13 @@ CFLAGS += -Wlogical-op -faggressive-loop-optimizations
 else
 ifeq ($(GPP), yes)
 else
-CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
+CFLAGS += -Weverything -Wno-error=disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
 endif
 endif
 
 ifeq ($(DEV), yes)
-CFLAGS += -Werror -DDEBUG -pg -ftrapv
+CFLAGS += -Werror -DDEBUG -pg -ftrapv -fsanitize=address
+LIBS += -lasan
 ifeq ($(CLANG), yes)
 else
 ifeq ($(CLANGPP), yes)
@@ -102,7 +103,7 @@ RM = rm -f
 STRIP = strip --strip-unneeded
 
 TARGET = Minesweeper
-LIBS = -lrt -lSDL2 -lSDL2_image
+LIBS += -lrt -lSDL2 -lSDL2_image
 
 .PHONY: all clean
 .SUFFIXES: .c .o

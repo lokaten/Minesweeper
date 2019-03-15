@@ -21,7 +21,7 @@ GW_Init( MS_root *root){
 
 
 void
-event_dispatch( MS_root *root){
+event_dispatch( const MS_root *root){
   assert( root != NULL);
 }
 
