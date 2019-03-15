@@ -263,8 +263,8 @@ drawelement( void *VGW, const MS_field *minefield, s16 w, s16 h){
     SDL_SetRenderTarget( GW -> renderer, GW -> target);
     
     MS_BlitTile( GW -> renderer, tile,
-		 ( ( w - GW -> real.xdiff)) * (s16)GW -> real.element_width  - (int)( (u16)( GW -> real.realxdiff + (s16)GW -> real.realwidth ) % GW -> real.element_width),
-		 ( ( h - GW -> real.ydiff)) * (s16)GW -> real.element_height - (int)( (u16)( GW -> real.realydiff + (s16)GW -> real.realheight) % GW -> real.element_height),
+		 ( ( w - GW -> real.xdiff)) * (s16)GW -> real.element_width ,
+		 ( ( h - GW -> real.ydiff)) * (s16)GW -> real.element_height,
 		 (int)GW -> real.element_width,
 		 (int)GW -> real.element_height);
     
