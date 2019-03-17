@@ -29,7 +29,7 @@ MF_CreateFieldFromRef( const MS_field *proto){
   assert( data != NULL);
   
   if( !proto -> global){
-    int i = (int)( proto -> width * proto -> height);
+    int i = (int)( ( proto -> width + !proto -> global) * ( proto -> height + !proto -> global));
     
     while( i--){
       ( data + i) -> set  = 1;
