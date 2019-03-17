@@ -33,10 +33,10 @@ typedef struct{
   SDL_Texture *eight;
 }GraphicWraper;
 
-SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
-int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
-int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
-void mousebuttondown( const MS_root *, SDL_Event);
+static inline SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
+static inline int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int);
+static inline int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
+static inline void mousebuttondown( const MS_root *, SDL_Event);
 
 void *
 GW_Init( MS_root *root){
@@ -102,6 +102,15 @@ GW_Init( MS_root *root){
 }
 
 void
+GW_Free( void *GW){
+  if( GW != NULL){
+    SDL_Quit();
+    
+    free( GW);
+  }
+}
+
+void
 event_dispatch( const MS_root *root){
   const MS_field *minefield = root -> minefield;
   GraphicWraper *GW         = ( GraphicWraper *)root -> GW;
@@ -164,8 +173,9 @@ event_dispatch( const MS_root *root){
 }
 
 
-void mousebuttondown( const MS_root * root,
-		      SDL_Event event){
+static inline void
+mousebuttondown( const MS_root * root,
+		 SDL_Event event){
   
   const MS_field *minefield = root -> minefield;
   GraphicWraper *GW         = ( GraphicWraper *)root -> GW;
@@ -287,16 +297,7 @@ drawelement( void *VGW, const MS_field *minefield, s16 w, s16 h){
   }
 }
 
-void
-GW_Free( void *GW){
-  if( GW != NULL){
-    SDL_Quit();
-    
-    free( GW);
-  }
-}
-
-SDL_Texture *
+static inline SDL_Texture *
 MS_OpenImage( SDL_Renderer *render, const char *str){
   SDL_Texture *tex = NULL;
   SDL_Surface *img = NULL;
@@ -309,14 +310,14 @@ MS_OpenImage( SDL_Renderer *render, const char *str){
   return tex;
 }
 
-int
+static inline int
 MS_BlitTex( SDL_Renderer *renderer, SDL_Texture *tex, int dx, int dy, int w, int h, int sx, int sy){
   dassert( renderer != NULL);
   dassert(      tex != NULL);
   return SDL_RenderCopyEx( renderer, tex, &( SDL_Rect){ .x = sx, .y = sy, .w = w, .h = h}, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
 }
 
-int
+static inline int
 MS_BlitTile( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, int h){
   dassert( renderer != NULL);
   dassert(     tile != NULL);
