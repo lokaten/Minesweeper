@@ -57,6 +57,27 @@ MF_CreateFieldFromRef( const MS_field *proto){
 
 
 void
+MF_FreeFieldPartial( const MS_field *minefield){
+  if( minefield != NULL){
+    MS_Free( minefield -> data);
+    MS_Free( minefield -> mine);
+    
+    CS_Free( minefield -> uncovque);
+  }
+}
+
+
+void
+MF_FreeField( MS_field *minefield){
+  MF_FreeFieldPartial( minefield);
+  
+  if( minefield != NULL){
+    MS_Free( minefield);
+  }
+}
+
+
+void
 setminefield( const MS_field  *minefield,
 	      void *GW,
 	      const MS_stream *mss,
@@ -113,17 +134,6 @@ setminefield( const MS_field  *minefield,
   MS_print( mss -> deb, "\rSeed: %08x   \n", minefield -> mine -> seed);
 }
 
-
-void
-MF_Free( MS_field *minefield){
-  if( minefield != NULL){
-    MS_Free( minefield -> data);
-    MS_Free( minefield -> mine);
-    
-    CS_Free( minefield -> uncovque);
-    MS_Free( minefield);
-  }
-}
 
 static inline void
 addelement( const MS_field *minefield, s16 x, s16 y){

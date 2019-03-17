@@ -24,8 +24,7 @@ quit( const MS_root *root){
   int ret = 0;
   MS_print( root -> mss -> out, "\rBye!                                \n");
   GW_Free( root -> GW);
-  MS_Free( root -> minefield -> data);
-  CS_Free( root -> minefield -> uncovque);
+  MF_FreeFieldPartial( root -> minefield);
   exit( ret);
 }
 
@@ -128,10 +127,10 @@ ROOT_Init( const int argc, const char **argv){
     MS_print( mss -> out, "\r\t\t\t\tlevel: %lu   \n", minefield -> level);
   }
   
-  if( minefield != field_beginner ) MF_Free( field_beginner );
-  if( minefield != field_advanced ) MF_Free( field_advanced );
-  if( minefield != field_expert   ) MF_Free( field_expert   );
-  if( minefield != field_benchmark) MF_Free( field_benchmark);
+  if( minefield != field_beginner ) MF_FreeField( field_beginner );
+  if( minefield != field_advanced ) MF_FreeField( field_advanced );
+  if( minefield != field_expert   ) MF_FreeField( field_expert   );
+  if( minefield != field_benchmark) MF_FreeField( field_benchmark);
   
   if( mss != very_quiet) MS_Free( very_quiet);
   if( mss != def_out   ) MS_Free( def_out   );
@@ -142,7 +141,7 @@ ROOT_Init( const int argc, const char **argv){
     setzero( minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3});
     uncov_elements( minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1});
     uncov( minefield, NULL);
-    MF_Free( minefield);
+    MF_FreeField( minefield);
     MS_Free( mss);
     quit( NULL);
   }else{
