@@ -123,7 +123,7 @@ typedef struct{
   */
 #ifdef LOCALE_
 
-static inline void *LOCALE_( MS_Create)( size_t, void *);
+static inline void *LOCALE_( MS_CreateFromRef)( size_t, const void *);
 INLINE int LOCALE_( MS_Free)( void *);
 static inline u32 LOCALE_( gen_divobj)( u32);
 static inline u32 LOCALE_( mol_)( u32, u32, u32);
@@ -139,15 +139,15 @@ INLINE __uint64_t LOCALE_( getmicrosec)( void);
 INLINE __uint64_t LOCALE_( getnanosec)( void);
 
 static inline void *
-LOCALE_( MS_Create)( size_t alo_size, void *vptr){
+LOCALE_( MS_CreateFromRef)( size_t alo_size, const void *vptr){
   void *ptr = ( void *)malloc( alo_size);
   dassert( alo_size);
   assert( ptr != NULL);
   memcpy( ptr, vptr, alo_size);
   return ptr;
 }
-#define MS_Create( type, ...) ( type *)LOCALE_( MS_Create)( sizeof( type), &( type){ __VA_ARGS__})
-#define MS_CreateEmpty( type) ( type *)LOCALE_( MS_Create)( sizeof( type), &( type){0})
+#define MS_Create( type, ...) ( type *)LOCALE_( MS_CreateFromRef)( sizeof( type), &( const type){ __VA_ARGS__})
+#define MS_CreateEmpty( type) ( type *)LOCALE_( MS_CreateFromRef)( sizeof( type), &( const type){0})
 
 
 INLINE int
