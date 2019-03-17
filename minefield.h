@@ -14,7 +14,7 @@ extern "C" {
     u8 mine:1;
     u8 cover:1;
     u8 flag:1;
-    u8 set:1;
+    u8 unset:1;
   }MS_element;
   
   
