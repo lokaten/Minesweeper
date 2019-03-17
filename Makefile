@@ -2,11 +2,13 @@
 ifeq ($(CLANG), yes)
 CC = clang -std=c99
 CXX = clang++ -std=c++11
+CFLAGS += -Weverything -Wno-error=disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
 endif
 
 ifeq ($(GCC), yes)
 CC = gcc -std=c99
 CXX = g++ -std=c++2a
+CFLAGS += -Wlogical-op -faggressive-loop-optimizations
 endif
 
 ifeq ($(CLANGPP), yes)
@@ -34,25 +36,9 @@ ifeq ($(NO_TERM), yes)
 CFLAGS += -DNO_TERM
 endif
 
-ifeq ($(GCC), yes)
-CFLAGS += -Wlogical-op -faggressive-loop-optimizations
-else
-ifeq ($(GPP), yes)
-else
-CFLAGS += -Weverything -Wno-error=disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
-endif
-endif
-
 ifeq ($(DEV), yes)
 CFLAGS += -Werror -DDEBUG -pg -ftrapv -fsanitize=address
 LIBS += -lasan
-ifeq ($(CLANG), yes)
-else
-ifeq ($(CLANGPP), yes)
-else
-CFLAGS += -fstack-usage
-endif
-endif
 endif
 
 ifeq ($(NATIVE), yes)
@@ -72,7 +58,7 @@ CFLAGS += -pedantic -Wold-style-definition -Wmissing-prototypes -Wstrict-prototy
 endif
 
 ifeq ($(CLANGPP), yes)
-CFLAGS += -Wno-old-style-cast -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary
+CFLAGS += -Wno-old-style-cast -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary -Wno-error=missing-field-initializers
 endif
 
 PFLAGS =
