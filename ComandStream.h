@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
-  
+
 #include "MS_util.h"
 
 typedef struct{
@@ -62,7 +62,7 @@ CS_CreateFromSize( const size_t size){
   Stream -> blk_push   = ptr;
   Stream -> blk_releas = ptr;
   Stream -> blk_finish = ptr;
-    
+  
   Stream -> fetch  = ptr;
   Stream -> push   = ptr;
   Stream -> releas = ptr;
@@ -112,7 +112,7 @@ CS_Push( ComandStream *Stream, const void *ptr){
   Stream -> push = Stream -> push + Stream -> size;
 }
 
-  
+
 /* 
  * return a pointer to the next element in the stream
  */
@@ -134,7 +134,7 @@ CS_Releas( ComandStream *Stream){
  end:
   return ret;
 }
-  
+
 
 static inline void
 CS_Finish( ComandStream *Stream, const void *ptr){
@@ -167,7 +167,7 @@ CS_Free( ComandStream *Stream){
     char *ptr = Stream -> blk_fetch;
     Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
     *( char **)( ptr + Stream -> blk_size) = NULL;
-   
+    
     while( Stream -> blk_fetch != NULL){
       ptr = Stream -> blk_fetch;
       Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
@@ -178,7 +178,7 @@ CS_Free( ComandStream *Stream){
   }
 }
 
-  
+
 #ifdef __cplusplus
 }
 #endif
