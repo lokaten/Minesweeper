@@ -27,7 +27,7 @@ MF_CreateFieldFromRef( const MS_field *proto){
   data = ( MS_element *)calloc( truewidth * trueheight, sizeof( MS_element));
   
   assert( data != NULL);
-    
+  
   minefield = MS_Create( MS_field,
 			 .data = data,
 			 .title = proto -> title,
@@ -80,6 +80,8 @@ setminefield( const MS_field  *minefield,
   
   u16 w = video.width;
   u16 h = video.height;
+  
+  assert( minefield != NULL);
   
   video.xdiff = ( int)( ( u32)( video.xdiff + ( int)video.width ) % video.width );
   video.ydiff = ( int)( ( u32)( video.ydiff + ( int)video.height) % video.height);
@@ -182,7 +184,7 @@ uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mi
     acse( minefield, postion.x, postion.y) -> count += setmine_element( acse( minefield, postion.x + 1, postion.y    ), mine) -> mine;
     acse( minefield, postion.x, postion.y) -> count += setmine_element( acse( minefield, postion.x - 1, postion.y    ), mine) -> mine;
   }
-
+  
   if( GW != NULL)
     drawelement( GW, &minefield, postion.x, postion.y);
   
@@ -192,14 +194,17 @@ uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mi
 
 static inline MS_element *
 setmine_element( MS_element *element, MS_mstr *mine){
+  assert( mine != NULL);
+  assert( element != NULL);
+  
   if( element -> unset){
-    element -> mine = ( ( ( __uint64_t)( ( *mine).noelements - ( *mine).set  ) * ( __uint64_t)( ( *mine).seed = MS_rand( ( *mine).seed))) <
-			( ( __uint64_t)( ( *mine).level      - ( *mine).mines) * ( __uint64_t)MS_RAND_MAX));
+    element -> mine = ( ( ( __uint64_t)( mine -> noelements - mine -> set  ) * ( __uint64_t)( mine -> seed = MS_rand( mine -> seed))) <
+			( ( __uint64_t)( mine -> level      - mine -> mines) * ( __uint64_t)MS_RAND_MAX));
     
     ++mine -> set;
     
     mine -> mines += element -> mine;
-
+    
     element -> unset = 0;
   }
   
@@ -210,9 +215,9 @@ setmine_element( MS_element *element, MS_mstr *mine){
 void
 uncov_elements( const MS_field *minefield,
 		MS_video  vid){
-  
   unsigned long i;
   int x, y;
+  assert( minefield != NULL);
   
   i = vid.width * vid.height;
   
@@ -228,16 +233,16 @@ uncov_elements( const MS_field *minefield,
 void
 setzero( const MS_field *minefield,
 	 MS_video  vid){
-  
   unsigned long i;
   int x, y;
+  assert( minefield != NULL);
   
   i = vid.width * vid.height;
   
   while( i--){
     x = ( s32)( i % vid.width) + vid.xdiff;
     y = ( s32)( i / vid.width) + vid.ydiff;
-
+    
     if( acse( *minefield, x, y) -> unset &&
         !acse( *minefield, x, y) -> flag){
       acse( *minefield, x, y) -> unset = 0;
