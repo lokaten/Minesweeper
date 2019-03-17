@@ -16,7 +16,6 @@
 
 
 MS_root *ROOT_Init( const int, const char **);
-void ROOT_Free( MS_root *);
 static inline void printtime( FILE *, u64);
 
 
@@ -24,6 +23,9 @@ void
 quit( const MS_root *root){
   int ret = 0;
   MS_print( root -> mss -> out, "\rBye!                                \n");
+  GW_Free( root -> GW);
+  MS_Free( root -> minefield -> data);
+  CS_Free( root -> minefield -> uncovque);
   exit( ret);
 }
 
@@ -126,10 +128,10 @@ ROOT_Init( const int argc, const char **argv){
     MS_print( mss -> out, "\r\t\t\t\tlevel: %lu   \n", minefield -> level);
   }
   
-  if( minefield != field_beginner ) MS_Free( field_beginner );
-  if( minefield != field_advanced ) MS_Free( field_advanced );
-  if( minefield != field_expert   ) MS_Free( field_expert   );
-  if( minefield != field_benchmark) MS_Free( field_benchmark);
+  if( minefield != field_beginner ) MF_Free( field_beginner );
+  if( minefield != field_advanced ) MF_Free( field_advanced );
+  if( minefield != field_expert   ) MF_Free( field_expert   );
+  if( minefield != field_benchmark) MF_Free( field_benchmark);
   
   if( mss != very_quiet) MS_Free( very_quiet);
   if( mss != def_out   ) MS_Free( def_out   );
@@ -159,15 +161,6 @@ ROOT_Init( const int argc, const char **argv){
   }
   
   return root;
-}
-
-
-void
-ROOT_Free( MS_root *root){
-  if( root != NULL){
-    GW_Free( root -> GW);
-    MS_Free( root);
-  }
 }
 
 
