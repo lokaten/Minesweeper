@@ -100,7 +100,7 @@ analyze:
 	clang-check -analyze *.c
 
 clean:
-	$(RM) *.o *.su *.gcda *~ $(TARGET)
+	$(RM) *.o *.su *.plist *.gcda *~ $(TARGET)
 
 strip:
 	$(STRIP) $(TARGET)
