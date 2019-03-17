@@ -20,18 +20,18 @@ extern "C" {
   
   
   typedef struct{
-    opttype optsw;
-    char *discript;
-    char *name;
-    char chr;
+    const opttype optsw;
+    const char *discript;
+    const char *name;
+    const char chr;
     void *data;
-    void *value;
+    const void *value;
   }MS_options;
   
 #define OPT_MAX 200
   
-  int procopt( MS_stream *, MS_options *, const int, const char **);
-  int help( FILE *, MS_options *);
+  int procopt( const MS_stream *, const MS_options *, const int, const char **);
+  int help( FILE *, const MS_options *);
   
   
 #ifdef __cplusplus

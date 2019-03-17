@@ -9,7 +9,7 @@
 #include "OPT.h"
 
 int
-procopt( MS_stream *mss, MS_options *opt, const int argc, const char **argv){
+procopt( const MS_stream *mss, const MS_options *opt, const int argc, const char **argv){
   int ret = 0;
   int i = 0;
   char *lr = NULL;
@@ -39,7 +39,7 @@ procopt( MS_stream *mss, MS_options *opt, const int argc, const char **argv){
               }
               break;
             case OPTSW_CPY:
-              *( void **)( opt[ j].data) = ( void *)( opt[ j].value);
+              *( const void **)( opt[ j].data) = ( const void *)( opt[ j].value);
               break;
             case OPTSW_RAW:
               /* *( void **)( opt[ j].data) = ( void *)argv[ i]; */
@@ -77,7 +77,7 @@ procopt( MS_stream *mss, MS_options *opt, const int argc, const char **argv){
                 }
                 break;
               case OPTSW_CPY:
-                *( void **)( opt[ j].data) = ( void *)( opt[ j].value);
+                *( const void **)( opt[ j].data) = ( const void *)( opt[ j].value);
                 break;
 	      default:
 		ret = -1;
@@ -102,7 +102,7 @@ procopt( MS_stream *mss, MS_options *opt, const int argc, const char **argv){
 
 
 int
-help( FILE *stream, MS_options *opt){
+help( FILE *stream, const MS_options *opt){
   int ret = 0;
 #ifdef NO_TERM
   ( void) stream;

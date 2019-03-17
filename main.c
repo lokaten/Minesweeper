@@ -51,8 +51,8 @@ ROOT_Init( const int argc, const char **argv){
   MS_stream *very_quiet = MS_Create( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
   MS_stream *def_out    = MS_Create( MS_stream, .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL);
   
-  unsigned long opt_true  = TRUE;
-  unsigned long opt_false = FALSE;
+  const unsigned long opt_true  = TRUE;
+  const unsigned long opt_false = FALSE;
   
   dassert( opt_true);
   dassert( !opt_false);
@@ -102,7 +102,7 @@ ROOT_Init( const int argc, const char **argv){
     if( mss -> hlp){
       help( mss -> hlp, opt);
       
-      quit( NULL);
+      quit( &( const MS_root){ .mss = mss});
     }
 #endif
   }
@@ -165,7 +165,6 @@ ROOT_Init( const int argc, const char **argv){
 void
 ROOT_Free( MS_root *root){
   if( root != NULL){
-    MF_Free( root -> minefield);
     GW_Free( root -> GW);
     MS_Free( root);
   }
