@@ -136,19 +136,19 @@ event_dispatch( const MS_root *root){
 #ifdef DEBUG
 	case SDLK_LEFT:
 	case 'h':
-	  GW -> real.realxdiff = ( GW -> real.realxdiff - GW -> real.element_width + GW -> mfvid.realwidth) % GW -> mfvid.realwidth;
+	  GW -> real.realxdiff = (s32)( (u32)( GW -> real.realxdiff - (s32)( GW -> real.element_width + GW -> mfvid.realwidth)) % GW -> mfvid.realwidth);
 	  break;
 	case SDLK_DOWN:
 	case 'j':
-	  GW -> real.realydiff = ( GW -> real.realydiff + GW -> real.element_height + GW -> mfvid.realheight) % GW -> mfvid.realheight;
+	  GW -> real.realydiff = (s32)( (u32)( GW -> real.realydiff + (s32)( GW -> real.element_height + GW -> mfvid.realheight)) % GW -> mfvid.realheight);
 	  break;
 	case SDLK_UP:
 	case 'k':
-	  GW -> real.realydiff = ( GW -> real.realydiff - GW -> real.element_height + GW -> mfvid.realheight) % GW -> mfvid.realheight;
+	  GW -> real.realydiff = (s32)( (u32)( GW -> real.realydiff - (s32)( GW -> real.element_height + GW -> mfvid.realheight)) % GW -> mfvid.realheight);
 	  break;
 	case SDLK_RIGHT:
 	case 'l':
-	  GW -> real.realxdiff = ( GW -> real.realxdiff + GW -> real.element_width + GW -> mfvid.realwidth) % GW -> mfvid.realwidth;
+	  GW -> real.realxdiff = (s32)( (u32)( GW -> real.realxdiff + (s32)( GW -> real.element_width + GW -> mfvid.realwidth)) % GW -> mfvid.realwidth);
 	  break;
 #endif
 	default:
@@ -174,8 +174,8 @@ void mousebuttondown( const MS_root * root,
   
   MS_pos postion;
   
-  postion.x = (s16)( ( ( event.button.x - GW -> real.realxdiff) / (int)GW -> real.element_width ) + minefield -> subwidth ) % minefield -> subwidth;
-  postion.y = (s16)( ( ( event.button.y - GW -> real.realydiff) / (int)GW -> real.element_height) + minefield -> subheight) % minefield -> subheight;
+  postion.x = ( s16)( ( ( u16)( ( event.button.x - GW -> real.realxdiff) / (int)GW -> real.element_width ) + minefield -> subwidth ) % minefield -> subwidth );
+  postion.y = ( s16)( ( ( u16)( ( event.button.y - GW -> real.realydiff) / (int)GW -> real.element_height) + minefield -> subheight) % minefield -> subheight);
   
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
