@@ -30,7 +30,7 @@ extern "C" {
     u32 mines;
     u32 level;
     u32 flaged;
-    u32 noelements;
+    const u32 noelements;
     u32 hit;
     u32 seed;
   }MS_mstr;
@@ -49,7 +49,7 @@ extern "C" {
     const u32 subheight;
     const u32 level;
     const u32 global;
-    u32 reseed;
+    const u32 reseed;
   }MS_field;
   
   

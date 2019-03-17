@@ -16,9 +16,32 @@ static inline void addelement( const MS_field *, s16, s16);
 MS_field *
 MF_CreateFieldFromRef( const MS_field *proto){
   MS_field *minefield;
+  MS_mstr *mine;
+  ComandStream *uncovque;
+  MS_element *data;
+  
+  mine = MS_Create( MS_mstr, .noelements = proto -> width * proto -> height);
+  
+  uncovque = CS_Create( MS_pos);
+  
+  data = ( MS_element *)malloc( sizeof( MS_element) * ( proto -> width + !proto -> global) * ( proto -> height + !proto -> global));
+  
+  assert( data != NULL);
+  
+  if( !proto -> global){
+    int i = (int)( proto -> width * proto -> height);
+    
+    while( i--){
+      ( data + i) -> set  = 1;
+      ( data + i) -> mine = 0;
+    }
+  }
   
   minefield = MS_Create( MS_field,
+			 .data = data,
 			 .title = proto -> title,
+			 .uncovque = uncovque,
+			 .mine = mine,
 			 .width = proto -> width + !proto -> global,
 			 .width_divobj = gen_divobj( proto -> width + !proto -> global),
 			 .height = proto -> height + !proto -> global,
@@ -28,24 +51,6 @@ MF_CreateFieldFromRef( const MS_field *proto){
 			 .level = proto -> level,
 			 .global = proto -> global,
 			 .reseed = proto -> reseed);
-  
-  minefield -> mine = MS_CreateEmpty( MS_mstr);
-  minefield -> uncovque = CS_Create( MS_pos);
-  
-  minefield -> mine -> noelements = minefield -> subwidth * minefield -> subheight;
-  
-  minefield -> data = ( MS_element *)malloc( sizeof( MS_element) * minefield -> width * minefield -> height);
-  
-  assert( minefield -> data != NULL);
-  
-  if( !minefield -> global){
-    int i = (int)( minefield -> width * minefield -> height);
-    
-    while( i--){
-      ( minefield -> data + i) -> set  = 1;
-      ( minefield -> data + i) -> mine = 0;
-    }
-  }
   
   return minefield;
 }
