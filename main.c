@@ -6,8 +6,6 @@
 
 #include <limits.h>
 
-#define LOCALE_( name) MAIN_##name
-
 #include "MS_util.h"
 #include "ComandStream.h"
 #include "userinterface.h"

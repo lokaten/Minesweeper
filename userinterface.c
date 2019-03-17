@@ -2,8 +2,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#define LOCALE_( name) GW_##name
-
 #include "MS_util.h"
 #include "minefield.h"
 #include "userinterface.h"

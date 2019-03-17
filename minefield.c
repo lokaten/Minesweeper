@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LOCALE_( name) MF_##name
-
 #include "MS_util.h"
 #include "ComandStream.h"
 #include "minefield.h"
@@ -19,17 +17,19 @@ MF_CreateFieldFromRef( const MS_field *proto){
   MS_mstr *mine;
   ComandStream *uncovque;
   MS_element *data;
+  u32 truewidth  = proto -> width  + !proto -> global;
+  u32 trueheight = proto -> height + !proto -> global;
   
   mine = MS_Create( MS_mstr, .noelements = proto -> width * proto -> height);
   
   uncovque = CS_Create( MS_pos);
   
-  data = ( MS_element *)malloc( sizeof( MS_element) * ( proto -> width + !proto -> global) * ( proto -> height + !proto -> global));
+  data = ( MS_element *)malloc( sizeof( MS_element) * truewidth * trueheight);
   
   assert( data != NULL);
   
   if( !proto -> global){
-    int i = (int)( ( proto -> width + !proto -> global) * ( proto -> height + !proto -> global));
+    int i = (int)( truewidth * trueheight);
     
     while( i--){
       ( data + i) -> set  = 1;
@@ -42,10 +42,10 @@ MF_CreateFieldFromRef( const MS_field *proto){
 			 .title = proto -> title,
 			 .uncovque = uncovque,
 			 .mine = mine,
-			 .width = proto -> width + !proto -> global,
-			 .width_divobj = gen_divobj( proto -> width + !proto -> global),
-			 .height = proto -> height + !proto -> global,
-			 .height_divobj  = gen_divobj( proto -> height + !proto -> global),
+			 .width = truewidth,
+			 .width_divobj = gen_divobj( truewidth),
+			 .height = trueheight,
+			 .height_divobj  = gen_divobj( trueheight),
 			 .subwidth  = proto -> width,
 			 .subheight = proto -> height,
 			 .level = proto -> level,

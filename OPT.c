@@ -3,8 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define LOCALE_( name) OPT_##name
-
 #include "MS_util.h"
 #include "OPT.h"
 

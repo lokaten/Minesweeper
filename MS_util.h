@@ -117,76 +117,65 @@ typedef struct{
 }MS_stream;
 
 #define MS_RAND_MAX   U32C( 0xffffffff)
-  /*
-#undef LOCALE_
-#define LOCALE_( name) __FILE__##name
-  */
-#ifdef LOCALE_
 
-static inline void *LOCALE_( MS_CreateFromRef)( size_t, const void *);
-INLINE int LOCALE_( MS_Free)( void *);
-static inline u32 LOCALE_( gen_divobj)( u32);
-static inline u32 LOCALE_( mol_)( u32, u32, u32);
-static inline u32 LOCALE_( div_)( u32, u32, u32);
+static inline void *MS_CreateFromRef( const size_t, const void *);
+static inline int MS_Free( void *);
+static inline u32 gen_divobj( u32);
+static inline u32 mol_( u32, u32, u32);
+static inline u32 div_( u32, u32, u32);
 /* protype of named parmenter function daclaration, migth be useful in other cases*/
-typedef struct{ u32 seed;}MS_rand_args;
-static inline u32 LOCALE_( MS_rand)( MS_rand_args);
-#define MS_rand( exp) LOCALE_( MS_rand)( ( MS_rand_args){ exp})
+static inline u32 MS_rand( u32);
 
-static inline u32 LOCALE_( rand_seed)( void);
-INLINE int LOCALE_( print)( FILE *, const char *, ...);
-INLINE __uint64_t LOCALE_( getmicrosec)( void);
-INLINE __uint64_t LOCALE_( getnanosec)( void);
+static inline u32 MS_rand_seed( void);
+static inline int MS_print( FILE *, const char *, ...);
+static inline __uint64_t getmicrosec( void);
+static inline __uint64_t getnanosec( void);
 
 static inline void *
-LOCALE_( MS_CreateFromRef)( size_t alo_size, const void *vptr){
+MS_CreateFromRef( const size_t alo_size, const void *vptr){
   void *ptr = ( void *)malloc( alo_size);
-  dassert( alo_size);
+  assert( alo_size);
   assert( ptr != NULL);
   memcpy( ptr, vptr, alo_size);
   return ptr;
 }
-#define MS_Create( type, ...) ( type *)LOCALE_( MS_CreateFromRef)( sizeof( type), &( const type){ __VA_ARGS__})
-#define MS_CreateEmpty( type) ( type *)LOCALE_( MS_CreateFromRef)( sizeof( type), &( const type){0})
+#define MS_Create( type, ...) ( type *)MS_CreateFromRef( sizeof( type), &( const type){ __VA_ARGS__})
+#define MS_CreateEmpty( type) ( type *)MS_CreateFromRef( sizeof( type), &( const type){0})
 
 
-INLINE int
-LOCALE_( MS_Free)( void *ptr){
+static inline  int
+MS_Free( void *ptr){
   if( ptr != NULL) free( ptr);
   return 0;
 }
-#define MS_Free LOCALE_( MS_Free)
 
 /* divsion is slow, make sure we don't do it more then we have to*/
 
 /* genrate a divobj from the divaider */
 static inline u32
-LOCALE_( gen_divobj)( u32 a){
+gen_divobj( u32 a){
   return (u32)( ( U64C( 0xffffffff) + (u64)a) / (u64)a);
 }
-#define gen_divobj LOCALE_( gen_divobj)
 
 /* divobj = gen_divobj( a)
  * ( b % a) => 
  */
 static inline u32
-LOCALE_( mol_)( u32 b, u32 a, u32 divobj){
+mol_( u32 b, u32 a, u32 divobj){
   u32 ret = ( (u64)( ( b * divobj) & U32C( 0xffffffff)) * (u64)a) >> 32;
-  dassert( LOCALE_( div_)( b, a, divobj) * a + ret == b);
+  dassert( div_( b, a, divobj) * a + ret == b);
   return ret;
 }
-#define mol_ LOCALE_( mol_)
 
 /* divobj = gen_divobj( a)
  * ( b / a) =>
  */
 static inline u32
-LOCALE_( div_)( u32 b, u32 a, u32 divobj){
+div_( u32 b, u32 a, u32 divobj){
   u32 ret = ( (u64)b * (u64)divobj) >> 32;
   dassert( ret * a <= b && ret * a + a > b);
   return ret;
 }
-#define div_ LOCALE_( div_)
 
 /*
  * return a "random" number...
@@ -208,8 +197,8 @@ LOCALE_( div_)( u32 b, u32 a, u32 divobj){
  * it's farliy easy to caluculate the "secret" numbers.
  */
 static inline u32
-LOCALE_( MS_rand)( MS_rand_args args){
-  return ( ( ( args.seed + U32C( 2654435405)) & U32C( 0xffffffff)) * U32C( 2654435909)) & U32C( 0xffffffff);
+MS_rand( u32 seed){
+  return ( ( ( seed + U32C( 2654435405)) & U32C( 0xffffffff)) * U32C( 2654435909)) & U32C( 0xffffffff);
 }
 
 
@@ -217,7 +206,7 @@ LOCALE_( MS_rand)( MS_rand_args args){
  * return a seed, for use with MS_rand( __uint32_t seed)
  */
 static inline u32
-LOCALE_( rand_seed)( void){
+MS_rand_seed( void){
   u32 seed;
   
 #ifdef CLOCK_REALTIME
@@ -235,12 +224,12 @@ LOCALE_( rand_seed)( void){
   
   return seed;
 }
-#define MS_rand_seed LOCALE_( rand_seed)
+
 
 _Pragma("GCC diagnostic ignored \"-Wformat-nonliteral\"")
 
-INLINE int
-LOCALE_( print)( FILE *stream, const char * format, ...){
+static inline int
+MS_print( FILE *stream, const char * format, ...){
   int ret = 0;
 #ifdef NO_TERM
   ( void) stream;
@@ -256,9 +245,8 @@ LOCALE_( print)( FILE *stream, const char * format, ...){
 #endif
   return ret;
 }
-#define MS_print LOCALE_( print)
 #ifdef DEBUG
-#define DEBUG_PRINT LOCALE_( print)
+#define DEBUG_PRINT MS_print
 #else
 #define DEBUG_PRINT( ...) (void)0
 #endif
@@ -266,8 +254,8 @@ LOCALE_( print)( FILE *stream, const char * format, ...){
 /*
  * get system time in microsecond...
  */
-INLINE __uint64_t
-LOCALE_( getmicrosec)( void){
+static inline  __uint64_t
+getmicrosec( void){
 #ifdef CLOCK_REALTIME
   struct timespec tv;
 
@@ -278,14 +266,13 @@ LOCALE_( getmicrosec)( void){
   return ( __uint64_t)time( NULL) * 1000000;
 #endif
 }
-#define getmicrosec LOCALE_( getmicrosec)
 
-  
+
 /*
  * get the amount of nanoseconds from a point in the past
  */
-INLINE __uint64_t
-LOCALE_( getnanosec)( void){
+static inline  __uint64_t
+getnanosec( void){
 #ifdef CLOCK_MONOTONIC
   struct timespec tv;
   
@@ -296,9 +283,7 @@ LOCALE_( getnanosec)( void){
   return ( __uint64_t)time( NULL) * 1000000000;
 #endif
 }
-#define getnanosec LOCALE_( getnanosec)
 
-#endif
   
 #ifdef __cplusplus
 }

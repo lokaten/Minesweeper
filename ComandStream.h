@@ -25,12 +25,12 @@ typedef struct{
 }ComandStream;
 
 
-static inline ComandStream *LOCALE_( CS_Create)( const size_t);
-static inline void *LOCALE_( CS_Fetch)( ComandStream *);
-static inline void LOCALE_( CS_Push)( ComandStream *, const void *);
-static inline void *LOCALE_( CS_Releas)( ComandStream *);
-static inline void LOCALE_( CS_Finish)( ComandStream *, const void *);
-static inline void LOCALE_( CS_Free)( ComandStream *);
+static inline ComandStream *CS_CreateFromSize( const size_t);
+static inline void *CS_Fetch( ComandStream *);
+static inline void CS_Push( ComandStream *, const void *);
+static inline void *CS_Releas( ComandStream *);
+static inline void CS_Finish( ComandStream *, const void *);
+static inline void CS_Free( ComandStream *);
 
 _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
 _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
@@ -38,7 +38,7 @@ _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 #define NC 1024
 
 static inline ComandStream *
-LOCALE_( CS_Create)( const size_t size){
+CS_CreateFromSize( const size_t size){
   ComandStream *Stream;
   char *ptr;
   
@@ -70,11 +70,11 @@ LOCALE_( CS_Create)( const size_t size){
   
   return Stream;
 }
-#define CS_Create( type) LOCALE_( CS_Create)( sizeof( type))
+#define CS_Create( type) CS_CreateFromSize( sizeof( MS_pos))
 
 
 static inline void *
-LOCALE_( CS_Fetch)( ComandStream *Stream){
+CS_Fetch( ComandStream *Stream){
   void *ret = NULL;
   assert( Stream != NULL);
   
@@ -96,11 +96,10 @@ LOCALE_( CS_Fetch)( ComandStream *Stream){
   
   return ret;
 }
-#define CS_Fetch LOCALE_( CS_Fetch)
 
 
 static inline void
-LOCALE_( CS_Push)( ComandStream *Stream, const void *ptr){
+CS_Push( ComandStream *Stream, const void *ptr){
   assert( Stream != NULL);
   
   if unlikely( Stream -> push == Stream -> blk_push + Stream -> blk_size){
@@ -112,14 +111,13 @@ LOCALE_( CS_Push)( ComandStream *Stream, const void *ptr){
   
   Stream -> push = Stream -> push + Stream -> size;
 }
-#define CS_Push LOCALE_( CS_Push)
 
   
 /* 
  * return a pointer to the next element in the stream
  */
 static inline void *
-LOCALE_( CS_Releas)( ComandStream *Stream){
+CS_Releas( ComandStream *Stream){
   void *ret = NULL;
   assert( Stream != NULL);
   
@@ -136,11 +134,10 @@ LOCALE_( CS_Releas)( ComandStream *Stream){
  end:
   return ret;
 }
-#define CS_Releas LOCALE_( CS_Releas)
   
 
 static inline void
-LOCALE_( CS_Finish)( ComandStream *Stream, const void *ptr){
+CS_Finish( ComandStream *Stream, const void *ptr){
   assert( Stream != NULL);
   
   if unlikely( Stream -> finish == Stream -> blk_finish + Stream -> blk_size){
@@ -159,14 +156,13 @@ LOCALE_( CS_Finish)( ComandStream *Stream, const void *ptr){
   
   Stream -> finish = Stream -> finish + Stream -> size;
 }
-#define CS_Finish LOCALE_( CS_Finish)
 
-  
+
 /*
  * free all block...
  */
 static inline void
-LOCALE_( CS_Free)( ComandStream *Stream){
+CS_Free( ComandStream *Stream){
   if likely( Stream != NULL){
     char *ptr = Stream -> blk_fetch;
     Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
@@ -181,7 +177,7 @@ LOCALE_( CS_Free)( ComandStream *Stream){
     free( Stream);
   }
 }
-#define CS_Free LOCALE_( CS_Free)
+
   
 #ifdef __cplusplus
 }

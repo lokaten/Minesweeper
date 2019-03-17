@@ -52,19 +52,13 @@ extern "C" {
     const u32 reseed;
   }MS_field;
   
-  
-#ifdef LOCALE_
-  static inline MS_element *LOCALE_( acse)( const MS_field, int, int);
+  static inline MS_element *acse( const MS_field, int, int);
   
   static inline MS_element *
-  LOCALE_( acse)( const MS_field field, int x, int y){
+  acse( const MS_field field, int x, int y){
     return field.data + ( mol_( (u32)( x + (int)field.width ), field.width , field.width_divobj ) +
 			  mol_( (u32)( y + (int)field.height), field.height, field.height_divobj) * field.width);
   }
-  
-#define acse LOCALE_( acse)
-  
-#endif
   
   void setzero( const MS_field *, MS_video);
   MS_field *MF_CreateFieldFromRef( const MS_field *);
