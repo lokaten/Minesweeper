@@ -14,7 +14,7 @@ static inline void addelement( const MS_field *, s16, s16);
 
 
 MS_field *
-MF_CreateFieldFromRef( MS_field *proto){
+MF_CreateFieldFromRef( const MS_field *proto){
   MS_field *minefield;
   
   minefield = MS_Create( MS_field,
@@ -110,12 +110,13 @@ setminefield( const MS_field  *minefield,
 
 
 void
-MF_Free( const MS_field *minefield){
+MF_Free( MS_field *minefield){
   if( minefield != NULL){
     MS_Free( minefield -> data);
     MS_Free( minefield -> mine);
     
     CS_Free( minefield -> uncovque);
+    MS_Free( minefield);
   }
 }
 
