@@ -130,7 +130,7 @@ event_dispatch( const MS_root *root){
 	case SDLK_F2:
 	case 'r':
 	  if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
-	    setminefield( minefield, GW, root -> mss, GW -> mfvid);
+	    setminefield( minefield, GW);
 	  }
 	  break;
 	case SDLK_F3:

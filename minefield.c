@@ -20,7 +20,9 @@ MF_CreateFieldFromRef( const MS_field *proto){
   u32 truewidth  = proto -> width  + !proto -> global;
   u32 trueheight = proto -> height + !proto -> global;
   
-  mine = MS_Create( MS_mstr, .noelements = proto -> width * proto -> height);
+  mine = MS_Create( MS_mstr,
+		    .level = proto -> level,
+		    .noelements = proto -> width * proto -> height);
   
   uncovque = CS_Create( MS_pos);
   
@@ -70,45 +72,23 @@ MF_FreeField( MS_field *minefield){
 
 void
 setminefield( const MS_field  *minefield,
-	      void *GW,
-	      const MS_stream *mss,
-	      MS_video   video){
-  
+	      void *GW){
   u32 i;
   
-  MS_pos element;
-  
-  u16 w = video.width;
-  u16 h = video.height;
-  
-  (void)mss;
-  
-  assert( minefield != NULL);
-  
-  video.xdiff = ( int)( ( u32)( video.xdiff + ( int)video.width ) % video.width );
-  video.ydiff = ( int)( ( u32)( video.ydiff + ( int)video.height) % video.height);
-  
-  i = w * h;
+  i = minefield -> width * minefield -> subheight;
   
   while( i--){
-    
-    {
-      element.x = (s16)( (u16)video.xdiff + i % w);
-      element.y = (s16)( (u16)video.ydiff + i / w);
-    }
-    
-    if( acse( *minefield, element.x, element.y) -> count != 15 ||
-	acse( *minefield, element.x, element.y) -> flag  == 1){
-      
-      *acse( *minefield, element.x, element.y) = (MS_element){ .count = 15, .cover = 1, .unset = 1};
-      
-      if( GW != NULL)
-	drawelement( GW, minefield, element.x, element.y);
+    if( mol_( i, minefield -> width, minefield -> width_divobj) < minefield -> subwidth){
+      if( ( minefield -> data + i) -> count != 15 ||
+	  ( minefield -> data + i) -> flag  == 1){
+	
+	*( minefield -> data + i) = (MS_element){ .count = 15, .cover = 1, .unset = 1};
+	
+	if( GW != NULL)
+	  drawelement( GW, minefield, mol_(i, minefield -> width, minefield -> width_divobj), div_( i, minefield -> width, minefield -> width_divobj));
+      }
     }
   }
-  
-  
-  minefield -> mine -> level = minefield -> level;
   
   minefield -> mine -> flaged = 0;
   

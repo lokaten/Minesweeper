@@ -134,8 +134,7 @@ ROOT_Init( const int argc, const char **argv){
   if( mss != def_out   ) MS_Free( def_out   );
   
   if( strstr( minefield -> title, "benchmark")){
-    setminefield( minefield, NULL, mss,
-		  ( MS_video){ .width = minefield -> subwidth, .height = minefield -> subheight});
+    setminefield( minefield, NULL);
     setzero( minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3});
     uncov_elements( minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1});
     uncov( minefield, NULL);
@@ -153,8 +152,7 @@ ROOT_Init( const int argc, const char **argv){
     
     draw( root -> GW, *root -> minefield);
     
-    setminefield( root -> minefield, root -> GW, root -> mss,
-		  ( MS_video){ .width = root -> minefield -> subwidth, .height = root -> minefield -> subheight});
+    setminefield( root -> minefield, root -> GW);
   }
   
   return root;
