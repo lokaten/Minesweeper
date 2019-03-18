@@ -32,6 +32,13 @@ draw( void *context_void, MS_field field){
   (void)field;
 }
 
+void
+drawelement( void *context_void, const MS_field *field, s16 w, s16 h){
+  assert( context_void != NULL);
+  assert( field != NULL);
+  (void)w;
+  (void)h;
+}
 
 void
 GW_Free( void *gw){
