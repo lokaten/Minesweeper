@@ -20,9 +20,9 @@ static inline void printtime( FILE *, u64);
 void
 quit( const MS_root *root){
   int ret = 0;
-  MS_print( root -> mss -> out, "\rBye!                                \n");
   GW_Free( root -> GW);
   MF_FreeFieldPartial( root -> minefield);
+  MS_print( root -> mss -> out, TERM("\rBye!                                \n"));
   exit( ret);
 }
 
@@ -95,7 +95,7 @@ ROOT_Init( const int argc, const char **argv){
     real = (MS_video){ .element_width = 15, .element_height = 15};
     
     if( procopt( mss, opt, argc, argv)){
-      MS_print( mss -> err, "\rWRong or broken input, pleas refer to --help\n");
+      MS_print( mss -> err, TERM("\rWRong or broken input, pleas refer to --help\n"));
     }
 #ifndef NO_TERM
     if( mss -> hlp){
@@ -109,7 +109,7 @@ ROOT_Init( const int argc, const char **argv){
   if( custom){
     if( custom_level >= ( custom_width * custom_height)){
       custom_level = ( custom_width * custom_height + 1) / 3;
-      MS_print( mss -> err, "\rMore mines then elments!\n");
+      MS_print( mss -> err, TERM("\rMore mines then elments!\n"));
     }
     
     minefield  = MF_CreateField( .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
@@ -189,46 +189,37 @@ main( const int argc, const char** argv){
 	uncov( root -> minefield, root -> GW);
       }
       
-      if( gameover && !root -> minefield -> mine -> set){
-	gameover = FALSE;
-      }
-      
       dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
       dassert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
       
-      draw( root -> GW, *root -> minefield);
-    }
-    
-    {
-#ifndef NO_TERM
-      const MS_stream *mss       = root -> mss;
-      const MS_field  *minefield = root -> minefield;
-      
-#ifdef DEBUG
-      if( mss -> deb != NULL){
-	__uint64_t mytime = getnanosec() - tutime;
-	
-	DEBUG_PRINT( mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
-      }
-#endif
-      
       if( !gameover){
-	if unlikely( minefield -> mine -> hit){
-	  printtime( mss -> out, ( tutime - gamestart) / 1000000);
-	  MS_print( mss -> out, "\r\t\t\t Mine!!               \n");
-	  gameover = TRUE;
-	}else if unlikely( ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level))){
-	  printtime( mss -> out, ( tutime - gamestart) / 1000000);
-	  MS_print( mss -> out, "\r\t\t\t Win!!         \n");
-	  gameover = TRUE;
-	}
+	if unlikely( root -> minefield -> mine -> hit){
+	    printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
+	    MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!               \n"));
+	    gameover = TRUE;
+	  }else if unlikely( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
+	    printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
+	    MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
+	    gameover = TRUE;
+	  }
 	
 	if( !gameover){
-	  MS_print( mss -> out, "\r\t\t\t %lu of %lu      ", minefield -> mine -> flaged, minefield -> mine -> level);
+	  MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
 	}
+      }else if( !root -> minefield -> mine -> set){
+	gameover = FALSE;
       }
       
-      printtime( mss -> out, ( tutime - gamestart) / 1000000);
+      printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
+      
+      draw( root -> GW, *root -> minefield);
+      
+#ifdef DEBUG
+      if( root -> mss -> deb != NULL){
+	__uint64_t mytime = getnanosec() - tutime;
+	
+	DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
+      }
 #endif
     }
   }

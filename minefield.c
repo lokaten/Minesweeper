@@ -81,6 +81,8 @@ setminefield( const MS_field  *minefield,
   u16 w = video.width;
   u16 h = video.height;
   
+  (void)mss;
+  
   assert( minefield != NULL);
   
   video.xdiff = ( int)( ( u32)( video.xdiff + ( int)video.width ) % video.width );
@@ -123,8 +125,6 @@ setminefield( const MS_field  *minefield,
   if( minefield -> reseed){
     minefield -> mine -> seed = minefield -> reseed;
   }
-  
-  MS_print( mss -> deb, "\rSeed: %08x   \n", minefield -> mine -> seed);
 }
 
 
