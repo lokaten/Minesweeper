@@ -52,7 +52,7 @@ CS_CreateFromSize( const size_t size){
 		      .blk_size = blk_size,
 		      .size = size);
   
-  ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
+  ptr = ( char *)calloc( 1, Stream -> blk_size + sizeof( char *));
   
   assert( ptr != NULL);
   

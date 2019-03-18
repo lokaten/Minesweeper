@@ -31,21 +31,10 @@ extern "C" {
 #define expect(   x, y)  ( x)
 #endif
 
-#ifdef __STDC_VERSION__
-#if __STDC_VERSION__ >= 199901
-#define INLINE static inline
-#endif
-#endif
-
 #ifdef DEBUG
 #define dassert( exp) assert( exp)
 #else
 #define dassert( exp) (void)( exp)
-#endif
-
-#ifdef INLINE 
-#else
-#define INLINE 
 #endif
 
 #ifdef NO_TERM
@@ -198,7 +187,7 @@ div_( u32 b, u32 a, u32 divobj){
  */
 static inline u32
 MS_rand( u32 seed){
-  return ( ( ( seed + U32C( 2654435405)) & U32C( 0xffffffff)) * U32C( 2654435909)) & U32C( 0xffffffff);
+  return ( u32)( ( (u64)seed + U64C( 2654435405)) * U64C( 2654435909)) & U32C( 0xffffffff);
 }
 
 
@@ -218,9 +207,6 @@ MS_rand_seed( void){
 #else
   seed = ( u32)time( NULL);
 #endif
-  
-  while( seed == MS_rand( seed))
-    seed += 42;
   
   return seed;
 }
