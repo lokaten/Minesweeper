@@ -187,7 +187,7 @@ div_( u32 b, u32 a, u32 divobj){
  */
 static inline u32
 MS_rand( u32 seed){
-  return ( u32)( ( (u64)seed + U64C( 2654435405)) * U64C( 2654435909)) & U32C( 0xffffffff);
+  return ( u32)( (u32)seed * U32C( 2654435909) + U32C( 1926438593)) & U32C( 0xffffffff);
 }
 
 
