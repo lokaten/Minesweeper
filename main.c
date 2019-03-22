@@ -7,7 +7,6 @@
 #include <limits.h>
 
 #include "MS_util.h"
-#include "ComandStream.h"
 #include "userinterface.h"
 #include "minefield.h"
 #include "OPT.h"
@@ -192,23 +191,19 @@ main( const int argc, const char** argv){
       
       if( !gameover){
 	if unlikely( root -> minefield -> mine -> hit){
-	    printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
-	    MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!               \n"));
-	    gameover = TRUE;
-	  }else if unlikely( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
-	    printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
-	    MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
-	    gameover = TRUE;
-	  }
-	
-	if( !gameover){
+	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!               "));
+	  gameover = TRUE;
+	}else if unlikely( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
+	  printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
+	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
+	  gameover = TRUE;
+	}else{
+	  printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
 	  MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
 	}
       }else if( !root -> minefield -> mine -> set){
 	gameover = FALSE;
       }
-      
-      printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
       
       draw( root -> GW, *root -> minefield);
       
