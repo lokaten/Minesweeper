@@ -115,10 +115,10 @@ ROOT_Init( const int argc, const char **argv){
     
     minefield  = MF_CreateField( .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
   }else{
-    minefield = MF_CreateFieldFromRef( minefield);
+    minefield = MF_CreateFieldFromLocal( minefield);
   }
   
-  mss = MS_CreateFromRef( sizeof( MS_stream), mss);
+  mss = MS_CreateFromLocal( MS_stream, mss);
   
   assert( minefield -> title != NULL);
   

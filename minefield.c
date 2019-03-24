@@ -12,8 +12,7 @@ static inline void addelement( const MS_field *, s16, s16);
 
 
 MS_field *
-MF_CreateFieldFromRef( const MS_field *proto){
-  MS_field *minefield;
+MF_CreateFieldFromLocal( const MS_field *proto){
   MS_mstr *mine;
   ComandStream *uncovque;
   MS_element *data;
@@ -30,22 +29,20 @@ MF_CreateFieldFromRef( const MS_field *proto){
   
   assert( data != NULL);
   
-  minefield = MS_Create( MS_field,
-			 .data = data,
-			 .title = proto -> title,
-			 .uncovque = uncovque,
-			 .mine = mine,
-			 .width = truewidth,
-			 .width_divobj = gen_divobj( truewidth),
-			 .height = trueheight,
-			 .height_divobj  = gen_divobj( trueheight),
-			 .subwidth  = proto -> width,
-			 .subheight = proto -> height,
-			 .level = proto -> level,
-			 .global = proto -> global,
-			 .reseed = proto -> reseed);
-  
-  return minefield;
+  return MS_Create( MS_field,
+		    .data = data,
+		    .title = proto -> title,
+		    .uncovque = uncovque,
+		    .mine = mine,
+		    .width = truewidth,
+		    .width_divobj = gen_divobj( truewidth),
+		    .height = trueheight,
+		    .height_divobj  = gen_divobj( trueheight),
+		    .subwidth  = proto -> width,
+		    .subheight = proto -> height,
+		    .level = proto -> level,
+		    .global = proto -> global,
+		    .reseed = proto -> reseed);
 }
 
 

@@ -105,9 +105,9 @@ typedef struct{
   FILE *hlp;
 }MS_stream;
 
-#define MS_RAND_MAX   U32C( 0xffffffff)
+#define MS_RAND_MAX U32C( 0xffffffff)
 
-static inline void *MS_CreateFromRef( const size_t, const void *);
+static inline void *MS_CreateFromSizeAndLocal( const size_t, const void *);
 static inline int MS_Free( void *);
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
@@ -121,15 +121,16 @@ static inline __uint64_t getmicrosec( void);
 static inline __uint64_t getnanosec( void);
 
 static inline void *
-MS_CreateFromRef( const size_t alo_size, const void *vptr){
+MS_CreateFromSizeAndLocal( const size_t alo_size, const void *vptr){
   void *ptr = ( void *)malloc( alo_size);
   assert( alo_size);
   assert( ptr != NULL);
   memcpy( ptr, vptr, alo_size);
   return ptr;
 }
-#define MS_Create( type, ...) ( type *)MS_CreateFromRef( sizeof( type), &( const type){ __VA_ARGS__})
-#define MS_CreateEmpty( type) ( type *)MS_CreateFromRef( sizeof( type), &( const type){0})
+#define MS_Create( type, ...) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), &( const type){ __VA_ARGS__})
+#define MS_CreateFromLocal( type, local) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), local)
+#define MS_CreateEmpty( type) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), &( const type){0})
 
 
 static inline  int
@@ -166,30 +167,17 @@ div_( u32 b, u32 a, u32 divobj){
   return ret;
 }
 
-/*
- * return a "random" number...
- *
- * usagae:
- * 
- * exmpel 0: seed = MS_rand_seed();
- * 
- * "exmpel 0" is the recomended way to get a good seed.
- * 
- * exmpel 1: MS_rand( ++seed);
- *
- * "exmpel 1" might sem like a good idea, but it makes it farly simple to
- * predict seed and furthur return value's, ther for is "exmpel 2" recumanded...
- *
- * exmpel 2: seed = MS_rand( seed);
- * 
- * if you have two calls to MS_rand() with litel diferance betwen seed,
- * it's farliy easy to caluculate the "secret" numbers.
- */
+//
+// ( seed = MS_rand( seed))
+//
 static inline u32
-MS_rand( u32 seed){
-  return ( u32)( (u32)seed * U32C( 2654435909) + U32C( 1926438593)) & U32C( 0xffffffff);
+MS_rand( const u32 seed){
+  u32 ret = U32C( 0xaaaaaaaa) ^ seed;
+  ret ^= ( mol_( ( ( seed & U32C( 0x00000fff))      ) * U32C( 1931), 1031, gen_divobj( 1031)) - 7);
+  ret ^= ( mol_( ( ( seed & U32C( 0x003ffc00)) >> 10) * U32C( 787 ), 2053, gen_divobj( 2053)) - 5) << 10;
+  ret ^= ( mol_( ( ( seed & U32C( 0xfff00000)) >> 20) * U32C( 797 ), 2053, gen_divobj( 2053)) - 5) << 21;
+  return ret;
 }
-
 
 /*
  * return a seed, for use with MS_rand( __uint32_t seed)

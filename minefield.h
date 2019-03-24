@@ -61,8 +61,8 @@ extern "C" {
   }
   
   void setzero( const MS_field *, MS_video);
-  MS_field *MF_CreateFieldFromRef( const MS_field *);
-#define MF_CreateField( ...) MF_CreateFieldFromRef( &( MS_field){__VA_ARGS__})
+  MS_field *MF_CreateFieldFromLocal( const MS_field *);
+#define MF_CreateField( ...) MF_CreateFieldFromLocal( &( MS_field){__VA_ARGS__})
   void setminefield( const MS_field *, void *);
   void MF_FreeFieldPartial( const MS_field *);
   void MF_FreeField( MS_field *);
