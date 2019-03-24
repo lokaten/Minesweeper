@@ -24,7 +24,7 @@ MF_CreateFieldFromRef( const MS_field *proto){
 		    .level = proto -> level,
 		    .noelements = proto -> width * proto -> height);
   
-  uncovque = CS_Create( MS_pos);
+  uncovque = CS_CreateStream( MS_pos);
   
   data = ( MS_element *)calloc( truewidth * trueheight, sizeof( MS_element));
   

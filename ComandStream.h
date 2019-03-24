@@ -25,7 +25,7 @@ typedef struct{
 }ComandStream;
 
 
-static inline ComandStream *CS_CreateFromSize( const size_t, const size_t);
+static inline ComandStream *CS_CreateStreamFromSize( const size_t, const size_t);
 static inline void *CS_Fetch( ComandStream *);
 static inline void CS_Push( ComandStream *, const void *);
 static inline void *CS_Releas( ComandStream *);
@@ -36,7 +36,7 @@ _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
 _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 
 static inline ComandStream *
-CS_CreateFromSize( const size_t size, const size_t blk_size){
+CS_CreateStreamFromSize( const size_t size, const size_t blk_size){
   ComandStream *Stream;
   char *ptr;
   
@@ -47,7 +47,7 @@ CS_CreateFromSize( const size_t size, const size_t blk_size){
 		      .blk_size = ( blk_size / size) * size,
 		      .size = size);
   
-  ptr = ( char *)calloc( 1, Stream -> blk_size + sizeof( char *));
+  ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
   
   assert( ptr != NULL);
   
@@ -65,7 +65,7 @@ CS_CreateFromSize( const size_t size, const size_t blk_size){
   
   return Stream;
 }
-#define CS_Create( type) CS_CreateFromSize( sizeof( MS_pos), 1024)
+#define CS_CreateStream( type) CS_CreateStreamFromSize( sizeof( MS_pos), 1024)
 
 
 static inline void *
@@ -77,10 +77,10 @@ CS_Fetch( ComandStream *Stream){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
       char *ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
       assert( ptr != NULL);
-      /*lock*/
+      // lock
       *( char **)( ptr + Stream -> blk_size) = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
       *( char **)( Stream -> blk_fetch + Stream -> blk_size) = ptr;
-      /*unlock*/
+      // unlock
     }
     Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
     Stream -> fetch  = Stream -> blk_fetch;
@@ -108,9 +108,9 @@ CS_Push( ComandStream *Stream, const void *ptr){
 }
 
 
-/* 
- * return a pointer to the next element in the stream
- */
+//
+// return a pointer to the next element in the stream
+//
 static inline void *
 CS_Releas( ComandStream *Stream){
   void *ret = NULL;
@@ -137,10 +137,10 @@ CS_Finish( ComandStream *Stream, const void *ptr){
   
   if unlikely( Stream -> finish == Stream -> blk_finish + Stream -> blk_size){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) != Stream -> blk_finish){
-      /*lock*/
+      // lock
       char *lptr =  *( char **)( Stream -> blk_fetch + Stream -> blk_size);
       *( char **)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( char **)( lptr + Stream -> blk_size);
-      /*unlock*/
+      // unlock
       free( lptr);
     }
     Stream -> blk_finish = *( char **)( Stream -> blk_finish + Stream -> blk_size);
@@ -153,9 +153,9 @@ CS_Finish( ComandStream *Stream, const void *ptr){
 }
 
 
-/*
- * free all block...
- */
+//
+// free all block...
+//
 static inline void
 CS_Free( ComandStream *Stream){
   if likely( Stream != NULL){
