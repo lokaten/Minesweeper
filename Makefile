@@ -105,8 +105,8 @@ clean:
 strip:
 	$(STRIP) $(TARGET)
 
-#$(TARGET): main.o epoxy.o minefield.o OPT.o
-$(TARGET): main.o userinterface.o minefield.o OPT.o
+#$(TARGET): main.o epoxy.o minefield.o
+$(TARGET): main.o userinterface.o minefield.o
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS) $(PFLAGS) $(LTO_FLAGS)
 
 
@@ -126,4 +126,3 @@ main.o:          main.c           MS_util.h userinterface.h minefield.h         
 userinterface.o: userinterface.c  MS_util.h userinterface.h minefield.h
 epoxy.o:         epoxy.c          MS_util.h userinterface.h minefield.h
 minefield.o:     minefield.c      MS_util.h                 minefield.h ComandStream.h
-OPT.o:           OPT.c            MS_util.h                                            OPT.h
