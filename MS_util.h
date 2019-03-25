@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 #include <time.h>
-#include <stdlib.h> // malloc
+#include <sys/mman.h> //mmap
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
@@ -110,7 +110,7 @@ typedef struct{
 static inline void *MS_CreateUninitalizedFromSize( const size_t);
 static inline void *MS_CreateEmptyArrayFromSize( const size_t, const size_t);
 static inline void *MS_CreateFromSizeAndLocal( const size_t, const void *);
-static inline void *MS_Free( void *);
+static inline void *MS_FreeFromSize( void *, size_t);
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
 static inline u32 div_( u32, u32, u32);
@@ -127,7 +127,7 @@ static inline __uint64_t getnanosec( void);
 
 static inline void *
 MS_CreateUninitalizedFromSize( const size_t alo_size){
-  void *ptr = ( void *)malloc( alo_size);
+  void *ptr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
   assert( ptr != NULL);
   return ptr;
 }
@@ -135,7 +135,7 @@ MS_CreateUninitalizedFromSize( const size_t alo_size){
 
 static inline void *
 MS_CreateEmptyArrayFromSize( const size_t num_mem, const size_t alo_size){
-  void *ptr = ( void *)calloc( num_mem, alo_size);
+  void *ptr = mmap( NULL, num_mem * alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
   assert( ptr != NULL);
   return ptr;
 }
@@ -144,7 +144,7 @@ MS_CreateEmptyArrayFromSize( const size_t num_mem, const size_t alo_size){
 
 static inline void *
 MS_CreateFromSizeAndLocal( const size_t alo_size, const void *vptr){
-  void *ptr = ( void *)malloc( alo_size);
+  void *ptr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
   assert( alo_size);
   assert( ptr != NULL);
   memcpy( ptr, vptr, alo_size);
@@ -153,12 +153,12 @@ MS_CreateFromSizeAndLocal( const size_t alo_size, const void *vptr){
 #define MS_Create( type, ...) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), &( const type){ __VA_ARGS__})
 #define MS_CreateFromLocal( type, local) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), local)
 
-
 static inline void *
-MS_Free( void *ptr){
-  if( ptr != NULL) free( ptr);
+MS_FreeFromSize( void *addr, size_t size){
+  if( addr != NULL) munmap( addr, size);
   return NULL;
 }
+#define MS_Free( addr, type) ( type *)MS_FreeFromSize( addr, sizeof( type));
 
 // divsion is slow, make sure we don't do it more then we have to
 

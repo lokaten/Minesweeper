@@ -1,12 +1,12 @@
 
 ifeq ($(CLANG), yes)
-CC = clang -std=c99
+CC = clang -std=gnu99
 CXX = clang++ -std=c++11
 CFLAGS += -Weverything -Wno-error=disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
 endif
 
 ifeq ($(GCC), yes)
-CC = gcc -std=c99
+CC = gcc -std=gnu99
 CXX = g++ -std=c++2a
 CFLAGS += -Wlogical-op -faggressive-loop-optimizations
 endif

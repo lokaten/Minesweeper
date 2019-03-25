@@ -47,8 +47,8 @@ MF_CreateFieldFromLocal( const MS_field *proto){
 void
 MF_FreeFieldPartial( const MS_field *minefield){
   if( minefield != NULL){
-    MS_Free( minefield -> data);
-    MS_Free( minefield -> mine);
+    MS_FreeFromSize( minefield -> data, minefield -> width * minefield -> height);
+    MS_Free( minefield -> mine, MS_mstr);
     
     CS_Free( minefield -> uncovque);
   }
@@ -60,7 +60,7 @@ MF_FreeField( MS_field *minefield){
   MF_FreeFieldPartial( minefield);
   
   if( minefield != NULL){
-    MS_Free( minefield);
+    MS_Free( minefield, MS_field);
   }
 }
 

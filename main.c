@@ -134,7 +134,7 @@ ROOT_Init( const int argc, const char **argv){
     uncov_elements( minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1});
     uncov( minefield, NULL);
     MF_FreeField( minefield);
-    MS_Free( mss);
+    MS_Free( mss, MS_stream);
     quit( NULL);
   }else{
     root = MS_Create( MS_root,

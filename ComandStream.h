@@ -138,7 +138,7 @@ CS_Finish( ComandStream *Stream, const void *ptr){
       char *lptr =  *( char **)( Stream -> blk_fetch + Stream -> blk_size);
       *( char **)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( char **)( lptr + Stream -> blk_size);
       // unlock
-      free( lptr);
+      MS_FreeFromSize( lptr, Stream -> blk_size + sizeof( char *));
     }
     Stream -> blk_finish = *( char **)( Stream -> blk_finish + Stream -> blk_size);
     Stream -> finish = Stream -> blk_finish;
@@ -163,10 +163,10 @@ CS_Free( ComandStream *Stream){
     while( Stream -> blk_fetch != NULL){
       ptr = Stream -> blk_fetch;
       Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
-      free( ptr);
+      MS_FreeFromSize( ptr, Stream -> blk_size + sizeof( char *));
     }
     
-    free( Stream);
+    MS_Free( Stream, ComandStream);
   }
 }
 
