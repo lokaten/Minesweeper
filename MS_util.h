@@ -7,15 +7,23 @@
 extern "C" {
 #endif
 
-#include <time.h>
+
 #include <sys/mman.h> //mmap
+#include <sys/time.h>
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <assert.h>
 #include <string.h> // memcpy
 
-#include <sys/time.h>
+#ifndef MAP_ANONYMOUS
+#include <stdlib.h> //malloc
+#endif
+
+#ifndef CLOCK_REALTIME
+#include <time.h>
+#endif
 
 #define TRUE  1
 #define FALSE 0
@@ -127,28 +135,48 @@ static inline __uint64_t getnanosec( void);
 
 static inline void *
 MS_CreateUninitalizedFromSize( const size_t alo_size){
-  void *ptr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
-  assert( ptr != NULL);
-  return ptr;
+  void * addr;
+  assert( alo_size);
+#ifdef MAP_ANONYMOUS
+  addr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+  assert( addr != MAP_FAILED);
+#else
+  addr = malloc( alo_size);
+  assert( addr != NULL);
+#endif
+  return addr;
 }
 #define MS_CreateUninitialized( type) ( type *)MS_CreateUinitializedFromSize( sizeof( type))
 
 static inline void *
 MS_CreateEmptyArrayFromSize( const size_t num_mem, const size_t alo_size){
-  void *ptr = mmap( NULL, num_mem * alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
-  assert( ptr != NULL);
-  return ptr;
+  void * addr;
+  assert( alo_size && num_mem);
+#ifdef MAP_ANONYMOUS
+  addr = mmap( NULL, num_mem * alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+  assert( addr != MAP_FAILED);
+#else
+  addr = calloc( num_mem, alo_size);
+  assert( addr != NULL);
+#endif
+  return addr;
 }
 #define MS_CreateEmpty( type) ( type *)MS_CreateEmptyArrayFromSize( 1, sizeof( type))
 #define MS_CreateEmptyArray( num_mem, type) ( type *)MS_CreateEmptyArrayFromSize( num_mem, sizeof( type))
 
 static inline void *
-MS_CreateFromSizeAndLocal( const size_t alo_size, const void *vptr){
-  void *ptr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+MS_CreateFromSizeAndLocal( const size_t alo_size, const void *ptr){
+  void * addr;
   assert( alo_size);
-  assert( ptr != NULL);
-  memcpy( ptr, vptr, alo_size);
-  return ptr;
+#ifdef MAP_ANONYMOUS
+  addr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+  assert( addr != MAP_FAILED);
+#else
+  addr = malloc( alo_size);
+  assert( addr != NULL);
+#endif
+  memcpy( addr, ptr, alo_size);
+  return addr;
 }
 #define MS_Create( type, ...) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), &( const type){ __VA_ARGS__})
 #define MS_CreateFromLocal( type, local) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), local)
