@@ -8,12 +8,12 @@ extern "C" {
 #endif
 
 #include <time.h>
-#include <stdlib.h> /* malloc */
+#include <stdlib.h> // malloc
 #include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <assert.h>
-#include <string.h> /* memcpy */
+#include <string.h> // memcpy
 
 #include <sys/time.h>
 
@@ -112,7 +112,6 @@ static inline int MS_Free( void *);
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
 static inline u32 div_( u32, u32, u32);
-/* protype of named parmenter function daclaration, migth be useful in other cases*/
 static inline u32 MS_rand( u32);
 
 static inline u32 MS_rand_seed( void);
@@ -139,17 +138,17 @@ MS_Free( void *ptr){
   return 0;
 }
 
-/* divsion is slow, make sure we don't do it more then we have to*/
+// divsion is slow, make sure we don't do it more then we have to
 
-/* genrate a divobj from the divaider */
+// genrate a divobj from the divaider
 static inline u32
 gen_divobj( u32 a){
   return (u32)( ( U64C( 0xffffffff) + (u64)a) / (u64)a);
 }
 
-/* divobj = gen_divobj( a)
- * ( b % a) => 
- */
+// divobj = gen_divobj( a)
+// ( b % a) =>
+//
 static inline u32
 mol_( u32 b, u32 a, u32 divobj){
   u32 ret = ( (u64)( ( b * divobj) & U32C( 0xffffffff)) * (u64)a) >> 32;
@@ -157,9 +156,9 @@ mol_( u32 b, u32 a, u32 divobj){
   return ret;
 }
 
-/* divobj = gen_divobj( a)
- * ( b / a) =>
- */
+// divobj = gen_divobj( a)
+// ( b / a) =>
+//
 static inline u32
 div_( u32 b, u32 a, u32 divobj){
   u32 ret = ( (u64)b * (u64)divobj) >> 32;
@@ -179,9 +178,9 @@ MS_rand( const u32 seed){
   return ret;
 }
 
-/*
- * return a seed, for use with MS_rand( __uint32_t seed)
- */
+//
+// return a seed, for use with MS_rand( __uint32_t seed)
+//
 static inline u32
 MS_rand_seed( void){
   u32 seed;
@@ -225,9 +224,9 @@ MS_print( FILE *stream, const char * format, ...){
 #define DEBUG_PRINT( ...) (void)0
 #endif
 
-/*
- * get system time in microsecond...
- */
+//
+// get system time in microsecond...
+//
 static inline  __uint64_t
 getmicrosec( void){
 #ifdef CLOCK_REALTIME
@@ -242,9 +241,9 @@ getmicrosec( void){
 }
 
 
-/*
- * get the amount of nanoseconds from a point in the past
- */
+//
+// get the amount of nanoseconds from a point in the past
+//
 static inline  __uint64_t
 getnanosec( void){
 #ifdef CLOCK_MONOTONIC
