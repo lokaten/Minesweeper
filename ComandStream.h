@@ -47,9 +47,7 @@ CS_CreateStreamFromSize( const size_t size, const size_t blk_size){
 		      .blk_size = ( blk_size / size) * size,
 		      .size = size);
   
-  ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
-  
-  assert( ptr != NULL);
+  ptr = MS_CreateUninitalizedFromSize( Stream -> blk_size + sizeof( char *));
   
   *( char **)( ptr + Stream -> blk_size) = ptr;
   
@@ -75,8 +73,7 @@ CS_Fetch( ComandStream *Stream){
   
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
-      char *ptr = ( char *)malloc( Stream -> blk_size + sizeof( char *));
-      assert( ptr != NULL);
+      char *ptr = MS_CreateUninitalizedFromSize( Stream -> blk_size + sizeof( char *));
       // lock
       *( char **)( ptr + Stream -> blk_size) = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
       *( char **)( Stream -> blk_fetch + Stream -> blk_size) = ptr;

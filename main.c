@@ -40,16 +40,14 @@ ROOT_Init( const int argc, const char **argv){
   u16 custom_width;
   u16 custom_height;
   u16 custom_level;
-
-#define CreateLocal( type, ...) &( type){__VA_ARGS__}
   
-  MS_field *field_beginner  = CreateLocal( MS_field, .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0);
-  MS_field *field_advanced  = CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0);
-  MS_field *field_expert    = CreateLocal( MS_field, .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0);
-  MS_field *field_benchmark = CreateLocal( MS_field, .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0);
+  MS_field *field_beginner  = MS_CreateLocal( MS_field, .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0);
+  MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0);
+  MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0);
+  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0);
   
-  MS_stream *very_quiet = CreateLocal( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
-  MS_stream *def_out    = CreateLocal( MS_stream, .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL);
+  MS_stream *very_quiet = MS_CreateLocal( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
+  MS_stream *def_out    = MS_CreateLocal( MS_stream, .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL);
   
   const unsigned long opt_true  = TRUE;
   const unsigned long opt_false = FALSE;

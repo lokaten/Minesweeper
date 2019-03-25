@@ -25,9 +25,7 @@ MF_CreateFieldFromLocal( const MS_field *proto){
   
   uncovque = CS_CreateStream( MS_pos);
   
-  data = ( MS_element *)calloc( truewidth * trueheight, sizeof( MS_element));
-  
-  assert( data != NULL);
+  data = MS_CreateEmptyArray( truewidth * trueheight, MS_element);
   
   return MS_Create( MS_field,
 		    .data = data,

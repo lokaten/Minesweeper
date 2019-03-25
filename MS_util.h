@@ -107,8 +107,10 @@ typedef struct{
 
 #define MS_RAND_MAX U32C( 0xffffffff)
 
+static inline void *MS_CreateUninitalizedFromSize( const size_t);
+static inline void *MS_CreateEmptyArrayFromSize( const size_t, const size_t);
 static inline void *MS_CreateFromSizeAndLocal( const size_t, const void *);
-static inline int MS_Free( void *);
+static inline void *MS_Free( void *);
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
 static inline u32 div_( u32, u32, u32);
@@ -118,6 +120,27 @@ static inline u32 MS_rand_seed( void);
 static inline int MS_print( FILE *, const char *, ...);
 static inline __uint64_t getmicrosec( void);
 static inline __uint64_t getnanosec( void);
+
+
+#define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
+#define MS_CreateLocalFromSize( size, ...) alloca( size)
+
+static inline void *
+MS_CreateUninitalizedFromSize( const size_t alo_size){
+  void *ptr = ( void *)malloc( alo_size);
+  assert( ptr != NULL);
+  return ptr;
+}
+#define MS_CreateUninitialized( type) ( type *)MS_CreateUinitializedFromSize( sizeof( type))
+
+static inline void *
+MS_CreateEmptyArrayFromSize( const size_t num_mem, const size_t alo_size){
+  void *ptr = ( void *)calloc( num_mem, alo_size);
+  assert( ptr != NULL);
+  return ptr;
+}
+#define MS_CreateEmpty( type) ( type *)MS_CreateEmptyArrayFromSize( 1, sizeof( type))
+#define MS_CreateEmptyArray( num_mem, type) ( type *)MS_CreateEmptyArrayFromSize( num_mem, sizeof( type))
 
 static inline void *
 MS_CreateFromSizeAndLocal( const size_t alo_size, const void *vptr){
@@ -129,13 +152,12 @@ MS_CreateFromSizeAndLocal( const size_t alo_size, const void *vptr){
 }
 #define MS_Create( type, ...) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), &( const type){ __VA_ARGS__})
 #define MS_CreateFromLocal( type, local) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), local)
-#define MS_CreateEmpty( type) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), &( const type){0})
 
 
-static inline  int
+static inline void *
 MS_Free( void *ptr){
   if( ptr != NULL) free( ptr);
-  return 0;
+  return NULL;
 }
 
 // divsion is slow, make sure we don't do it more then we have to
