@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
+#include <unistd.h> // _SC_PAGE_SIZE
 
 #include "MS_util.h"
 
@@ -25,7 +26,7 @@ typedef struct{
 }ComandStream;
 
 
-static inline ComandStream *CS_CreateStreamFromSize( const size_t, const size_t);
+static inline ComandStream *CS_CreateStreamFromSize( const size_t);
 static inline void *CS_Fetch( ComandStream *);
 static inline void CS_Push( ComandStream *, const void *);
 static inline void *CS_Releas( ComandStream *);
@@ -36,15 +37,28 @@ _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
 _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 
 static inline ComandStream *
-CS_CreateStreamFromSize( const size_t size, const size_t blk_size){
+CS_CreateStreamFromSize( const size_t size){
   ComandStream *Stream;
+  size_t blk_size;
   char *ptr;
   
   assert( size);
-  assert( blk_size >= size);
+  
+#ifdef _SC_PAGE_SIZE
+  blk_size = sysconf( _SC_PAGE_SIZE) - sizeof( char *);
+#else
+  blk_size = 4092;
+#endif
+  
+  
+  while( blk_size % size || blk_size % sizeof( char *)){
+    blk_size -= blk_size % size;
+    blk_size -= blk_size % sizeof( char *);
+  }
+  
   
   Stream = MS_Create( ComandStream,
-		      .blk_size = ( blk_size / size) * size,
+		      .blk_size = blk_size,
 		      .size = size);
   
   ptr = MS_CreateUninitalizedFromSize( Stream -> blk_size + sizeof( char *));
@@ -63,7 +77,7 @@ CS_CreateStreamFromSize( const size_t size, const size_t blk_size){
   
   return Stream;
 }
-#define CS_CreateStream( type) CS_CreateStreamFromSize( sizeof( MS_pos), 1024)
+#define CS_CreateStream( type) CS_CreateStreamFromSize( sizeof( MS_pos))
 
 
 static inline void *
