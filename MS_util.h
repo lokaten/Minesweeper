@@ -116,8 +116,7 @@ typedef struct{
 #define MS_RAND_MAX U32C( 0xffffffff)
 
 static inline void *MS_CreateUninitalizedFromSize( const size_t);
-static inline void *MS_CreateEmptyArrayFromSize( const size_t, const size_t);
-static inline void *MS_CreateFromSizeAndLocal( const size_t, const void *);
+static inline void *MS_CreateArrayFromSizeAndLocal( const size_t, const size_t, const void *);
 static inline void *MS_FreeFromSize( void *, size_t);
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
@@ -131,7 +130,7 @@ static inline __uint64_t getnanosec( void);
 
 
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
-#define MS_CreateLocalFromSize( size, ...) alloca( size)
+#define MS_CreateLocalFromSize( size) alloca( size)
 
 static inline void *
 MS_CreateUninitalizedFromSize( const size_t alo_size){
@@ -149,37 +148,23 @@ MS_CreateUninitalizedFromSize( const size_t alo_size){
 #define MS_CreateUninitialized( type) ( type *)MS_CreateUinitializedFromSize( sizeof( type))
 
 static inline void *
-MS_CreateEmptyArrayFromSize( const size_t num_mem, const size_t alo_size){
-  void * addr;
-  assert( alo_size && num_mem);
-#ifdef MAP_ANONYMOUS
-  addr = mmap( NULL, num_mem * alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
-  assert( addr != MAP_FAILED);
-#else
-  addr = calloc( num_mem, alo_size);
-  assert( addr != NULL);
-#endif
-  return addr;
-}
-#define MS_CreateEmpty( type) ( type *)MS_CreateEmptyArrayFromSize( 1, sizeof( type))
-#define MS_CreateEmptyArray( num_mem, type) ( type *)MS_CreateEmptyArrayFromSize( num_mem, sizeof( type))
-
-static inline void *
-MS_CreateFromSizeAndLocal( const size_t alo_size, const void *ptr){
-  void * addr;
+MS_CreateArrayFromSizeAndLocal( const size_t num_mem, const size_t alo_size, const void *ptr){
+  u32 i = num_mem;
+  char * addr;
   assert( alo_size);
-#ifdef MAP_ANONYMOUS
-  addr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
-  assert( addr != MAP_FAILED);
-#else
-  addr = malloc( alo_size);
-  assert( addr != NULL);
-#endif
-  memcpy( addr, ptr, alo_size);
-  return addr;
+  assert( num_mem);
+  addr = MS_CreateUninitalizedFromSize( num_mem * alo_size);
+  while( i--){
+    memcpy( addr + i * alo_size, ptr, alo_size);
+  }
+  return ( void *)addr;
 }
-#define MS_Create( type, ...) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), &( const type){ __VA_ARGS__})
-#define MS_CreateFromLocal( type, local) ( type *)MS_CreateFromSizeAndLocal( sizeof( type), local)
+#define MS_Create( type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( 1, sizeof( type), &( const type){ __VA_ARGS__})
+#define MS_CreateFromLocal( type, local) ( type *)MS_CreateArrayFromSizeAndLocal( 1, sizeof( type), local)
+#define MS_CreateEmpty( type) ( type *)MS_CreateArrayFromSizeAndLocal( 1, sizeof( type), &( const type){0})
+#define MS_CreateEmptyArray( num_mem, type) ( type *)MS_CreateArrayFromSizeAndLocal( num_mem, sizeof( type), &( const type){0})
+#define MS_CreateArray( num_mem, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( num_mem, sizeof( type), &( const type){ __VA_ARGS__})
+#define MS_CreateArrayFromLocal( num_mem, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( num_mem, sizeof( type), local)
 
 static inline void *
 MS_FreeFromSize( void *addr, size_t size){
@@ -187,6 +172,8 @@ MS_FreeFromSize( void *addr, size_t size){
   return NULL;
 }
 #define MS_Free( addr, type) ( type *)MS_FreeFromSize( addr, sizeof( type));
+#define MS_FreeArray( addr, num_mem, type) ( type *)MS_FreeFromSize( addr, num_mem * sizeof( type));
+
 
 // divsion is slow, make sure we don't do it more then we have to
 
