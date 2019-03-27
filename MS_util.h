@@ -161,7 +161,7 @@ MS_CreateSlabFromSize( size_t size){
 static inline void *
 MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const size_t alo_size, const void *ptr){
   u32 i = num_mem;
-  uintptr_t addr;
+  uintptr_t addr = 0;
   assert( alo_size);
   assert( num_mem);
   assert( freenode != NULL);
@@ -169,6 +169,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     addr = freenode -> begining;
     freenode -> begining += num_mem * alo_size;
   }
+  assert( addr != 0);
   while( i--){
     memcpy( ( void *)( addr + i * alo_size), ptr, alo_size);
   }
