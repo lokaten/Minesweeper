@@ -8,7 +8,6 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
-#include <unistd.h> // _SC_PAGE_SIZE
 
 #include "MS_util.h"
 
@@ -43,13 +42,8 @@ CS_CreateStreamFromSize( const size_t size){
   char *ptr;
   
   assert( size);
-  
-#ifdef _SC_PAGE_SIZE
-  blk_size = sysconf( _SC_PAGE_SIZE) - sizeof( char *);
-#else
-  blk_size = 4092;
-#endif
-  
+
+  blk_size = SLAB_SIZE - sizeof( char *);
   
   while( blk_size % size || blk_size % sizeof( char *)){
     blk_size -= blk_size % size;
@@ -61,7 +55,7 @@ CS_CreateStreamFromSize( const size_t size){
 		      .blk_size = blk_size,
 		      .size = size);
   
-  ptr = MS_CreateUninitalizedFromSize( Stream -> blk_size + sizeof( char *));
+  ptr = MS_CreateSlab();
   
   *( char **)( ptr + Stream -> blk_size) = ptr;
   
@@ -87,7 +81,7 @@ CS_Fetch( ComandStream *Stream){
   
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
-      char *ptr = MS_CreateUninitalizedFromSize( Stream -> blk_size + sizeof( char *));
+	char *ptr = MS_CreateSlab();
       // lock
       *( char **)( ptr + Stream -> blk_size) = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
       *( char **)( Stream -> blk_fetch + Stream -> blk_size) = ptr;
@@ -152,7 +146,7 @@ CS_Finish( ComandStream *Stream, const void *ptr){
       char *lptr =  *( char **)( Stream -> blk_fetch + Stream -> blk_size);
       *( char **)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( char **)( lptr + Stream -> blk_size);
       // unlock
-      MS_FreeFromSize( lptr, Stream -> blk_size + sizeof( char *));
+      MS_FreeSlab( lptr);
     }
     Stream -> blk_finish = *( char **)( Stream -> blk_finish + Stream -> blk_size);
     Stream -> finish = Stream -> blk_finish;
@@ -177,7 +171,7 @@ CS_Free( ComandStream *Stream){
     while( Stream -> blk_fetch != NULL){
       ptr = Stream -> blk_fetch;
       Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
-      MS_FreeFromSize( ptr, Stream -> blk_size + sizeof( char *));
+      MS_FreeSlab( ptr);
     }
     
     MS_Free( Stream, ComandStream);

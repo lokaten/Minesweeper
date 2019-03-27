@@ -18,6 +18,8 @@ extern "C" {
 
 #include <stdint.h>
 
+#include <unistd.h> // _SC_PAGE_SIZE
+
 #ifndef MAP_ANONYMOUS
 #include <stdlib.h> // malloc
 #endif
@@ -113,7 +115,7 @@ typedef struct{
 
 #define MS_RAND_MAX U32C( 0xffffffff)
 
-static inline void *MS_CreateUninitalizedFromSize( const size_t);
+static inline void *MS_CreateSlab( void);
 static inline void *MS_CreateArrayFromSizeAndLocal( const size_t, const size_t, const void *);
 static inline void *MS_FreeFromSize( void *, size_t);
 static inline u32 gen_divobj( u32);
@@ -126,24 +128,18 @@ static inline int MS_print( FILE *, const char *, ...);
 static inline __uint64_t getmicrosec( void);
 static inline __uint64_t getnanosec( void);
 
+#define SLAB_SIZE sysconf( _SC_PAGE_SIZE)
 
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
 #define MS_CreateLocalFromSize( size) alloca( size)
 
 static inline void *
-MS_CreateUninitalizedFromSize( const size_t alo_size){
+MS_CreateSlab( void){
   void * addr;
-  assert( alo_size);
-#ifdef MAP_ANONYMOUS
-  addr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+  addr = mmap( NULL, SLAB_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
   assert( addr != MAP_FAILED);
-#else
-  addr = malloc( alo_size);
-  assert( addr != NULL);
-#endif
   return addr;
 }
-#define MS_CreateUninitialized( type) ( type *)MS_CreateUinitializedFromSize( sizeof( type))
 
 static inline void *
 MS_CreateArrayFromSizeAndLocal( const size_t num_mem, const size_t alo_size, const void *ptr){
@@ -151,7 +147,7 @@ MS_CreateArrayFromSizeAndLocal( const size_t num_mem, const size_t alo_size, con
   char * addr;
   assert( alo_size);
   assert( num_mem);
-  addr = MS_CreateUninitalizedFromSize( num_mem * alo_size);
+  addr = MS_CreateSlab();
   while( i--){
     memcpy( addr + i * alo_size, ptr, alo_size);
   }
@@ -169,6 +165,7 @@ MS_FreeFromSize( void *addr, size_t size){
   if( addr != NULL) munmap( addr, size);
   return NULL;
 }
+#define MS_FreeSlab( addr) MS_FreeFromSize( addr, SLAB_SIZE);
 #define MS_Free( addr, type) ( type *)MS_FreeFromSize( addr, sizeof( type));
 #define MS_FreeArray( addr, num_mem, type) ( type *)MS_FreeFromSize( addr, num_mem * sizeof( type));
 
