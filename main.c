@@ -36,8 +36,8 @@ ROOT_Init( const int argc, const char **argv){
   MS_stream *mss;
   bool no_resize;
 
-  bool custom = FALSE;
-  bool custom_global = FALSE;
+  u32 custom = FALSE;
+  u32 custom_global = FALSE;
   u16 custom_width;
   u16 custom_height;
   u16 custom_level;
@@ -114,7 +114,7 @@ ROOT_Init( const int argc, const char **argv){
       MS_print( mss -> err, TERM("\rMore mines then elments!\n"));
     }
     
-    minefield  = MF_CreateField( &freenode, .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
+    minefield = MF_CreateField( &freenode, .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
   }else{
     minefield = MF_CreateFieldFromLocal( &freenode, minefield);
   }
@@ -156,6 +156,8 @@ ROOT_Init( const int argc, const char **argv){
     
     setminefield( root -> minefield, root -> GW);
   }
+  
+  DEBUG_PRINT( stdout, "slab: %u  \tleft %u   \n", SLAB_SIZE, root -> freenode -> end - root -> freenode -> begining);
   
   return root;
 }
