@@ -138,6 +138,7 @@ static inline __uint64_t getmicrosec( void);
 static inline __uint64_t getnanosec( void);
 
 #define SLAB_SIZE sysconf( _SC_PAGE_SIZE)
+#define ALIGNMENT sizeof( uintptr_t)
 
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
 #define MS_CreateLocalFromSize( size) alloca( size)
@@ -159,19 +160,22 @@ MS_CreateSlabFromSize( size_t size){
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
 
 static inline void *
-MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const size_t alo_size, const void *ptr){
+MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const size_t size, const void *ptr){
   u32 i = num_mem;
   uintptr_t addr = 0;
-  assert( alo_size);
+  size_t alo_size;
+  assert( size);
   assert( num_mem);
   assert( freenode != NULL);
-  if( ( freenode -> end - freenode -> begining) >= ( num_mem * alo_size)){
+  alo_size = num_mem * size + ALIGNMENT - 1;
+  alo_size -= alo_size % ALIGNMENT;
+  if( ( freenode -> end - freenode -> begining) >= alo_size){
     addr = freenode -> begining;
-    freenode -> begining += num_mem * alo_size;
+    freenode -> begining += alo_size;
   }
   assert( addr != 0);
   while( i--){
-    memcpy( ( void *)( addr + i * alo_size), ptr, alo_size);
+    memcpy( ( void *)( addr + i * size), ptr, size);
   }
   return ( void *)addr;
 }
