@@ -115,7 +115,7 @@ typedef struct{
 
 #define MS_RAND_MAX U32C( 0xffffffff)
 
-static inline void *MS_CreateSlab( void);
+static inline void *MS_CreateSlabFromSize( size_t size);
 static inline void *MS_CreateArrayFromSizeAndLocal( const size_t, const size_t, const void *);
 static inline void *MS_FreeFromSize( void *, size_t);
 static inline u32 gen_divobj( u32);
@@ -134,12 +134,20 @@ static inline __uint64_t getnanosec( void);
 #define MS_CreateLocalFromSize( size) alloca( size)
 
 static inline void *
-MS_CreateSlab( void){
+MS_CreateSlabFromSize( size_t size){
   void * addr;
-  addr = mmap( NULL, SLAB_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+  size_t alo_size = size + SLAB_SIZE - 1;
+  alo_size -= alo_size % SLAB_SIZE;
+#ifdef MAP_ANONYMOUS
+  addr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
   assert( addr != MAP_FAILED);
+#else
+  addr = malloc( alo_size);
+  assert( addr != NULL);
+#endif
   return addr;
 }
+#define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
 
 static inline void *
 MS_CreateArrayFromSizeAndLocal( const size_t num_mem, const size_t alo_size, const void *ptr){
@@ -147,7 +155,7 @@ MS_CreateArrayFromSizeAndLocal( const size_t num_mem, const size_t alo_size, con
   char * addr;
   assert( alo_size);
   assert( num_mem);
-  addr = MS_CreateSlab();
+  addr = MS_CreateSlabFromSize( num_mem * alo_size);
   while( i--){
     memcpy( addr + i * alo_size, ptr, alo_size);
   }
