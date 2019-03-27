@@ -8,17 +8,18 @@ extern "C" {
 #endif
 
 
-#include <sys/mman.h> //mmap
+#include <sys/mman.h> // mmap
 #include <sys/time.h>
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdarg.h>
 #include <assert.h>
 #include <string.h> // memcpy
 
+#include <stdint.h>
+
 #ifndef MAP_ANONYMOUS
-#include <stdlib.h> //malloc
+#include <stdlib.h> // malloc
 #endif
 
 #ifndef CLOCK_REALTIME
@@ -52,8 +53,6 @@ extern "C" {
 #endif
 
 #ifdef __cplusplus
-#undef NULL
-#define NULL nullptr
 #else
 typedef _Bool bool;
 #endif
@@ -80,18 +79,17 @@ typedef int_fast16_t  s16;
 typedef int_fast8_t   s8;
 #endif
 
-#define U64C( exp)   ( u64)UINT64_C( exp)
-#define U32C( exp)   ( u32)UINT32_C( exp)
-#define U16C( exp)   ( u16)UINT16_C( exp)
-#define U8C(  exp)   ( u8 )UINT8_C(  exp)
+#define U64C   ( u64)UINT64_C
+#define U32C   ( u32)UINT32_C
+#define U16C   ( u16)UINT16_C
+#define U8C    ( u8 )UINT8_C
 
-#define S64C( exp)   ( s64)INT64_C( exp)
-#define S32C( exp)   ( s32)INT32_C( exp)
-#define S16C( exp)   ( s16)INT16_C( exp)
-#define S8C(  exp)   ( s8 )INT8_C(  exp)
+#define S64C   ( s64)INT64_C
+#define S32C   ( s32)INT32_C
+#define S16C   ( s16)INT16_C
+#define S8C    ( s8 )INT8_C
 
 
-    
 typedef struct{
   s32 xdiff;
   s32 ydiff;
@@ -268,9 +266,9 @@ static inline  __uint64_t
 getmicrosec( void){
 #ifdef CLOCK_REALTIME
   struct timespec tv;
-
+  
   clock_gettime( CLOCK_REALTIME, &tv);
-
+  
   return ( ( __uint64_t)tv.tv_sec * 1000000 + ( __uint64_t)tv.tv_nsec / 1000);
 #else
   return ( __uint64_t)time( NULL) * 1000000;
@@ -283,11 +281,11 @@ getmicrosec( void){
 //
 static inline  __uint64_t
 getnanosec( void){
-#ifdef CLOCK_MONOTONIC
+#ifdef CLOCK_REALTIME
   struct timespec tv;
   
   clock_gettime( CLOCK_MONOTONIC, &tv);
-    
+  
   return ( ( __uint64_t)tv.tv_sec * 1000000000 + ( __uint64_t)tv.tv_nsec);
 #else
   return ( __uint64_t)time( NULL) * 1000000000;
