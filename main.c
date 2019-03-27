@@ -36,7 +36,7 @@ ROOT_Init( const int argc, const char **argv){
   MS_stream *mss;
   bool no_resize;
 
-  u32 custom = FALSE;
+  u32 custom = FALSE; // procopt will overflow _Bool
   u32 custom_global = FALSE;
   u16 custom_width;
   u16 custom_height;
@@ -126,8 +126,8 @@ ROOT_Init( const int argc, const char **argv){
   MS_print( mss -> out, "\rMode: %s\n", minefield -> title);
   
   if( custom){
-    MS_print( mss -> out, "\rwidth: %lu   ", minefield -> width);
-    MS_print( mss -> out, "\r\t\theight: %lu   ", minefield -> height);
+    MS_print( mss -> out, "\rwidth: %lu   ", minefield -> subwidth);
+    MS_print( mss -> out, "\r\t\theight: %lu   ", minefield -> subheight);
     MS_print( mss -> out, "\r\t\t\t\tlevel: %lu   \n", minefield -> level);
   }
   
