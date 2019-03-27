@@ -12,22 +12,22 @@ static inline void addelement( const MS_field *, s16, s16);
 
 
 MS_field *
-MF_CreateFieldFromLocal( const MS_field *proto){
+MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
   MS_mstr *mine;
   ComandStream *uncovque;
   MS_element *data;
   u32 truewidth  = proto -> width  + !proto -> global;
   u32 trueheight = proto -> height + !proto -> global;
   
-  mine = MS_Create( NULL, MS_mstr,
+  mine = MS_Create( freenode, MS_mstr,
 		    .level = proto -> level,
 		    .noelements = proto -> width * proto -> height);
   
-  uncovque = CS_CreateStream( MS_pos);
+  uncovque = CS_CreateStream( freenode, MS_pos);
   
-  data = MS_CreateEmptyArray( truewidth * trueheight, MS_element);
+  data = MS_CreateEmptyArray( freenode, truewidth * trueheight, MS_element);
   
-  return MS_Create( NULL, MS_field,
+  return MS_Create( freenode, MS_field,
 		    .data = data,
 		    .title = proto -> title,
 		    .uncovque = uncovque,

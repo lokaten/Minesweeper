@@ -25,7 +25,7 @@ typedef struct{
 }ComandStream;
 
 
-static inline ComandStream *CS_CreateStreamFromSize( const size_t);
+static inline ComandStream *CS_CreateStreamFromSize( FreeNode *, const size_t);
 static inline void *CS_Fetch( ComandStream *);
 static inline void CS_Push( ComandStream *, const void *);
 static inline void *CS_Releas( ComandStream *);
@@ -36,7 +36,7 @@ _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
 _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 
 static inline ComandStream *
-CS_CreateStreamFromSize( const size_t size){
+CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
   ComandStream *Stream;
   size_t blk_size;
   char *ptr;
@@ -51,7 +51,7 @@ CS_CreateStreamFromSize( const size_t size){
   }
   
   
-  Stream = MS_Create( NULL, ComandStream,
+  Stream = MS_Create( freenode, ComandStream,
 		      .blk_size = blk_size,
 		      .size = size);
   
@@ -71,7 +71,7 @@ CS_CreateStreamFromSize( const size_t size){
   
   return Stream;
 }
-#define CS_CreateStream( type) CS_CreateStreamFromSize( sizeof( MS_pos))
+#define CS_CreateStream( freenode, type) CS_CreateStreamFromSize( freenode, sizeof( MS_pos))
 
 
 static inline void *

@@ -114,12 +114,12 @@ ROOT_Init( const int argc, const char **argv){
       MS_print( mss -> err, TERM("\rMore mines then elments!\n"));
     }
     
-    minefield  = MF_CreateField( .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
+    minefield  = MF_CreateField( &freenode, .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
   }else{
-    minefield = MF_CreateFieldFromLocal( minefield);
+    minefield = MF_CreateFieldFromLocal( &freenode, minefield);
   }
   
-  mss = MS_CreateFromLocal( MS_stream, mss);
+  mss = MS_CreateFromLocal( &freenode, MS_stream, mss);
   
   assert( minefield -> title != NULL);
   
@@ -142,13 +142,15 @@ ROOT_Init( const int argc, const char **argv){
   }else{
     
     root = MS_Create( &freenode, MS_root,
-		      .freenode = &freenode,
+		      .freenode = MS_CreateEmpty( &freenode, FreeNode),
 		      .real = real,
 		      .minefield = minefield,
 		      .mss = mss,
 		      .no_resize = no_resize);
     
-    root -> GW = GW_Init( root);
+    root -> freenode = &freenode;
+    
+    root -> GW = GW_Init( root -> freenode, root);
     
     draw( root -> GW, *root -> minefield);
     

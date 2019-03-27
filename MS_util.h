@@ -164,13 +164,10 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   uintptr_t addr;
   assert( alo_size);
   assert( num_mem);
-  if( freenode == NULL){
-    addr = ( uintptr_t)MS_CreateSlabFromSize( num_mem * alo_size);
-  }else{
-    if( ( freenode -> end - freenode -> begining) >= ( num_mem * alo_size)){
-      addr = freenode -> begining;
-      freenode -> begining += num_mem * alo_size;
-    }
+  assert( freenode != NULL);
+  if( ( freenode -> end - freenode -> begining) >= ( num_mem * alo_size)){
+    addr = freenode -> begining;
+    freenode -> begining += num_mem * alo_size;
   }
   while( i--){
     memcpy( ( void *)( addr + i * alo_size), ptr, alo_size);
@@ -178,11 +175,11 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   return ( void *)addr;
 }
 #define MS_Create( freenode, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){ __VA_ARGS__})
-#define MS_CreateFromLocal( type, local) ( type *)MS_CreateArrayFromSizeAndLocal( NULL, 1, sizeof( type), local)
-#define MS_CreateEmpty( type) ( type *)MS_CreateArrayFromSizeAndLocal( NULL, 1, sizeof( type), &( const type){0})
-#define MS_CreateEmptyArray( num_mem, type) ( type *)MS_CreateArrayFromSizeAndLocal( NULL, num_mem, sizeof( type), &( const type){0})
-#define MS_CreateArray( num_mem, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( NULL, num_mem, sizeof( type), &( const type){ __VA_ARGS__})
-#define MS_CreateArrayFromLocal( num_mem, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( NULL, num_mem, sizeof( type), local)
+#define MS_CreateFromLocal( freenode, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), local)
+#define MS_CreateEmpty( freenode, type) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){0})
+#define MS_CreateEmptyArray( freenode, num_mem, type) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), &( const type){0})
+#define MS_CreateArray( freenode, num_mem, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), &( const type){ __VA_ARGS__})
+#define MS_CreateArrayFromLocal( freenode, num_mem, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), local)
 
 static inline FreeNode
 MS_FreeFromSize( FreeNode *freenode, void * vaddr, size_t size){

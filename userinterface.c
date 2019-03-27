@@ -39,8 +39,8 @@ static inline int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int
 static inline void mousebuttondown( const MS_root *, SDL_Event);
 
 void *
-GW_Init( MS_root *root){
-  GraphicWraper *GW = MS_CreateEmpty( GraphicWraper);
+GW_Init( FreeNode *freenode, MS_root *root){
+  GraphicWraper *GW = MS_CreateEmpty( freenode, GraphicWraper);
   
   GW -> global = root -> minefield -> global;
   
@@ -118,7 +118,7 @@ event_dispatch( const MS_root *root){
   
   if unlikely( GW == NULL) return;
     
-  if( SDL_WaitEventTimeout( &event, 1000)){
+  if( SDL_WaitEventTimeout( &event, ( ( u64)MS_rand( MS_rand_seed()) * U64C( 75)) / MS_RAND_MAX)){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
       quit( root);
