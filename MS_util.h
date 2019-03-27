@@ -187,8 +187,10 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
 #define MS_CreateArrayFromLocal( freenode, num_mem, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), local)
 
 static inline FreeNode
-MS_FreeFromSize( FreeNode *freenode, void * vaddr, size_t size){
+MS_FreeFromSize( FreeNode *freenode, void * vaddr, size_t vsize){
   uintptr_t addr = ( uintptr_t)vaddr;
+  size_t size = vsize + ALIGNMENT - 1;
+  size -= size % ALIGNMENT;
   if( freenode == NULL){
     freenode = MS_CreateLocal( FreeNode, 0);
     freenode -> begining = addr;
