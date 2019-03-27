@@ -12,6 +12,7 @@ extern "C" {
 #include "minefield.h"
 
 typedef struct{
+  FreeNode *freenode;
   void *GW;
   const MS_video real;
   const MS_field *minefield;

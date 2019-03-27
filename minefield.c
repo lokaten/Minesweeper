@@ -19,7 +19,7 @@ MF_CreateFieldFromLocal( const MS_field *proto){
   u32 truewidth  = proto -> width  + !proto -> global;
   u32 trueheight = proto -> height + !proto -> global;
   
-  mine = MS_Create( MS_mstr,
+  mine = MS_Create( NULL, MS_mstr,
 		    .level = proto -> level,
 		    .noelements = proto -> width * proto -> height);
   
@@ -27,7 +27,7 @@ MF_CreateFieldFromLocal( const MS_field *proto){
   
   data = MS_CreateEmptyArray( truewidth * trueheight, MS_element);
   
-  return MS_Create( MS_field,
+  return MS_Create( NULL, MS_field,
 		    .data = data,
 		    .title = proto -> title,
 		    .uncovque = uncovque,

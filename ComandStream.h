@@ -51,7 +51,7 @@ CS_CreateStreamFromSize( const size_t size){
   }
   
   
-  Stream = MS_Create( ComandStream,
+  Stream = MS_Create( NULL, ComandStream,
 		      .blk_size = blk_size,
 		      .size = size);
   

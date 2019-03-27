@@ -113,11 +113,20 @@ typedef struct{
   FILE *hlp;
 }MS_stream;
 
+
+typedef struct{
+  uintptr_t prev;
+  uintptr_t next;
+  uintptr_t begining;
+  uintptr_t end;
+}FreeNode;
+
 #define MS_RAND_MAX U32C( 0xffffffff)
 
 static inline void *MS_CreateSlabFromSize( size_t size);
-static inline void *MS_CreateArrayFromSizeAndLocal( const size_t, const size_t, const void *);
-static inline void *MS_FreeFromSize( void *, size_t);
+static inline void *MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
+static inline FreeNode MS_FreeFromSize( FreeNode *, void *, size_t);
+static inline void *MS_FreeSlabFromSize( void *, size_t);
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
 static inline u32 div_( u32, u32, u32);
@@ -150,33 +159,58 @@ MS_CreateSlabFromSize( size_t size){
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
 
 static inline void *
-MS_CreateArrayFromSizeAndLocal( const size_t num_mem, const size_t alo_size, const void *ptr){
+MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const size_t alo_size, const void *ptr){
   u32 i = num_mem;
-  char * addr;
+  uintptr_t addr;
   assert( alo_size);
   assert( num_mem);
-  addr = MS_CreateSlabFromSize( num_mem * alo_size);
+  if( freenode == NULL){
+    addr = ( uintptr_t)MS_CreateSlabFromSize( num_mem * alo_size);
+  }else{
+    if( ( freenode -> end - freenode -> begining) >= ( num_mem * alo_size)){
+      addr = freenode -> begining;
+      freenode -> begining += num_mem * alo_size;
+    }
+  }
   while( i--){
-    memcpy( addr + i * alo_size, ptr, alo_size);
+    memcpy( ( void *)( addr + i * alo_size), ptr, alo_size);
   }
   return ( void *)addr;
 }
-#define MS_Create( type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( 1, sizeof( type), &( const type){ __VA_ARGS__})
-#define MS_CreateFromLocal( type, local) ( type *)MS_CreateArrayFromSizeAndLocal( 1, sizeof( type), local)
-#define MS_CreateEmpty( type) ( type *)MS_CreateArrayFromSizeAndLocal( 1, sizeof( type), &( const type){0})
-#define MS_CreateEmptyArray( num_mem, type) ( type *)MS_CreateArrayFromSizeAndLocal( num_mem, sizeof( type), &( const type){0})
-#define MS_CreateArray( num_mem, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( num_mem, sizeof( type), &( const type){ __VA_ARGS__})
-#define MS_CreateArrayFromLocal( num_mem, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( num_mem, sizeof( type), local)
+#define MS_Create( freenode, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){ __VA_ARGS__})
+#define MS_CreateFromLocal( type, local) ( type *)MS_CreateArrayFromSizeAndLocal( NULL, 1, sizeof( type), local)
+#define MS_CreateEmpty( type) ( type *)MS_CreateArrayFromSizeAndLocal( NULL, 1, sizeof( type), &( const type){0})
+#define MS_CreateEmptyArray( num_mem, type) ( type *)MS_CreateArrayFromSizeAndLocal( NULL, num_mem, sizeof( type), &( const type){0})
+#define MS_CreateArray( num_mem, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( NULL, num_mem, sizeof( type), &( const type){ __VA_ARGS__})
+#define MS_CreateArrayFromLocal( num_mem, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( NULL, num_mem, sizeof( type), local)
+
+static inline FreeNode
+MS_FreeFromSize( FreeNode *freenode, void * vaddr, size_t size){
+  uintptr_t addr = ( uintptr_t)vaddr;
+  if( freenode == NULL){
+    freenode = MS_CreateLocal( FreeNode, 0);
+    freenode -> begining = addr;
+    freenode -> end      = addr + size;
+  }else{
+    if( freenode -> end == addr){
+      freenode -> end += size;
+    }else if( freenode -> begining - size == addr){
+      freenode -> begining -= size;
+    }
+  }
+  return *freenode;
+}
+#define MS_Free( addr, type) MS_FreeFromSize( NULL, addr, sizeof( type))
+#define MS_FreeArray( addr, num_mem, type) MS_FreeFromSize( NULL, addr, num_mem * sizeof( type))
 
 static inline void *
-MS_FreeFromSize( void *addr, size_t size){
-  if( addr != NULL) munmap( addr, size);
+MS_FreeSlabFromSize( void *addr, size_t size){
+  size_t alo_size = size + SLAB_SIZE - 1;
+  alo_size -= alo_size % SLAB_SIZE;
+  if( addr != NULL) munmap( addr, alo_size);
   return NULL;
 }
-#define MS_FreeSlab( addr) MS_FreeFromSize( addr, SLAB_SIZE);
-#define MS_Free( addr, type) ( type *)MS_FreeFromSize( addr, sizeof( type));
-#define MS_FreeArray( addr, num_mem, type) ( type *)MS_FreeFromSize( addr, num_mem * sizeof( type));
-
+#define MS_FreeSlab( addr) MS_FreeSlabFromSize( addr, SLAB_SIZE)
 
 // divsion is slow, make sure we don't do it more then we have to
 

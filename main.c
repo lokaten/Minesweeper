@@ -29,6 +29,7 @@ quit( const MS_root *root){
 MS_root *
 ROOT_Init( const int argc, const char **argv){
   MS_root *root;
+  FreeNode freenode;
   
   MS_video real;
   MS_field *minefield;
@@ -105,6 +106,8 @@ ROOT_Init( const int argc, const char **argv){
 #endif
   }
   
+  freenode = MS_FreeFromSize( NULL, MS_CreateSlab(), SLAB_SIZE);
+  
   if( custom){
     if( custom_level >= ( custom_width * custom_height)){
       custom_level = ( custom_width * custom_height + 1) / 3;
@@ -137,7 +140,9 @@ ROOT_Init( const int argc, const char **argv){
     MS_Free( mss, MS_stream);
     quit( NULL);
   }else{
-    root = MS_Create( MS_root,
+    
+    root = MS_Create( &freenode, MS_root,
+		      .freenode = &freenode,
 		      .real = real,
 		      .minefield = minefield,
 		      .mss = mss,
@@ -156,11 +161,13 @@ ROOT_Init( const int argc, const char **argv){
 
 int
 main( const int argc, const char** argv){
-  const MS_root *root = ROOT_Init( argc, argv);
-
+  MS_root *root;
+  
   bool gameover;
   u64 tutime;
   u64 gamestart;
+  
+  root = ROOT_Init( argc, argv);
   
   gameover  = FALSE;
   tutime    = getnanosec();
