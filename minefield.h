@@ -64,8 +64,8 @@ extern "C" {
   MS_field *MF_CreateFieldFromLocal( FreeNode *, const MS_field *);
 #define MF_CreateField( freenode, ...) MF_CreateFieldFromLocal( freenode, &( MS_field){__VA_ARGS__})
   void setminefield( const MS_field *, void *);
-  void MF_FreeFieldPartial( const MS_field *);
-  void MF_FreeField( MS_field *);
+  void MF_FreeFieldPartial( FreeNode *, const MS_field *);
+  void MF_FreeField( FreeNode *, MS_field *);
   void uncov( const MS_field *, void *);
   void uncov_elements( const MS_field *,  MS_video);
   

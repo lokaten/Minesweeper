@@ -30,7 +30,7 @@ static inline void *CS_Fetch( ComandStream *);
 static inline void CS_Push( ComandStream *, const void *);
 static inline void *CS_Releas( ComandStream *);
 static inline void CS_Finish( ComandStream *, const void *);
-static inline void CS_Free( ComandStream *);
+static inline void CS_Free( FreeNode *, ComandStream *);
 
 _Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
 _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
@@ -162,7 +162,7 @@ CS_Finish( ComandStream *Stream, const void *ptr){
 // free all block...
 //
 static inline void
-CS_Free( ComandStream *Stream){
+CS_Free( FreeNode *freenode, ComandStream *Stream){
   if likely( Stream != NULL){
     char *ptr = Stream -> blk_fetch;
     Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
@@ -174,7 +174,7 @@ CS_Free( ComandStream *Stream){
       MS_FreeSlab( ptr);
     }
     
-    MS_Free( Stream, ComandStream);
+    MS_Free( freenode, Stream, ComandStream);
   }
 }
 

@@ -194,7 +194,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *vfreenode, const size_t num_mem, const
       freenode -> next = vfreenode -> prev;
     }
     
-    DEBUG_PRINT( stdout, "slab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, freenode -> end - freenode -> begining, alo_size);
+    DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, freenode -> end - freenode -> begining, alo_size);
     
     freenode = ( FreeNode *)freenode -> next;
   }
@@ -216,21 +216,39 @@ MS_FreeFromSize( FreeNode *freenode, void * vaddr, size_t vsize){
   uintptr_t addr = ( uintptr_t)vaddr;
   size_t size = vsize + ALIGNMENT - 1;
   size -= size % ALIGNMENT;
+  if( addr == 0) return *freenode;
   if( freenode == NULL){
     freenode = MS_CreateLocal( FreeNode, 0);
     freenode -> begining = addr;
     freenode -> end      = addr + size;
   }else{
-    if( freenode -> end == addr){
-      freenode -> end += size;
-    }else if( freenode -> begining - size == addr){
-      freenode -> begining -= size;
+    FreeNode *nf = freenode;
+    while( size){
+      if( nf -> end == addr){
+	nf -> end += size;
+	size = 0;
+      }else if( nf -> begining == addr + size){
+	nf -> begining -= size;
+	size = 0;
+      }else if( nf -> next == ( uintptr_t)freenode){
+	nf -> next  = ( uintptr_t)MS_Create( freenode, FreeNode,
+					     .begining = addr,
+					     .end      = addr,
+					     .next     = ( uintptr_t)freenode,
+					     .prev     = ( uintptr_t)nf);
+	freenode -> prev = nf -> next;
+      }
+      
+      DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, nf -> end - nf -> begining, size);
+      
+      nf = ( FreeNode *)nf -> next;
     }
   }
+  
   return *freenode;
 }
-#define MS_Free( addr, type) MS_FreeFromSize( NULL, addr, sizeof( type))
-#define MS_FreeArray( addr, num_mem, type) MS_FreeFromSize( NULL, addr, num_mem * sizeof( type))
+#define MS_Free( freenode, addr, type) MS_FreeFromSize( freenode, addr, sizeof( type))
+#define MS_FreeArray( freenode, addr, num_mem, type) MS_FreeFromSize( freenode, addr, num_mem * sizeof( type))
 
 static inline void *
 MS_FreeSlabFromSize( void *addr, size_t size){

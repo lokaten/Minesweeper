@@ -20,7 +20,7 @@ void
 quit( const MS_root *root){
   int ret = 0;
   GW_Free( root -> GW);
-  MF_FreeFieldPartial( root -> minefield);
+  MF_FreeFieldPartial( root -> freenode, root -> minefield);
   MS_print( root -> mss -> out, TERM("\rBye!                                \n"));
   exit( ret);
 }
@@ -110,6 +110,7 @@ ROOT_Init( const int argc, const char **argv){
   }
   
   *freenode = MS_FreeFromSize( NULL, MS_CreateSlab(), SLAB_SIZE);
+  freenode = MS_CreateFromLocal( freenode, FreeNode, freenode);
   freenode -> next = ( uintptr_t)freenode;
   freenode -> prev = ( uintptr_t)freenode;
   
@@ -141,26 +142,25 @@ ROOT_Init( const int argc, const char **argv){
     setzero( minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3});
     uncov_elements( minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1});
     uncov( minefield, NULL);
-    MF_FreeField( minefield);
-    MS_Free( mss, MS_stream);
+    MF_FreeField( freenode, minefield);
+    MS_Free( freenode, mss, MS_stream);
     quit( NULL);
-  }else{
-    
-    root = MS_Create( freenode, MS_root,
-		      .freenode = freenode,
-		      .real = real,
-		      .minefield = minefield,
-		      .mss = mss,
-		      .no_resize = no_resize);
-    
-    root -> freenode = freenode;
-    
-    root -> GW = GW_Init( root -> freenode, root);
-    
-    draw( root -> GW, *root -> minefield);
-    
-    setminefield( root -> minefield, root -> GW);
   }
+  
+  root = MS_Create( freenode, MS_root,
+		    .freenode = freenode,
+		    .real = real,
+		    .minefield = minefield,
+		    .mss = mss,
+		    .no_resize = no_resize);
+  
+  root -> freenode = freenode;
+  
+  root -> GW = GW_Init( root -> freenode, root);
+  
+  draw( root -> GW, *root -> minefield);
+  
+  setminefield( root -> minefield, root -> GW);
   
   return root;
 }
