@@ -157,6 +157,7 @@ MS_CreateSlabFromSize( size_t size){
   void * addr;
   size_t alo_size = size + SLAB_SIZE - 1;
   alo_size -= alo_size % SLAB_SIZE;
+  assert( alo_size == size);
 #ifdef MAP_ANONYMOUS
   addr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
   assert( addr != MAP_FAILED);
@@ -164,6 +165,7 @@ MS_CreateSlabFromSize( size_t size){
   addr = malloc( alo_size);
   assert( addr != NULL);
 #endif
+  assert( ( uintptr_t)addr % SLAB_SIZE == 0);
   return addr;
 }
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
@@ -265,6 +267,8 @@ static inline void *
 MS_FreeSlabFromSize( void *addr, size_t size){
   size_t alo_size = size + SLAB_SIZE - 1;
   alo_size -= alo_size % SLAB_SIZE;
+  assert( alo_size == size);
+  assert( ( uintptr_t)addr % SLAB_SIZE == 0);
   if( addr != NULL) munmap( addr, alo_size);
   return NULL;
 }
