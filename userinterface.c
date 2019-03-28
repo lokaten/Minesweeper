@@ -102,11 +102,11 @@ GW_Init( FreeNode *freenode, MS_root *root){
 }
 
 void
-GW_Free( void *GW){
+GW_Free( FreeNode *freenode, void *GW){
   if( GW != NULL){
     SDL_Quit();
     
-    // MS_Free( NULL, GW, GraphicWraper);
+    MS_Free( freenode, GW, GraphicWraper);
   }
 }
 

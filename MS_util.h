@@ -238,8 +238,6 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
       freenode -> prev = nf -> next;
     }
     
-    DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, nf -> end - nf -> begining, size);
-    
     if( nf -> end >= nf -> begining + SLAB_SIZE){
       size_t slab_size = nf -> end - nf -> begining;
       slab_size -= slab_size % SLAB_SIZE;
@@ -268,6 +266,8 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
       nf = ( FreeNode *)nfnext;
     }
   }while( nf != freenode);
+  
+  DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, size);
   
   return NULL;
 }
