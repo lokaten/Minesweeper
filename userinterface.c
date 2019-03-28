@@ -228,7 +228,7 @@ mousebuttondown( const MS_root * root,
 	++minefield -> mine -> flaged;
       }
       
-      drawelement( GW, minefield, postion.x, postion.y);
+      drawelement( GW, element, postion.x, postion.y);
     }
   default:
     break;
@@ -259,10 +259,9 @@ draw( void *gw_void, MS_field minefield){
 }
 
 void
-drawelement( void *VGW, const MS_field *minefield, s16 w, s16 h){
+drawelement( void *VGW, const MS_element *element, s16 w, s16 h){
   GraphicWraper *GW = ( GraphicWraper *)VGW;
   SDL_Texture *tile = NULL;
-  MS_element *element = acse( *minefield, w, h);
   
   if( element -> flag){
     tile =  GW -> flag;

@@ -25,7 +25,7 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
   
   uncovque = CS_CreateStream( freenode, MS_pos);
   
-  data = MS_CreateEmptyArray( freenode, truewidth * trueheight, MS_element);
+  data = MS_CreateArray( freenode, truewidth * trueheight, MS_element, .count = 14);
   
   return MS_Create( freenode, MS_field,
 		    .data = data,
@@ -74,14 +74,14 @@ setminefield( const MS_field  *minefield,
   
   while( i--){
     if( mol_( i, minefield -> width, minefield -> width_divobj) < minefield -> subwidth){
-      if( ( minefield -> data + i) -> count != 15 ||
-	  ( minefield -> data + i) -> flag  == 1){
-	
-	*( minefield -> data + i) = (MS_element){ .count = 15, .cover = 1, .unset = 1};
+      if( ( minefield -> data + i) -> cover == 0 ||
+	  ( minefield -> data + i) -> flag == 1){
 	
 	if( GW != NULL)
-	  drawelement( GW, minefield, mol_(i, minefield -> width, minefield -> width_divobj), div_( i, minefield -> width, minefield -> width_divobj));
+	  drawelement( GW, &( MS_element){ .cover = 1}, mol_(i, minefield -> width, minefield -> width_divobj), div_( i, minefield -> width, minefield -> width_divobj));
       }
+      
+      *( minefield -> data + i) = ( MS_element){ .count = 15, .cover = 1};
     }
   }
   
@@ -161,7 +161,7 @@ uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mi
   }
   
   if( GW != NULL)
-    drawelement( GW, &minefield, postion.x, postion.y);
+    drawelement( GW, acse( minefield, postion.x, postion.y), postion.x, postion.y);
   
   return acse( minefield, postion.x, postion.y);
 }
@@ -172,7 +172,7 @@ setmine_element( MS_element *element, MS_mstr *mine){
   assert( mine != NULL);
   assert( element != NULL);
   
-  if( element -> unset){
+  if( !element -> set && element -> count != 14){
     element -> mine = ( ( ( __uint64_t)( mine -> noelements - mine -> set  ) * ( __uint64_t)( mine -> seed = MS_rand( mine -> seed))) <
 			( ( __uint64_t)( mine -> level      - mine -> mines) * ( __uint64_t)MS_RAND_MAX));
     
@@ -180,7 +180,9 @@ setmine_element( MS_element *element, MS_mstr *mine){
     
     mine -> mines += element -> mine;
     
-    element -> unset = 0;
+    assert( mine -> mines <= mine -> level);
+    
+    element -> set = 1;
   }
   
   return element;
@@ -218,9 +220,10 @@ setzero( const MS_field *minefield,
     x = ( s32)( i % vid.width) + vid.xdiff;
     y = ( s32)( i / vid.width) + vid.ydiff;
     
-    if( acse( *minefield, x, y) -> unset &&
-        !acse( *minefield, x, y) -> flag){
-      acse( *minefield, x, y) -> unset = 0;
+    if( !acse( *minefield, x, y) -> set &&
+        !acse( *minefield, x, y) -> flag &&
+	acse(  *minefield, x, y) -> count == 15){
+      acse( *minefield, x, y) -> set = 1;
       ++minefield -> mine ->  set;
     }
     

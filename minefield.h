@@ -14,7 +14,7 @@ extern "C" {
     u8 mine:1;
     u8 cover:1;
     u8 flag:1;
-    u8 unset:1;
+    u8 set:1;
   }MS_element;
   
   
@@ -70,7 +70,7 @@ extern "C" {
   void uncov_elements( const MS_field *,  MS_video);
   
   /**/
-  void drawelement( void *, const MS_field *, s16, s16);
+  void drawelement( void *, const MS_element *, s16, s16);
   
 #ifdef __cplusplus
 }
