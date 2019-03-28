@@ -189,9 +189,10 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *vfreenode, const size_t num_mem, const
       FreeNode *nf = MS_CreateLocal( FreeNode, 0);
       size_t slab_alo_size = alo_size + SLAB_SIZE - 1;
       slab_alo_size -= slab_alo_size % SLAB_SIZE;
-      *nf = MS_FreeFromSize( NULL, MS_CreateSlabFromSize( slab_alo_size), slab_alo_size);
-      nf -> prev = ( uintptr_t)freenode;
-      nf -> next = ( uintptr_t)freenode;
+      nf -> begining = ( uintptr_t)MS_CreateSlabFromSize( slab_alo_size);
+      nf -> end      = nf -> begining + slab_alo_size;
+      nf -> prev     = ( uintptr_t)freenode;
+      nf -> next     = ( uintptr_t)freenode;
       vfreenode -> prev = ( uintptr_t)MS_CreateArrayFromSizeAndLocal( vfreenode, 1, sizeof( FreeNode), nf);
       freenode -> next = vfreenode -> prev;
     }
@@ -216,46 +217,43 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *vfreenode, const size_t num_mem, const
 static inline FreeNode
 MS_FreeFromSize( FreeNode *freenode, void * vaddr, size_t vsize){
   uintptr_t addr = ( uintptr_t)vaddr;
+  FreeNode *nf = freenode;
   size_t size = vsize + ALIGNMENT - 1;
   size -= size % ALIGNMENT;
+  
+  assert( freenode != NULL);
   if( addr == 0) return *freenode;
-  if( freenode == NULL){
-    freenode = MS_CreateLocal( FreeNode, 0);
-    freenode -> begining = addr;
-    freenode -> end      = addr + size;
-  }else{
-    FreeNode *nf = freenode;
-    while( size){
-      if( nf -> end == addr){
-	nf -> end += size;
-	size = 0;
-      }else if( nf -> begining == addr + size){
-	nf -> begining -= size;
-	size = 0;
-      }else if( nf -> next == ( uintptr_t)freenode){
-	nf -> next  = ( uintptr_t)MS_Create( freenode, FreeNode,
-					     .begining = addr,
-					     .end      = addr,
-					     .next     = ( uintptr_t)freenode,
-					     .prev     = ( uintptr_t)nf);
-	freenode -> prev = nf -> next;
-      }
-      
-      DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, nf -> end - nf -> begining, size);
-      
-      if( nf -> end >= nf -> begining + SLAB_SIZE){
-	size_t slab_size = nf -> end - nf -> begining;
-	slab_size -= slab_size % SLAB_SIZE;
-	MS_FreeSlabFromSize( ( void *)nf -> begining, slab_size);
-	nf -> begining += slab_size;
-      }
-      if( nf -> end == nf -> begining){
-	( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-      }
-      
-      nf = ( FreeNode *)nf -> next;
+  
+  while( size){
+    if( nf -> end == addr){
+      nf -> end += size;
+      size = 0;
+    }else if( nf -> begining == addr + size){
+      nf -> begining -= size;
+      size = 0;
+    }else if( nf -> next == ( uintptr_t)freenode){
+      nf -> next  = ( uintptr_t)MS_Create( freenode, FreeNode,
+					   .begining = addr,
+					   .end      = addr,
+					   .next     = ( uintptr_t)freenode,
+					   .prev     = ( uintptr_t)nf);
+      freenode -> prev = nf -> next;
     }
+    
+    DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, nf -> end - nf -> begining, size);
+    
+    if( nf -> end >= nf -> begining + SLAB_SIZE){
+      size_t slab_size = nf -> end - nf -> begining;
+      slab_size -= slab_size % SLAB_SIZE;
+      MS_FreeSlabFromSize( ( void *)nf -> begining, slab_size);
+      nf -> begining += slab_size;
+    }
+    if( nf -> end == nf -> begining){
+      ( ( FreeNode *)nf -> prev) -> next = nf -> next;
+      ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+    }
+    
+    nf = ( FreeNode *)nf -> next;
   }
   
   return *freenode;

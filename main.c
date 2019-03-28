@@ -109,10 +109,13 @@ ROOT_Init( const int argc, const char **argv){
 #endif
   }
   
-  *freenode = MS_FreeFromSize( NULL, MS_CreateSlab(), SLAB_SIZE);
+  freenode -> begining = ( uintptr_t)MS_CreateSlab();
+  freenode -> end      = freenode -> begining + SLAB_SIZE;
+  
   freenode = MS_CreateFromLocal( freenode, FreeNode, freenode);
-  freenode -> next = ( uintptr_t)freenode;
-  freenode -> prev = ( uintptr_t)freenode;
+  
+  freenode -> next     = ( uintptr_t)freenode;
+  freenode -> prev     = ( uintptr_t)freenode;
   
   if( custom){
     if( custom_level >= ( custom_width * custom_height)){

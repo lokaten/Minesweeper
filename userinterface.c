@@ -106,7 +106,7 @@ GW_Free( void *GW){
   if( GW != NULL){
     SDL_Quit();
     
-    MS_Free( NULL, GW, GraphicWraper);
+    // MS_Free( NULL, GW, GraphicWraper);
   }
 }
 
