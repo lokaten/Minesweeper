@@ -241,6 +241,17 @@ MS_FreeFromSize( FreeNode *freenode, void * vaddr, size_t vsize){
       
       DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, nf -> end - nf -> begining, size);
       
+      if( nf -> end >= nf -> begining + SLAB_SIZE){
+	size_t slab_size = nf -> end - nf -> begining;
+	slab_size -= slab_size % SLAB_SIZE;
+	MS_FreeSlabFromSize( ( void *)nf -> begining, slab_size);
+	nf -> begining += slab_size;
+      }
+      if( nf -> end == nf -> begining){
+	( ( FreeNode *)nf -> prev) -> next = nf -> next;
+	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+      }
+      
       nf = ( FreeNode *)nf -> next;
     }
   }
