@@ -247,22 +247,33 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
     {
       uintptr_t nfnext = nf -> next;
       
-      if( nf -> end == nf -> begining){
-	( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
-      }else if( freenode -> end == nf -> begining){
-	freenode -> end = nf -> end;
-	( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
-      }else if( freenode -> begining == nf -> end){
-	freenode -> begining = nf -> begining;
-	( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
-      }else if( freenode != nf){
-	if( nf -> end == ( uintptr_t)nf){
+      if( freenode != nf){
+	if( nf -> end == nf -> begining){
+	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
+	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
+	}else if( freenode -> end == nf -> begining){
+	  freenode -> end = nf -> end;
+	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
+	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
+	}else if( freenode -> begining == nf -> end){
+	  freenode -> begining = nf -> begining;
+	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
+	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
+	}else if( freenode -> begining == ( uintptr_t)nf + sizeof( FreeNode)){
+	  //
+	  // TODO: We need to move nf so that freenode can increas in size
+	  // till it incompas a hole slab, so that we can free that slab
+	  //
+	}else if( freenode -> end == ( uintptr_t)nf){
+	  FreeNode g = *nf;
+	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
+	  nf = MS_CreateFromLocal( freenode, FreeNode, &g);
+	  ( ( FreeNode *)nf -> prev) -> next = ( uintptr_t)nf;
+	  ( ( FreeNode *)nf -> next) -> prev = ( uintptr_t)nf;
+	}else if( nf -> end == ( uintptr_t)nf){
 	  FreeNode g = *nf;
 	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
 	  nf = MS_CreateFromLocal( freenode, FreeNode, &g);

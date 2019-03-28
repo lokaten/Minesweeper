@@ -27,10 +27,14 @@ quit( const MS_root *root){
 
 static inline const MS_root *
 ROOT_FreeRoot( const MS_root *root){
-  GW_Free( root -> freenode, root -> GW);
-  MF_FreeField( root -> freenode, root -> minefield);
-  MS_Free( root -> freenode, root -> mss, MS_stream);
-  MS_Free( root -> freenode, root, MS_root);
+  FreeNode g = *root -> freenode;
+  ( ( FreeNode *)( ( &g) -> prev)) -> next = ( uintptr_t)&g;
+  ( ( FreeNode *)( ( &g) -> next)) -> prev = ( uintptr_t)&g;
+  MS_Free( &g, root -> freenode, FreeNode);
+  MS_Free( &g, root -> mss, MS_stream);
+  MF_FreeField( &g, root -> minefield);
+  GW_Free( &g, root -> GW);
+  MS_Free( &g, root, MS_root);
   return NULL;
 }
 
