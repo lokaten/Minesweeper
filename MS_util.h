@@ -251,16 +251,30 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
 	( ( FreeNode *)nf -> prev) -> next = nf -> next;
 	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
 	MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
-      }else if( ff -> end == nf -> begining){
-	ff -> end = nf -> end;
+      }else if( freenode -> end == nf -> begining){
+	freenode -> end = nf -> end;
 	( ( FreeNode *)nf -> prev) -> next = nf -> next;
 	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
 	MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
-      }else if( ff -> begining == nf -> end){
-	ff -> begining = nf -> begining;
+      }else if( freenode -> begining == nf -> end){
+	freenode -> begining = nf -> begining;
 	( ( FreeNode *)nf -> prev) -> next = nf -> next;
 	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
 	MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
+      }else if( freenode != nf){
+	if( nf -> end == ( uintptr_t)nf){
+	  FreeNode g = *nf;
+	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
+	  nf = MS_CreateFromLocal( freenode, FreeNode, &g);
+	  ( ( FreeNode *)nf -> prev) -> next = ( uintptr_t)nf;
+	  ( ( FreeNode *)nf -> next) -> prev = ( uintptr_t)nf;
+	}else if( nf -> begining == ( uintptr_t)nf + sizeof( FreeNode)){
+	  FreeNode g = *nf;
+	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
+	  nf = MS_CreateFromLocal( freenode, FreeNode, &g);
+	  ( ( FreeNode *)nf -> prev) -> next = ( uintptr_t)nf;
+	  ( ( FreeNode *)nf -> next) -> prev = ( uintptr_t)nf;
+	}
       }
       
       nf = ( FreeNode *)nfnext;
