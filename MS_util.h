@@ -9,16 +9,19 @@ extern "C" {
 
 
 #include <sys/mman.h> // mmap
-#include <sys/time.h>
+#include <sys/time.h> // clock_gettime
 
-#include <stdio.h>
-#include <stdarg.h>
 #include <assert.h>
 #include <string.h> // memcpy
 
 #include <stdint.h>
 
 #include <unistd.h> // _SC_PAGE_SIZE
+
+#ifndef NO_TERM
+#include <stdio.h> // printf
+#include <stdarg.h> // va_list
+#endif
 
 #ifndef MAP_ANONYMOUS
 #include <stdlib.h> // malloc
@@ -107,10 +110,10 @@ typedef struct{
 
 
 typedef struct{
-  FILE *out;
-  FILE *err;
-  FILE *deb;
-  FILE *hlp;
+  void *out;
+  void *err;
+  void *deb;
+  void *hlp;
 }MS_stream;
 
 
@@ -123,6 +126,12 @@ typedef struct{
 
 #define MS_RAND_MAX U32C( 0xffffffff)
 
+#ifdef DEBUG
+#define DEBUG_PRINT( file, string, ...) fprintf( file, string, __VA_ARGS__)
+#else
+#define DEBUG_PRINT( ...) (void)0
+#endif
+
 static inline void *MS_CreateSlabFromSize( size_t size);
 static inline void *MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
 static inline FreeNode MS_FreeFromSize( FreeNode *, void *, size_t);
@@ -133,11 +142,11 @@ static inline u32 div_( u32, u32, u32);
 static inline u32 MS_rand( u32);
 
 static inline u32 MS_rand_seed( void);
-static inline int MS_print( FILE *, const char *, ...);
+static inline int MS_print( void *, const char *, ...);
 static inline __uint64_t getmicrosec( void);
 static inline __uint64_t getnanosec( void);
 
-#define SLAB_SIZE sysconf( _SC_PAGE_SIZE)
+#define SLAB_SIZE ( size_t)sysconf( _SC_PAGE_SIZE)
 #define ALIGNMENT sizeof( uintptr_t)
 
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
@@ -160,18 +169,34 @@ MS_CreateSlabFromSize( size_t size){
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
 
 static inline void *
-MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const size_t size, const void *ptr){
+MS_CreateArrayFromSizeAndLocal( FreeNode *vfreenode, const size_t num_mem, const size_t size, const void *ptr){
   u32 i = num_mem;
   uintptr_t addr = 0;
   size_t alo_size;
+  FreeNode *freenode = vfreenode;
   assert( size);
   assert( num_mem);
   assert( freenode != NULL);
   alo_size = num_mem * size + ALIGNMENT - 1;
   alo_size -= alo_size % ALIGNMENT;
-  if( ( freenode -> end - freenode -> begining) >= alo_size){
-    addr = freenode -> begining;
-    freenode -> begining += alo_size;
+  while( addr == 0){
+    if( freenode -> end >= freenode -> begining + alo_size){
+      addr = freenode -> begining;
+      freenode -> begining += alo_size;
+    }else if( freenode -> next == ( uintptr_t)vfreenode){
+      FreeNode *nf = MS_CreateLocal( FreeNode, 0);
+      size_t slab_alo_size = alo_size + SLAB_SIZE - 1;
+      slab_alo_size -= slab_alo_size % SLAB_SIZE;
+      *nf = MS_FreeFromSize( NULL, MS_CreateSlabFromSize( slab_alo_size), slab_alo_size);
+      nf -> prev = ( uintptr_t)freenode;
+      nf -> next = ( uintptr_t)freenode;
+      vfreenode -> prev = ( uintptr_t)MS_CreateArrayFromSizeAndLocal( vfreenode, 1, sizeof( FreeNode), nf);
+      freenode -> next = vfreenode -> prev;
+    }
+    
+    DEBUG_PRINT( stdout, "slab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, freenode -> end - freenode -> begining, alo_size);
+    
+    freenode = ( FreeNode *)freenode -> next;
   }
   assert( addr != 0);
   while( i--){
@@ -280,7 +305,7 @@ MS_rand_seed( void){
 _Pragma("GCC diagnostic ignored \"-Wformat-nonliteral\"")
 
 static inline int
-MS_print( FILE *stream, const char * format, ...){
+MS_print( void *stream, const char * format, ...){
   int ret = 0;
 #ifdef NO_TERM
   ( void) stream;
@@ -289,18 +314,14 @@ MS_print( FILE *stream, const char * format, ...){
   if( stream != NULL){
     va_list args;
     va_start( args, format);
-    ret = vfprintf( stream, format, args);
+    ret = vfprintf( ( FILE *)stream, format, args);
     fflush( stream);
     va_end( args);
   }
 #endif
   return ret;
 }
-#ifdef DEBUG
-#define DEBUG_PRINT MS_print
-#else
-#define DEBUG_PRINT( ...) (void)0
-#endif
+
 
 //
 // get system time in microsecond...

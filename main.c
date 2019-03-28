@@ -29,7 +29,7 @@ quit( const MS_root *root){
 MS_root *
 ROOT_Init( const int argc, const char **argv){
   MS_root *root;
-  FreeNode freenode;
+  FreeNode *freenode = MS_CreateLocal( FreeNode, 0);
   
   MS_video real;
   MS_field *minefield;
@@ -46,8 +46,11 @@ ROOT_Init( const int argc, const char **argv){
   MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0);
   MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0);
   MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0);
-  
+
+#ifndef NO_TERM
   MS_stream *very_quiet = MS_CreateLocal( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
+#endif
+  
   MS_stream *def_out    = MS_CreateLocal( MS_stream, .out = stdout, .err = stderr, .deb = NULL, .hlp = NULL);
   
   const unsigned long opt_true  = TRUE;
@@ -106,7 +109,9 @@ ROOT_Init( const int argc, const char **argv){
 #endif
   }
   
-  freenode = MS_FreeFromSize( NULL, MS_CreateSlab(), SLAB_SIZE);
+  *freenode = MS_FreeFromSize( NULL, MS_CreateSlab(), SLAB_SIZE);
+  freenode -> next = ( uintptr_t)freenode;
+  freenode -> prev = ( uintptr_t)freenode;
   
   if( custom){
     if( custom_level >= ( custom_width * custom_height)){
@@ -114,12 +119,12 @@ ROOT_Init( const int argc, const char **argv){
       MS_print( mss -> err, TERM("\rMore mines then elments!\n"));
     }
     
-    minefield = MF_CreateField( &freenode, .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
+    minefield = MF_CreateField( freenode, .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
   }else{
-    minefield = MF_CreateFieldFromLocal( &freenode, minefield);
+    minefield = MF_CreateFieldFromLocal( freenode, minefield);
   }
   
-  mss = MS_CreateFromLocal( &freenode, MS_stream, mss);
+  mss = MS_CreateFromLocal( freenode, MS_stream, mss);
   
   assert( minefield -> title != NULL);
   
@@ -141,14 +146,14 @@ ROOT_Init( const int argc, const char **argv){
     quit( NULL);
   }else{
     
-    root = MS_Create( &freenode, MS_root,
-		      .freenode = MS_CreateEmpty( &freenode, FreeNode),
+    root = MS_Create( freenode, MS_root,
+		      .freenode = freenode,
 		      .real = real,
 		      .minefield = minefield,
 		      .mss = mss,
 		      .no_resize = no_resize);
     
-    root -> freenode = &freenode;
+    root -> freenode = freenode;
     
     root -> GW = GW_Init( root -> freenode, root);
     
@@ -156,8 +161,6 @@ ROOT_Init( const int argc, const char **argv){
     
     setminefield( root -> minefield, root -> GW);
   }
-  
-  DEBUG_PRINT( stdout, "slab: %u  \tleft %u   \n", SLAB_SIZE, root -> freenode -> end - root -> freenode -> begining);
   
   return root;
 }
