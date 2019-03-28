@@ -134,8 +134,8 @@ typedef struct{
 
 static inline void *MS_CreateSlabFromSize( size_t size);
 static inline void *MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
-static inline void *MS_FreeFromSize( FreeNode *, void *, size_t);
-static inline void *MS_FreeSlabFromSize( void *, size_t);
+static inline const void *MS_FreeFromSize( FreeNode *, const void *, const size_t);
+static inline const void *MS_FreeSlabFromSize( void *, const size_t);
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
 static inline u32 div_( u32, u32, u32);
@@ -214,21 +214,21 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *vfreenode, const size_t num_mem, const
 #define MS_CreateArray( freenode, num_mem, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), &( const type){ __VA_ARGS__})
 #define MS_CreateArrayFromLocal( freenode, num_mem, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), local)
 
-static inline void *
-MS_FreeFromSize( FreeNode *freenode, void * vaddr, size_t vsize){
-  uintptr_t addr = ( uintptr_t)vaddr;
-  FreeNode *nf = freenode;
+static inline const void *
+MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
+  const uintptr_t addr = ( const uintptr_t)vaddr;
+  FreeNode *nf = freenode, *ff = freenode;
   size_t size = vsize + ALIGNMENT - 1;
   size -= size % ALIGNMENT;
   assert( freenode != NULL);
   assert( addr != 0);
-  while( size){
+  do{
     if( nf -> end == addr){
       nf -> end += size;
-      size = 0;
+      ff = nf;
     }else if( nf -> begining == addr + size){
       nf -> begining -= size;
-      size = 0;
+      ff = nf;
     }else if( nf -> next == ( uintptr_t)freenode){
       nf -> next  = ( uintptr_t)MS_Create( freenode, FreeNode,
 					   .begining = addr,
@@ -246,21 +246,36 @@ MS_FreeFromSize( FreeNode *freenode, void * vaddr, size_t vsize){
       MS_FreeSlabFromSize( ( void *)nf -> begining, slab_size);
       nf -> begining += slab_size;
     }
-    if( nf -> end == nf -> begining){
-      ( ( FreeNode *)nf -> prev) -> next = nf -> next;
-      ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+    {
+      uintptr_t nfnext = nf -> next;
+      
+      if( nf -> end == nf -> begining){
+	( ( FreeNode *)nf -> prev) -> next = nf -> next;
+	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+	MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
+      }else if( ff -> end == nf -> begining){
+	ff -> end = nf -> end;
+	( ( FreeNode *)nf -> prev) -> next = nf -> next;
+	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+	MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
+      }else if( ff -> begining == nf -> end){
+	ff -> begining = nf -> begining;
+	( ( FreeNode *)nf -> prev) -> next = nf -> next;
+	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+	MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
+      }
+      
+      nf = ( FreeNode *)nfnext;
     }
-    
-    nf = ( FreeNode *)nf -> next;
-  }
+  }while( nf != freenode);
   
   return NULL;
 }
 #define MS_Free( freenode, addr, type) MS_FreeFromSize( freenode, addr, sizeof( type))
 #define MS_FreeArray( freenode, addr, num_mem, type) MS_FreeFromSize( freenode, addr, num_mem * sizeof( type))
 
-static inline void *
-MS_FreeSlabFromSize( void *addr, size_t size){
+static inline const void *
+MS_FreeSlabFromSize( void *addr, const size_t size){
   size_t alo_size = size + SLAB_SIZE - 1;
   alo_size -= alo_size % SLAB_SIZE;
   assert( alo_size == size);

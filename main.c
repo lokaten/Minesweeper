@@ -11,7 +11,7 @@
 #include "minefield.h"
 #include "OPT.h"
 
-
+static inline const MS_root * ROOT_FreeRoot( const MS_root *);
 MS_root *ROOT_Init( const int, const char **);
 static inline void printtime( FILE *, u64);
 
@@ -19,12 +19,20 @@ static inline void printtime( FILE *, u64);
 void
 quit( const MS_root *root){
   int ret = 0;
-  GW_Free( root -> GW);
-  MF_FreeFieldPartial( root -> freenode, root -> minefield);
-  MS_print( root -> mss -> out, TERM("\rBye!                                \n"));
+  void *f = root -> mss -> out;
+  ROOT_FreeRoot( root);
+  MS_print( f, TERM("\rBye!                                \n"));
   exit( ret);
 }
 
+static inline const MS_root *
+ROOT_FreeRoot( const MS_root *root){
+  GW_Free( root -> GW);
+  MF_FreeField( root -> freenode, root -> minefield);
+  MS_Free( root -> freenode, root -> mss, MS_stream);
+  MS_Free( root -> freenode, root, MS_root);
+  return NULL;
+}
 
 MS_root *
 ROOT_Init( const int argc, const char **argv){

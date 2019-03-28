@@ -43,23 +43,13 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
 		    .reseed = proto -> reseed);
 }
 
-
 void
-MF_FreeFieldPartial( FreeNode *freenode, const MS_field *minefield){
+MF_FreeField(  FreeNode *freenode, const MS_field *minefield){
   if( minefield != NULL){
     MS_FreeArray( freenode, minefield -> data, minefield -> width * minefield -> height, MS_element);
     MS_Free( freenode, minefield -> mine, MS_mstr);
     
     CS_Free( freenode, minefield -> uncovque);
-  }
-}
-
-
-void
-MF_FreeField( FreeNode *freenode, MS_field *minefield){
-  MF_FreeFieldPartial( freenode, minefield);
-  
-  if( minefield != NULL){
     MS_Free( freenode, minefield, MS_field);
   }
 }
