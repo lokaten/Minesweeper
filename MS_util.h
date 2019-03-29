@@ -266,9 +266,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
 	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
 	}else{
 	  if( ( nf       -> end == ( uintptr_t)nf) ||
-	      ( freenode -> end == ( uintptr_t)nf) ||
-	      ( nf       -> begining  == ( uintptr_t)nf + sizeof( FreeNode)) ||
-	      ( freenode -> begining  == ( uintptr_t)nf + sizeof( FreeNode))){
+	      ( freenode -> end == ( uintptr_t)nf)){
 	    nf = MS_CreateFromLocal( freenode, FreeNode, nf);
 	    ( ( FreeNode *)nf -> prev) -> next = ( uintptr_t)nf;
 	    ( ( FreeNode *)nf -> next) -> prev = ( uintptr_t)nf;
@@ -277,12 +275,6 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
 	      DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, nf -> end - nf -> begining, sizeof( FreeNode));
 	    }else if( freenode -> end == ( uintptr_t)nf){
 	      freenode -> end += sizeof( FreeNode);
-	      DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, freenode -> end - freenode -> begining, sizeof( FreeNode));
-	    }else if( nf -> begining  == ( uintptr_t)nf + sizeof( FreeNode)){
-	      nf -> begining -= sizeof( FreeNode);
-	      DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, nf -> end - nf -> begining, sizeof( FreeNode));
-	    }else if( freenode -> begining  == ( uintptr_t)nf + sizeof( FreeNode)){
-	      freenode -> begining -= sizeof( FreeNode);
 	      DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, freenode -> end - freenode -> begining, sizeof( FreeNode));
 	    }
 	  }
