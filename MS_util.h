@@ -192,9 +192,10 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *vfreenode, const size_t num_mem, const
       nf -> begining = ( uintptr_t)MS_CreateSlabFromSize( slab_alo_size);
       nf -> end      = nf -> begining + slab_alo_size;
       nf -> prev     = ( uintptr_t)freenode;
-      nf -> next     = ( uintptr_t)freenode;
-      vfreenode -> prev = ( uintptr_t)MS_CreateArrayFromSizeAndLocal( vfreenode, 1, sizeof( FreeNode), nf);
-      freenode -> next = vfreenode -> prev;
+      nf -> next     = ( uintptr_t)vfreenode;
+      nf = MS_CreateArrayFromSizeAndLocal( vfreenode, 1, sizeof( FreeNode), nf);
+      vfreenode -> prev = ( uintptr_t)nf;
+      freenode  -> next = ( uintptr_t)nf;
     }
     
     DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, freenode -> end - freenode -> begining, alo_size);
