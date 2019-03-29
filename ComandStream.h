@@ -55,7 +55,7 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
 		      .blk_size = blk_size,
 		      .size = size);
   
-  ptr = MS_CreateSlab();
+  ptr = ( char *)MS_CreateSlab();
   
   *( char **)( ptr + Stream -> blk_size) = ptr;
   
@@ -81,7 +81,7 @@ CS_Fetch( ComandStream *Stream){
   
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
     if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
-	char *ptr = MS_CreateSlab();
+      char *ptr = ( char *)MS_CreateSlab();
       // lock
       *( char **)( ptr + Stream -> blk_size) = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
       *( char **)( Stream -> blk_fetch + Stream -> blk_size) = ptr;

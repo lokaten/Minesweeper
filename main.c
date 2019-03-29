@@ -19,7 +19,7 @@ static inline void printtime( FILE *, u64);
 void
 quit( const MS_root *root){
   int ret = 0;
-  void *f = root -> mss -> out;
+  FILE *f = root -> mss -> out;
   ROOT_FreeRoot( root);
   MS_print( f, TERM("\rBye!                                \n"));
   exit( ret);

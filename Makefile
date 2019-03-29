@@ -14,6 +14,7 @@ endif
 ifeq ($(CLANGPP), yes)
 CC = clang++ -std=c++11
 CXX = clang++ -std=c++11
+CFLAGS += -Wno-address-of-temporary -Wno-missing-field-initializers
 endif
 
 ifeq ($(GPP), yes)

@@ -18,8 +18,9 @@ extern "C" {
 
 #include <unistd.h> // _SC_PAGE_SIZE
 
+#include <stdio.h> // FILE
+
 #ifndef NO_TERM
-#include <stdio.h> // printf
 #include <stdarg.h> // va_list
 #endif
 
@@ -108,14 +109,12 @@ typedef struct{
   u32 realheight;
 }MS_video;
 
-
 typedef struct{
-  void *out;
-  void *err;
-  void *deb;
-  void *hlp;
+  FILE *out;
+  FILE *err;
+  FILE *deb;
+  FILE *hlp;
 }MS_stream;
-
 
 typedef struct{
   uintptr_t prev;
@@ -142,7 +141,7 @@ static inline u32 div_( u32, u32, u32);
 static inline u32 MS_rand( u32);
 
 static inline u32 MS_rand_seed( void);
-static inline int MS_print( void *, const char *, ...);
+static inline int MS_print( FILE *, const char *, ...);
 static inline __uint64_t getmicrosec( void);
 static inline __uint64_t getnanosec( void);
 
@@ -193,7 +192,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *vfreenode, const size_t num_mem, const
       nf -> end      = nf -> begining + slab_alo_size;
       nf -> prev     = ( uintptr_t)freenode;
       nf -> next     = ( uintptr_t)vfreenode;
-      nf = MS_CreateArrayFromSizeAndLocal( vfreenode, 1, sizeof( FreeNode), nf);
+      nf = ( FreeNode *)MS_CreateArrayFromSizeAndLocal( vfreenode, 1, sizeof( FreeNode), nf);
       vfreenode -> prev = ( uintptr_t)nf;
       freenode  -> next = ( uintptr_t)nf;
     }
@@ -368,7 +367,7 @@ MS_rand_seed( void){
 _Pragma("GCC diagnostic ignored \"-Wformat-nonliteral\"")
 
 static inline int
-MS_print( void *stream, const char * format, ...){
+MS_print( FILE *stream, const char * format, ...){
   int ret = 0;
 #ifdef NO_TERM
   ( void) stream;
