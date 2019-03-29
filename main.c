@@ -26,28 +26,29 @@ quit( const MS_root *root){
 }
 
 static inline const MS_root *
-ROOT_FreeRoot( const MS_root *root){
-  FreeNode g = *root -> freenode;
-  ( ( FreeNode *)( ( &g) -> prev)) -> next = ( uintptr_t)&g;
-  ( ( FreeNode *)( ( &g) -> next)) -> prev = ( uintptr_t)&g;
-  MS_Free( &g, root -> freenode, FreeNode);
-  MS_Free( &g, root -> mss, MS_stream);
-  MF_FreeField( &g, root -> minefield);
-  GW_Free( &g, root -> GW);
-  MS_Free( &g, root, MS_root);
+ROOT_FreeRoot( const MS_root *proot){
+  MS_root root = *proot;
+  FreeNode g = *proot -> freenode;
+  ( ( FreeNode *) ( &g) -> prev) -> next = ( uintptr_t)&g;
+  ( ( FreeNode *) ( &g) -> next) -> prev = ( uintptr_t)&g;
+  GW_Free( &g, ( &root) -> GW);
+  MS_Free( &g, proot, MS_root);
+  MS_Free( &g, ( &root) -> mss, MS_stream);
+  MF_FreeField( &g, ( &root) -> minefield);
+  MS_Free( &g, ( &root) -> freenode, FreeNode);
   return NULL;
 }
 
 MS_root *
 ROOT_Init( const int argc, const char **argv){
   MS_root *root;
-  FreeNode *freenode = MS_CreateLocal( FreeNode, 0);
+  FreeNode *freenode;
   
   MS_video real;
   MS_field *minefield;
   MS_stream *mss;
   bool no_resize;
-
+  
   u32 custom = FALSE; // procopt will overflow _Bool
   u32 custom_global = FALSE;
   u16 custom_width;
@@ -58,7 +59,7 @@ ROOT_Init( const int argc, const char **argv){
   MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0);
   MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0);
   MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0);
-
+  
 #ifndef NO_TERM
   MS_stream *very_quiet = MS_CreateLocal( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
 #endif
@@ -121,6 +122,7 @@ ROOT_Init( const int argc, const char **argv){
 #endif
   }
   
+  freenode  = MS_CreateLocal( FreeNode, 0);
   freenode -> begining = ( uintptr_t)MS_CreateSlab();
   freenode -> end      = freenode -> begining + SLAB_SIZE;
   
@@ -168,8 +170,6 @@ ROOT_Init( const int argc, const char **argv){
 		    .minefield = minefield,
 		    .mss = mss,
 		    .no_resize = no_resize);
-  
-  root -> freenode = freenode;
   
   root -> GW = GW_Init( root -> freenode, root);
   

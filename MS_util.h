@@ -217,12 +217,13 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *vfreenode, const size_t num_mem, const
 static inline const void *
 MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
   const uintptr_t addr = ( const uintptr_t)vaddr;
-  FreeNode *nf = freenode, *ff = freenode;
+  FreeNode *nf = freenode, *ff = NULL;
   size_t size = vsize + ALIGNMENT - 1;
   size -= size % ALIGNMENT;
   assert( freenode != NULL);
   assert( addr != 0);
-  do{
+  while( ff == NULL){
+    
     if( nf -> end == addr){
       nf -> end += size;
       ff = nf;
@@ -244,6 +245,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
       MS_FreeSlabFromSize( ( void *)nf -> begining, slab_size);
       nf -> begining += slab_size;
     }
+    
     {
       uintptr_t nfnext = nf -> next;
       
@@ -262,35 +264,12 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
 	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
 	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
 	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
-	}else if( freenode -> begining == ( uintptr_t)nf + sizeof( FreeNode)){
-	  //
-	  // TODO: We need to move nf so that freenode can increas in size
-	  // till it incompas a hole slab, so that we can free that slab
-	  //
-	}else if( freenode -> end == ( uintptr_t)nf){
-	  FreeNode g = *nf;
-	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
-	  nf = MS_CreateFromLocal( freenode, FreeNode, &g);
-	  ( ( FreeNode *)nf -> prev) -> next = ( uintptr_t)nf;
-	  ( ( FreeNode *)nf -> next) -> prev = ( uintptr_t)nf;
-	}else if( nf -> end == ( uintptr_t)nf){
-	  FreeNode g = *nf;
-	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
-	  nf = MS_CreateFromLocal( freenode, FreeNode, &g);
-	  ( ( FreeNode *)nf -> prev) -> next = ( uintptr_t)nf;
-	  ( ( FreeNode *)nf -> next) -> prev = ( uintptr_t)nf;
-	}else if( nf -> begining == ( uintptr_t)nf + sizeof( FreeNode)){
-	  FreeNode g = *nf;
-	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
-	  nf = MS_CreateFromLocal( freenode, FreeNode, &g);
-	  ( ( FreeNode *)nf -> prev) -> next = ( uintptr_t)nf;
-	  ( ( FreeNode *)nf -> next) -> prev = ( uintptr_t)nf;
 	}
       }
       
       nf = ( FreeNode *)nfnext;
     }
-  }while( nf != freenode);
+  }
   
   DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, size);
   
