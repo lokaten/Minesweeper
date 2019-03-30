@@ -259,11 +259,6 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
 	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
 	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
 	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
-	}else if( freenode -> begining == nf -> end){
-	  freenode -> begining = nf -> begining;
-	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	  MS_FreeFromSize( freenode, nf, sizeof( FreeNode));
 	}else{
 	  if( ( nf       -> end == ( uintptr_t)nf) ||
 	      ( freenode -> end == ( uintptr_t)nf)){
