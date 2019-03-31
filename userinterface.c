@@ -283,17 +283,17 @@ drawelement( void *VGW, const MS_element *element, s16 w, s16 h){
       break;
     }
   
-  if likely( tile != NULL){
-    SDL_SetRenderTarget( GW -> renderer, GW -> target);
-    
-    MS_BlitTile( GW -> renderer, tile,
-		 ( ( w - GW -> real.xdiff)) * (s16)GW -> real.element_width ,
-		 ( ( h - GW -> real.ydiff)) * (s16)GW -> real.element_height,
-		 (int)GW -> real.element_width,
-		 (int)GW -> real.element_height);
-    
-    SDL_SetRenderTarget( GW -> renderer, NULL);
-  }
+  assert( tile != NULL);
+  
+  SDL_SetRenderTarget( GW -> renderer, GW -> target);
+  
+  MS_BlitTile( GW -> renderer, tile,
+	       ( ( w - GW -> real.xdiff)) * (s16)GW -> real.element_width ,
+	       ( ( h - GW -> real.ydiff)) * (s16)GW -> real.element_height,
+	       (int)GW -> real.element_width,
+	       (int)GW -> real.element_height);
+  
+  SDL_SetRenderTarget( GW -> renderer, NULL);
 }
 
 static inline SDL_Texture *
@@ -302,24 +302,25 @@ MS_OpenImage( SDL_Renderer *render, const char *str){
   SDL_Surface *img = NULL;
   assert( render != NULL);
   assert(    str != NULL);
-  if unlikely( ( img = IMG_Load( str                            )) == NULL) goto bail;
-  if unlikely( ( tex = SDL_CreateTextureFromSurface( render, img)) == NULL) goto bail;
- bail:
-  if( img != NULL) SDL_free( img);
+  img = IMG_Load( str);
+  assert( img != NULL);
+  tex = SDL_CreateTextureFromSurface( render, img);
+  assert( tex != NULL);
+  SDL_free( img);
   return tex;
 }
 
 static inline int
 MS_BlitTex( SDL_Renderer *renderer, SDL_Texture *tex, int dx, int dy, int w, int h, int sx, int sy){
-  dassert( renderer != NULL);
-  dassert(      tex != NULL);
+  assert( renderer != NULL);
+  assert(      tex != NULL);
   return SDL_RenderCopyEx( renderer, tex, &( SDL_Rect){ .x = sx, .y = sy, .w = w, .h = h}, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
 }
 
 static inline int
 MS_BlitTile( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, int h){
-  dassert( renderer != NULL);
-  dassert(     tile != NULL);
+  assert( renderer != NULL);
+  assert(     tile != NULL);
   return SDL_RenderCopyEx( renderer, tile, NULL, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
 }
 

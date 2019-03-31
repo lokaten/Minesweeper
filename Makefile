@@ -9,17 +9,21 @@ ifeq ($(GCC), yes)
 CC = gcc -std=gnu99
 CXX = g++ -std=c++2a
 CFLAGS += -Wlogical-op -faggressive-loop-optimizations
+CFLAGS += -pedantic -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes -Wdeclaration-after-statement
 endif
 
 ifeq ($(CLANGPP), yes)
 CC = clang++ -std=c++11
 CXX = clang++ -std=c++11
-CFLAGS += -Wno-address-of-temporary -Wno-missing-field-initializers
+CFLAGS += -Wevrything -Wno-address-of-temporary -Wno-missing-field-initializers
+CFLAGS += -Wno-old-style-cast -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary
 endif
 
 ifeq ($(GPP), yes)
 CC = g++ -std=c++2a
 CXX = g++ -std=c++2a
+CFLAGS += -Wlogical-op -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel -Wno-error=missing-field-initializers -Wno-missing-field-initializers -Wno-error=pedantic -Wno-error
+CXXFLAGS += -Wnoexcept -Wstrict-null-sentinel
 endif
 
 ifeq ($(DEBUG), yes)
@@ -51,17 +55,6 @@ CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabl
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo
 
-ifeq ($(GPP), yes)
-CFLAGS += -Wlogical-op -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel -Wno-error=missing-field-initializers -Wno-missing-field-initializers -Wno-error=pedantic -Wno-error
-CXXFLAGS += -Wnoexcept -Wstrict-null-sentinel
-else
-CFLAGS += -pedantic -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes -Wdeclaration-after-statement
-endif
-
-ifeq ($(CLANGPP), yes)
-CFLAGS += -Wno-old-style-cast -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary -Wno-error=missing-field-initializers
-endif
-
 PFLAGS =
 LTO_FLAGS =
 LDFLAGS =
@@ -90,7 +83,11 @@ RM = rm -f
 STRIP = strip --strip-unneeded
 
 TARGET = Minesweeper
+ifeq ($(EPOXY),yes)
+LIBS += -lrt -lwayland-egl -lwayland-client -lepoxy
+else
 LIBS += -lrt -lSDL2 -lSDL2_image
+endif
 
 .PHONY: all clean
 .SUFFIXES: .c .o
@@ -105,11 +102,13 @@ clean:
 
 strip:
 	$(STRIP) $(TARGET)
-
-#$(TARGET): main.o epoxy.o minefield.o
+ifeq ($(EPOXY),yes)
+$(TARGET): main.o epoxy.o minefield.o
+	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS) $(PFLAGS) $(LTO_FLAGS)
+else
 $(TARGET): main.o userinterface.o minefield.o
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS) $(PFLAGS) $(LTO_FLAGS)
-
+endif
 
 ifeq ($(DEV),yes)
 else

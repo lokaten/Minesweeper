@@ -108,7 +108,7 @@ ROOT_Init( const int argc, const char **argv){
 #endif
       { OPTSW_NUL, TERM(""/* Last elemnt is a NULL termination */), ""               , 0  , NULL                       , NULL}};
     
-    real = (MS_video){ .element_width = 15, .element_height = 15};
+    real = ( MS_video){ .element_width = 15, .element_height = 15};
     
     if( procopt( mss, opt, argc, argv)){
       MS_print( mss -> err, TERM("\rWRong or broken input, pleas refer to --help\n"));
@@ -140,6 +140,14 @@ ROOT_Init( const int argc, const char **argv){
     minefield = MF_CreateField( freenode, .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
   }else{
     minefield = MF_CreateFieldFromLocal( freenode, minefield);
+  }
+  
+  {
+    real.realwidth  = real.realwidth ? real.realwidth : minefield -> subwidth  * real.element_width;
+    real.realheight = real.realheight? real.realheight: minefield -> subheight * real.element_height;
+    
+    real.width  = real.realwidth  / real.element_width ;
+    real.height = real.realheight / real.element_height;
   }
   
   mss = MS_CreateFromLocal( freenode, MS_stream, mss);
