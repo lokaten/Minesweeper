@@ -106,10 +106,10 @@ strip:
 	$(STRIP) $(TARGET)
 
 ifeq ($(EPOXY),yes)
-$(TARGET): main.o epoxy.o minefield.o
+$(TARGET): main.o FreeNode.o epoxy.o minefield.o
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS) $(PFLAGS) $(LTO_FLAGS)
 else
-$(TARGET): main.o userinterface.o minefield.o
+$(TARGET): main.o FreeNode.o userinterface.o minefield.o
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS) $(PFLAGS) $(LTO_FLAGS)
 endif
 
@@ -126,6 +126,7 @@ endif
 
 # Dependencies
 main.o:          main.c           MS_util.h userinterface.h minefield.h                OPT.h
+FreeNode.o:      FreeNode.c       MS_util.h
 userinterface.o: userinterface.c  MS_util.h userinterface.h minefield.h
 epoxy.o:         epoxy.c          MS_util.h userinterface.h minefield.h
 minefield.o:     minefield.c      MS_util.h                 minefield.h ComandStream.h
