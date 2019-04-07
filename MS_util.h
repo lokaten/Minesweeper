@@ -179,6 +179,7 @@ MS_CreateSlabFromSize( size_t size){
   assert( addr != NULL);
 #endif
   assert( ( uintptr_t)addr % SLAB_SIZE == 0);
+  DEBUG_PRINT( stdout, "\raloc_slab!!    \n");
   return addr;
 }
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
@@ -190,7 +191,10 @@ MS_FreeSlabFromSize( void *addr, const size_t size){
   alo_size -= alo_size % SLAB_SIZE;
   assert( alo_size == size);
   assert( ( uintptr_t)addr % SLAB_SIZE == 0);
-  if( addr != NULL) munmap( addr, alo_size);
+  if( addr != NULL){
+    munmap( addr, alo_size);
+    DEBUG_PRINT( stdout, "\rFrre_slab!!    \n");
+  }
   return NULL;
 }
 #define MS_FreeSlab( addr) MS_FreeSlabFromSize( addr, SLAB_SIZE)
