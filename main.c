@@ -31,14 +31,14 @@ static inline const MS_root *
 ROOT_FreeRoot( const MS_root *proot){
 #define MS_CreateLocalFromLocal( ptr, type, local) type local_of_##ptr = *local; type * ptr = &local_of_##ptr
   MS_CreateLocalFromLocal( root, MS_root, proot);
-  MS_CreateLocalFromLocal( g, FreeNode, root -> freenode);
-  ( ( FreeNode *) g -> prev) -> next = ( uintptr_t)&g;
-  ( ( FreeNode *) g -> next) -> prev = ( uintptr_t)&g;
-  GW_Free( g, root -> GW);
-  MS_Free( g, proot, MS_root);
-  MS_Free( g, root -> mss, MS_stream);
-  MF_FreeField( g, root -> minefield);
-  MS_Free( g, root -> freenode, FreeNode);
+  MS_CreateLocalFromLocal( ff, FreeNode, root -> freenode);
+  ( ( FreeNode *) root -> freenode -> prev) -> next = ( uintptr_t)ff;
+  ( ( FreeNode *) root -> freenode -> next) -> prev = ( uintptr_t)ff;
+  GW_Free( ff, root -> GW);
+  MS_Free( ff, proot, MS_root);
+  MS_Free( ff, root -> mss, MS_stream);
+  MF_FreeField( ff, root -> minefield);
+  MS_Free( ff, root -> freenode, FreeNode);
   return NULL;
 }
 
