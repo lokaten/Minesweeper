@@ -26,7 +26,8 @@ void event_dispatch( const MS_root *);
 void draw( void *, MS_field);
 
 /**/
-void quit( const MS_root *) __attribute__((noreturn));
+FUNC_DEC( void, FUNC_quit, const MS_root *root;) __attribute__((noreturn));
+#define quit( ...) FUNC_CALL( FUNC_quit, __VA_ARGS__)
 #ifdef __cplusplus
 }
 #endif

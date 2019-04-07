@@ -16,26 +16,29 @@ MS_root *ROOT_Init( const int, const char **);
 static inline void printtime( FILE *, u64);
 
 
-void
-quit( const MS_root *root){
+FUNC_DEF( void, FUNC_quit){
   int ret = 0;
-  FILE *f = root -> mss -> out;
-  ROOT_FreeRoot( root);
+  FILE *f;
+  assert( parm -> root != NULL);
+  assert( parm -> root -> mss != NULL);
+  f = parm -> root -> mss -> out;
+  ROOT_FreeRoot( parm -> root);
   MS_print( f, TERM("\rBye!                                \n"));
   exit( ret);
 }
 
 static inline const MS_root *
 ROOT_FreeRoot( const MS_root *proot){
-  MS_root root = *proot;
-  FreeNode g = *proot -> freenode;
-  ( ( FreeNode *) ( &g) -> prev) -> next = ( uintptr_t)&g;
-  ( ( FreeNode *) ( &g) -> next) -> prev = ( uintptr_t)&g;
-  GW_Free( &g, ( &root) -> GW);
-  MS_Free( &g, proot, MS_root);
-  MS_Free( &g, ( &root) -> mss, MS_stream);
-  MF_FreeField( &g, ( &root) -> minefield);
-  MS_Free( &g, ( &root) -> freenode, FreeNode);
+#define MS_CreateLocalFromLocal( ptr, type, local) type local_of_##ptr = *local; type * ptr = &local_of_##ptr
+  MS_CreateLocalFromLocal( root, MS_root, proot);
+  MS_CreateLocalFromLocal( g, FreeNode, root -> freenode);
+  ( ( FreeNode *) g -> prev) -> next = ( uintptr_t)&g;
+  ( ( FreeNode *) g -> next) -> prev = ( uintptr_t)&g;
+  GW_Free( g, root -> GW);
+  MS_Free( g, proot, MS_root);
+  MS_Free( g, root -> mss, MS_stream);
+  MF_FreeField( g, root -> minefield);
+  MS_Free( g, root -> freenode, FreeNode);
   return NULL;
 }
 

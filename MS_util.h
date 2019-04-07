@@ -126,10 +126,14 @@ typedef struct{
 #define MS_RAND_MAX U32C( 0xffffffff)
 
 #ifdef DEBUG
-#define DEBUG_PRINT( file, string, ...) fprintf( file, string, __VA_ARGS__)
+#define DEBUG_PRINT( file, ...) fprintf( file, __VA_ARGS__)
 #else
 #define DEBUG_PRINT( ...) (void)0
 #endif
+
+#define FUNC_CALL( name, ...) name( &( const struct parm##name){__VA_ARGS__})
+#define FUNC_DEC( pre, name, arg) struct parm##name{ arg};pre name( const struct parm##name *)
+#define FUNC_DEF( pre, name) pre name( const struct parm##name *parm)
 
 static inline void *MS_CreateSlabFromSize( size_t size);
 static inline void *MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
@@ -183,13 +187,13 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *vfreenode, const size_t num_mem, const
       addr = freenode -> begining;
       freenode -> begining += alo_size;
     }else if( freenode -> next == ( uintptr_t)vfreenode){
-      FreeNode *nf = MS_CreateLocal( FreeNode, 0);
       size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
+      FreeNode *nf = MS_CreateLocal( FreeNode, 0);
       nf -> begining = ( uintptr_t)MS_CreateSlabFromSize( slab_alo_size);
       nf -> end      = nf -> begining + slab_alo_size;
       nf -> prev     = ( uintptr_t)freenode;
       nf -> next     = ( uintptr_t)vfreenode;
-      nf = MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( FreeNode), nf);
+      nf = ( FreeNode *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( FreeNode), nf);
       vfreenode -> prev = ( uintptr_t)nf;
       freenode  -> next = ( uintptr_t)nf;
     }
@@ -228,10 +232,10 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t vsize){
       ff = nf;
     }else if( nf -> next == ( uintptr_t)freenode){
       nf -> next  = ( uintptr_t)MS_Create( freenode, FreeNode,
-					   .begining = addr,
-					   .end      = addr,
+					   .prev     = ( uintptr_t)nf,
 					   .next     = ( uintptr_t)freenode,
-					   .prev     = ( uintptr_t)nf);
+					   .begining = addr,
+					   .end      = addr);
       freenode -> prev = nf -> next;
     }
     

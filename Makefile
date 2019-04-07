@@ -2,7 +2,7 @@
 ifeq ($(CLANG), yes)
 CC = clang -std=gnu99
 CXX = clang++ -std=c++11
-CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
+CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded -Wno-error=bad-function-cast -Wno-error=shorten-64-to-32
 endif
 
 ifeq ($(GCC), yes)
@@ -10,6 +10,7 @@ CC = gcc -std=gnu99
 CXX = g++ -std=c++2a
 CFLAGS += -Wlogical-op -faggressive-loop-optimizations
 CFLAGS += -pedantic -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes -Wdeclaration-after-statement
+CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -fdiagnostics-show-option
 endif
 
 ifeq ($(CLANGPP), yes)
@@ -24,6 +25,7 @@ CC = g++ -std=c++2a
 CXX = g++ -std=c++2a
 CFLAGS += -Wlogical-op -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel -Wno-error=missing-field-initializers -Wno-missing-field-initializers -Wno-error=pedantic -Wno-error
 CXXFLAGS += -Wnoexcept -Wstrict-null-sentinel
+CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -fdiagnostics-show-option
 endif
 
 ifeq ($(DEBUG), yes)
@@ -42,7 +44,7 @@ CFLAGS += -DNO_TERM
 endif
 
 ifeq ($(DEV), yes)
-CFLAGS += -Werror -DDEBUG -pg -ftrapv -fsanitize=address
+CFLAGS += -Werror -DDEBUG -pg -ftrapv -fsanitize=address -ftime-report
 LIBS += -lasan
 endif
 
@@ -51,7 +53,6 @@ CC += -march=native
 endif
 
 CFLAGS += -Wall -Wextra -Wformat-security -Werror=format-security -Wno-c99-extensions
-CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -fdiagnostics-show-option
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo
 
@@ -83,6 +84,7 @@ RM = rm -f
 STRIP = strip --strip-unneeded
 
 TARGET = Minesweeper
+
 ifeq ($(EPOXY),yes)
 LIBS += -lrt -lwayland-egl -lwayland-client -lepoxy
 else
@@ -102,6 +104,7 @@ clean:
 
 strip:
 	$(STRIP) $(TARGET)
+
 ifeq ($(EPOXY),yes)
 $(TARGET): main.o epoxy.o minefield.o
 	$(CC) -o $@ $(LDFLAGS) $^ $(LIBS) $(PFLAGS) $(LTO_FLAGS)

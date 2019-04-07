@@ -97,7 +97,13 @@ GW_Init( FreeNode *freenode, MS_root *root){
   SDL_EventState( SDL_JOYBUTTONUP  , SDL_IGNORE);
   SDL_EventState( SDL_USEREVENT    , SDL_IGNORE);
   SDL_EventState( SDL_SYSWMEVENT   , SDL_IGNORE);
-
+  
+  SDL_EventState( SDL_MOUSEWHEEL   , SDL_IGNORE);
+  SDL_EventState( SDL_FINGERDOWN   , SDL_IGNORE);
+  SDL_EventState( SDL_FINGERUP     , SDL_IGNORE);
+  
+  // SDL_EventState( SDL_MOUSEMOTION  , SDL_IGNORE);
+  
   return GW;
 }
 
@@ -116,9 +122,9 @@ event_dispatch( const MS_root *root){
   GraphicWraper *GW         = ( GraphicWraper *)root -> GW;
   SDL_Event event;
   
-  if unlikely( GW == NULL) return;
+  assert( GW);
     
-  if( SDL_WaitEventTimeout( &event, ( ( u64)MS_rand( MS_rand_seed()) * U64C( 75)) / MS_RAND_MAX)){
+  if( SDL_WaitEventTimeout( &event, 1000)){ // ( ( u64)MS_rand( MS_rand_seed()) * U64C( 1000)) / MS_RAND_MAX)){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
       quit( root);

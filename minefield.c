@@ -70,7 +70,7 @@ setminefield( const MS_field  *minefield,
 	  ( minefield -> data + i) -> flag == 1){
 	
 	if( GW != NULL)
-	  drawelement( GW, &( MS_element){ .cover = 1}, mol_(i, minefield -> width, minefield -> width_divobj), div_( i, minefield -> width, minefield -> width_divobj));
+	  drawelement( GW, &( MS_element){ .cover = 1}, ( s32)mol_(i, minefield -> width, minefield -> width_divobj), ( s32)div_( i, minefield -> width, minefield -> width_divobj));
       }
       
       *( minefield -> data + i) = ( MS_element){ .count = 15, .cover = 1};
