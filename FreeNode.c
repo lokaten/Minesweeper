@@ -130,7 +130,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     freenode -> next = ( uintptr_t)ff;
   }
   
-  DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, size);
+  DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   return NULL;
 }
