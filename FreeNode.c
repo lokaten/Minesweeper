@@ -44,17 +44,18 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   
   addr           = ff -> begining;
   ff -> begining += alo_size;
-    
+  
   if( ff -> end != ff -> begining &&
       ff != freenode){
-    ff = MS_CreateFromLocal( freenode, FreeNode, ff);
+    ff -> next = ( uintptr_t)ff;
+    ff -> prev = ( uintptr_t)ff;
+    ff = MS_CreateFromLocal( ff, FreeNode, ff);
     ff -> next = freenode -> next;
     ff -> prev = ( uintptr_t)freenode;
     ( ( FreeNode *)freenode -> next) -> prev = ( uintptr_t)ff;
     freenode -> next = ( uintptr_t)ff;
   }
-
-  // FIXME: use affter free
+  
   DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   {
