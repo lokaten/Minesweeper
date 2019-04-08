@@ -49,7 +49,13 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
       ff != freenode){
     ff -> next = ( uintptr_t)ff;
     ff -> prev = ( uintptr_t)ff;
-    ff = MS_CreateFromLocal( ff, FreeNode, ff);
+    if( freenode -> end >= freenode -> begining + sizeof( FreeNode)){
+      ff = MS_CreateFromLocal( freenode, FreeNode, ff);
+    }else{
+      // FIXME: we shold probably look a bit harder for free heap space too alocate the freenode...
+      assert( ff -> end >= ff -> begining + sizeof( FreeNode));
+      ff = MS_CreateFromLocal( ff, FreeNode, ff);
+    }
     ff -> next = freenode -> next;
     ff -> prev = ( uintptr_t)freenode;
     ( ( FreeNode *)freenode -> next) -> prev = ( uintptr_t)ff;
