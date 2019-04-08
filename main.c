@@ -126,8 +126,8 @@ ROOT_Init( const int argc, const char **argv){
   }
   
   freenode  = MS_CreateLocal( FreeNode, 0);
-  freenode -> begining = ( uintptr_t)MS_CreateSlab();
-  freenode -> end      = freenode -> begining + SLAB_SIZE;
+  freenode -> next     = ( uintptr_t)freenode;
+  freenode -> prev     = ( uintptr_t)freenode;
   
   freenode = MS_CreateFromLocal( freenode, FreeNode, freenode);
   
