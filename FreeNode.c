@@ -99,21 +99,29 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     
     while( nf != freenode){
       if( nf -> end == ff -> begining){
-	ff -> begining = nf -> begining;
-	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	MS_Free( freenode, nf, FreeNode);
+	nf -> end = ff -> end;
+	ff -> begining = ff -> end;
       }else if( nf -> begining == ff -> end){
-	ff -> end = nf -> end;
-	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	MS_Free( freenode, nf, FreeNode);
+	nf -> begining = ff -> begining;
+	ff -> end = ff -> begining;
+      }
+      
+      if( nf -> end >= nf -> begining + SLAB_SIZE){
+	size_t slab_size = nf -> end - nf -> begining;
+	slab_size -= slab_size % SLAB_SIZE;
+	MS_FreeSlabFromSize( ( void *)nf -> begining, slab_size);
+	nf -> begining += slab_size;
+	if( nf -> end == nf -> begining){
+	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
+	  MS_Free( freenode, nf, FreeNode);
+	}
       }
       
       nf = ( FreeNode *)nf -> next;
     }
   }
-
+  
   if( ff -> end >= ff -> begining + SLAB_SIZE){
     size_t slab_size = ff -> end - ff -> begining;
     slab_size -= slab_size % SLAB_SIZE;
