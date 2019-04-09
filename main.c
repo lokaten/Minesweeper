@@ -29,9 +29,10 @@ FUNC_DEF( void, FUNC_quit){
 
 static inline const MS_root *
 ROOT_FreeRoot( const MS_root *proot){
-#define MS_CreateLocalFromLocal( ptr, type, local) type local_of_##ptr = *local; type * ptr = &local_of_##ptr
-  MS_CreateLocalFromLocal( root, MS_root, proot);
-  MS_CreateLocalFromLocal( ff, FreeNode, root -> freenode);
+  MS_root local_root = *proot;
+  FreeNode local_freenode = *proot -> freenode;
+  MS_root *root = &local_root;
+  FreeNode *ff = &local_freenode;
   ( ( FreeNode *) root -> freenode -> prev) -> next = ( uintptr_t)ff;
   ( ( FreeNode *) root -> freenode -> next) -> prev = ( uintptr_t)ff;
   GW_Free( ff, root -> GW);
