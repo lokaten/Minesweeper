@@ -2,7 +2,7 @@
 ifeq ($(CLANG), yes)
 CC = clang -std=gnu99
 CXX = clang++ -std=c++11
-CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded -Wno-error=bad-function-cast -Wno-error=shorten-64-to-32
+CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded -Wno-error=bad-function-cast -Wno-error=shorten-64-to-32 -Wno-error=language-extension-token
 endif
 
 ifeq ($(GCC), yes)
