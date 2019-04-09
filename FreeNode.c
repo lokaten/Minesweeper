@@ -93,7 +93,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     freenode -> begining = ff -> begining;
     ff = freenode;
   }
-
+  
   {
     FreeNode *nf = ( FreeNode *)freenode -> next;
     
@@ -104,6 +104,21 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
       }else if( nf -> begining == ff -> end){
 	nf -> begining = ff -> begining;
 	ff -> end = ff -> begining;
+      }
+      
+      if( freenode -> end == ( uintptr_t)nf &&
+	  freenode -> end >= freenode -> begining + sizeof( FreeNode)){
+	nf = MS_CreateFromLocal( freenode, nf);
+	( ( FreeNode *)nf -> next) -> prev = ( uintptr_t)nf;
+	( ( FreeNode *)nf -> prev) -> next = ( uintptr_t)nf;
+	freenode -> end += sizeof( FreeNode);
+      }
+      
+      if( freenode -> end == nf -> begining){
+	freenode -> end = nf -> end;
+	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+	( ( FreeNode *)nf -> prev) -> next = nf -> next;
+	MS_Free( freenode, nf); // FIXME: recursion is a bad idea
       }
       
       if( nf -> end >= nf -> begining + SLAB_SIZE){
