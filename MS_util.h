@@ -157,8 +157,8 @@ void *MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, co
 #define MS_CreateArrayFromLocal( freenode, num_mem, local) ( typeof( *local) *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( *local), local)
 
 const void *MS_FreeFromSize( FreeNode *, const void *, const size_t);
-#define MS_Free( freenode, addr, ...) MS_FreeFromSize( freenode, addr, sizeof( *addr))
-#define MS_FreeArray( freenode, addr, num_mem, ...) MS_FreeFromSize( freenode, addr, num_mem * sizeof( *addr))
+#define MS_Free( freenode, addr) MS_FreeFromSize( freenode, addr, sizeof( *addr))
+#define MS_FreeArray( freenode, addr, num_mem) MS_FreeFromSize( freenode, addr, num_mem * sizeof( *addr))
 
 
 #define SLAB_SIZE ( size_t)sysconf( _SC_PAGE_SIZE)
