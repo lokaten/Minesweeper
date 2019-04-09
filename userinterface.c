@@ -112,7 +112,7 @@ GW_Free( FreeNode *freenode, void *GW){
   if( GW != NULL){
     SDL_Quit();
     
-    MS_Free( freenode, GW, GraphicWraper);
+    MS_Free( freenode, ( GraphicWraper *)GW);
   }
 }
 

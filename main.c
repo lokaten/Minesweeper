@@ -129,7 +129,7 @@ ROOT_Init( const int argc, const char **argv){
   freenode -> next     = ( uintptr_t)freenode;
   freenode -> prev     = ( uintptr_t)freenode;
   
-  freenode = MS_CreateFromLocal( freenode, FreeNode, freenode);
+  freenode = MS_CreateFromLocal( freenode, freenode);
   
   freenode -> next     = ( uintptr_t)freenode;
   freenode -> prev     = ( uintptr_t)freenode;
@@ -153,7 +153,7 @@ ROOT_Init( const int argc, const char **argv){
     real.height = real.realheight / real.element_height;
   }
   
-  mss = MS_CreateFromLocal( freenode, MS_stream, mss);
+  mss = MS_CreateFromLocal( freenode, mss);
   
   assert( minefield -> title != NULL);
   
