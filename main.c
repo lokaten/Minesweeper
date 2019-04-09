@@ -35,10 +35,10 @@ ROOT_FreeRoot( const MS_root *proot){
   ( ( FreeNode *) root -> freenode -> prev) -> next = ( uintptr_t)ff;
   ( ( FreeNode *) root -> freenode -> next) -> prev = ( uintptr_t)ff;
   GW_Free( ff, root -> GW);
-  MS_Free( ff, proot, MS_root);
-  MS_Free( ff, root -> mss, MS_stream);
+  MS_Free( ff, proot);
+  MS_Free( ff, root -> mss);
   MF_FreeField( ff, root -> minefield);
-  MS_Free( ff, root -> freenode, FreeNode);
+  MS_Free( ff, root -> freenode);
   return NULL;
 }
 
@@ -171,7 +171,7 @@ ROOT_Init( const int argc, const char **argv){
     uncov_elements( minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1});
     uncov( minefield, NULL);
     MF_FreeField( freenode, minefield);
-    MS_Free( freenode, mss, MS_stream);
+    MS_Free( freenode, mss);
     quit( NULL);
   }
   

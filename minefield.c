@@ -44,15 +44,15 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
 }
 
 void
-MF_FreeField(  FreeNode *freenode, const MS_field *pminefield){
-  const MS_field *minefield = pminefield;
+MF_FreeField(  FreeNode *freenode, const MS_field *minefield){
+  const MS_field local_minefield = *minefield;
   if( minefield != NULL){
-    MS_Free( freenode, minefield, MS_field);
+    MS_Free( freenode, minefield);
     
-    MS_FreeArray( freenode, minefield -> data, minefield -> width * minefield -> height, MS_element);
-
-    CS_Free( freenode, minefield -> uncovque);
-    MS_Free( freenode, minefield -> mine, MS_mstr);
+    MS_FreeArray( freenode, ( &local_minefield) -> data, minefield -> width * minefield -> height);
+    
+    CS_Free( freenode, ( &local_minefield) -> uncovque);
+    MS_Free( freenode, ( &local_minefield) -> mine);
   }
 }
 

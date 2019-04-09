@@ -21,7 +21,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
 			       .end      = nf -> end);
 	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
 	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	  MS_Free( freenode, nf, FreeNode);
+	  MS_Free( freenode, nf);
 	  break;
 	}
 	
@@ -114,7 +114,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
 	if( nf -> end == nf -> begining){
 	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
 	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	  MS_Free( freenode, nf, FreeNode); // FIXME: recursion is a bad idea
+	  MS_Free( freenode, nf); // FIXME: recursion is a bad idea
 	}
       }
       

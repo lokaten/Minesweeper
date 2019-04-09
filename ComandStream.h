@@ -174,7 +174,7 @@ CS_Free( FreeNode *freenode, ComandStream *Stream){
       MS_FreeSlab( ptr);
     }
     
-    MS_Free( freenode, Stream, ComandStream);
+    MS_Free( freenode, Stream);
   }
 }
 
