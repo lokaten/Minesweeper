@@ -114,9 +114,11 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
 	if( nf -> end == nf -> begining){
 	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
 	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	  MS_Free( freenode, nf, FreeNode);
+	  MS_Free( freenode, nf, FreeNode); // FIXME: recursion is a bad idea
 	}
       }
+      
+      DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, nf -> end - nf -> begining, alo_size);
       
       nf = ( FreeNode *)nf -> next;
     }
@@ -136,9 +138,10 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     ff -> prev = ( uintptr_t)freenode;
     ( ( FreeNode *)freenode -> next) -> prev = ( uintptr_t)ff;
     freenode -> next = ( uintptr_t)ff;
+    DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
+  }else if( ff == freenode){
+    DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   }
-  
-  DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   return NULL;
 }
