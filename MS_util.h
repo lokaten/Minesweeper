@@ -166,6 +166,7 @@ const void *MS_FreeFromSize( FreeNode *, const void *, const size_t);
 
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
 #define MS_CreateLocalFromSize( size) alloca( size)
+#define MS_CreateLocalFromLocal( local) ( typeof( local))&( ( union{ typeof( *local) type;}){ .type = *local})
 
 static inline void *
 MS_CreateSlabFromSize( size_t size){
