@@ -106,16 +106,18 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
 	ff -> end = ff -> begining;
       }
       
-      if( freenode -> end == ( uintptr_t)nf &&
-	  freenode -> end >= freenode -> begining + sizeof( FreeNode)){
-	nf = MS_CreateFromLocal( freenode, nf);
+      if( freenode -> begining == ( uintptr_t)nf + sizeof( FreeNode) &&
+	  freenode -> begining <= freenode -> end - sizeof( FreeNode)){
+	freenode -> end -= sizeof( FreeNode);
+	memcpy( ( FreeNode *)freenode -> end, nf, sizeof( FreeNode));
+	nf = ( FreeNode *)freenode -> end;
 	( ( FreeNode *)nf -> next) -> prev = ( uintptr_t)nf;
 	( ( FreeNode *)nf -> prev) -> next = ( uintptr_t)nf;
-	freenode -> end += sizeof( FreeNode);
+	freenode -> begining -= sizeof( FreeNode);
       }
       
-      if( freenode -> end == nf -> begining){
-	freenode -> end = nf -> end;
+      if( freenode -> begining == nf -> end){
+	freenode -> begining = nf -> begining;
 	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
 	( ( FreeNode *)nf -> prev) -> next = nf -> next;
 	MS_Free( freenode, nf); // FIXME: recursion is a bad idea
