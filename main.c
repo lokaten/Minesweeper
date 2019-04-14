@@ -206,50 +206,48 @@ main( const int argc, const char** argv){
   gamestart = tutime;
   
   while( TRUE){
-    {
-      tutime = getnanosec();
-      if( !root -> minefield -> mine -> uncoverd || gameover){
-	gamestart = tutime;
-      }
-      
-      event_dispatch( root);
-      
-      if unlikely( root -> minefield -> mine -> hit){
-	MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> subwidth, .height = root -> minefield -> subheight};
-	uncov_elements( root -> minefield, mfvid);
-	
-	uncov( root -> minefield, root -> GW);
-      }
-      
-      dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
-      dassert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
-      
-      if( !gameover){
-	if unlikely( root -> minefield -> mine -> hit){
-	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!               "));
-	  gameover = TRUE;
-	}else if unlikely( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
-	  printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
-	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
-	  gameover = TRUE;
-	}else{
-	  printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
-	  MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
-	}
-      }else if( !root -> minefield -> mine -> set){
-	gameover = FALSE;
-      }
-      
-      draw( root -> GW, *root -> minefield);
-      
-#ifdef DEBUG
-      if( root -> mss -> deb != NULL){
-	__uint64_t mytime = getnanosec() - tutime;
-	
-	DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
-      }
-#endif
+    tutime = getnanosec();
+    if( !root -> minefield -> mine -> uncoverd || gameover){
+      gamestart = tutime;
     }
+    
+    event_dispatch( root);
+    
+    if unlikely( root -> minefield -> mine -> hit){
+      MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> subwidth, .height = root -> minefield -> subheight};
+      uncov_elements( root -> minefield, mfvid);
+      
+      uncov( root -> minefield, root -> GW);
+    }
+    
+    dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
+    dassert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
+    
+    if( !gameover){
+      if unlikely( root -> minefield -> mine -> hit){
+	MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!               "));
+	gameover = TRUE;
+      }else if unlikely( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
+	printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
+	MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
+	gameover = TRUE;
+      }else{
+	printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
+	MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
+      }
+    }else if( !root -> minefield -> mine -> set){
+      gameover = FALSE;
+    }
+    
+    draw( root -> GW, *root -> minefield);
+    
+#ifdef DEBUG
+    if( root -> mss -> deb != NULL){
+      __uint64_t mytime = getnanosec() - tutime;
+      
+      DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
+    }
+#endif
   }
 }
 
