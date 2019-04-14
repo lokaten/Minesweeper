@@ -1,6 +1,4 @@
 
-#define LOCALE_( name) GW_##name
-
 #include "MS_util.h"
 #include "minefield.h"
 #include "userinterface.h"
@@ -44,7 +42,7 @@ static void seat_listener_name( void *, struct wl_seat *, const char *);
 
 
 // global variable do not acses
-Context *global_ctx;
+static Context *global_ctx;
 
 void *
 GW_Init( FreeNode *freenode, MS_root *root){
@@ -92,7 +90,7 @@ GW_Init( FreeNode *freenode, MS_root *root){
       
       
       
-      ctx -> egl_window = wl_egl_window_create( ctx -> window -> surface, root -> real.realwidth, root -> real.realheight);
+      ctx -> egl_window = wl_egl_window_create( ctx -> window -> surface, ( s32)root -> real.realwidth, ( s32)root -> real.realheight);
       assert( ctx -> egl_window);
       
       ctx -> window -> egl_surface = eglCreateWindowSurface( ctx -> egl_display, config, ctx -> egl_window, NULL);
@@ -148,8 +146,8 @@ GW_Free( FreeNode *freenode, void *pctx){
   eglDestroyContext( ctx -> egl_display, ctx -> window -> egl_context);
   eglTerminate( ctx -> egl_display);
   wl_display_disconnect( ctx -> display);
-  MS_Free( freenode, ctx -> window, Window);
-  MS_Free( freenode, ctx, Context);
+  MS_Free( freenode, ctx -> window);
+  MS_Free( freenode, ctx);
 }
 
 
