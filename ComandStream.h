@@ -11,17 +11,19 @@ extern "C" {
 
 #include "MS_util.h"
 
+typedef uintptr_t address;
+
 typedef struct{
   const size_t blk_size;
   const size_t size;
-  char *blk_fetch;
-  char *blk_push;
-  char *blk_releas;
-  char *blk_finish;
-  char *fetch;
-  char *push;
-  char *releas;
-  char *finish;
+  address blk_fetch;
+  address blk_push;
+  address blk_releas;
+  address blk_finish;
+  address fetch;
+  address push;
+  address releas;
+  address finish;
 }ComandStream;
 
 
@@ -32,22 +34,19 @@ static inline void *CS_Releas( ComandStream *);
 static inline void CS_Finish( ComandStream *, const void *);
 static inline void CS_Free( FreeNode *, ComandStream *);
 
-_Pragma("GCC diagnostic ignored \"-Wpointer-arith\"")
-_Pragma("GCC diagnostic ignored \"-Wcast-align\"")
-
 static inline ComandStream *
 CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
   ComandStream *Stream;
   size_t blk_size;
-  char *ptr;
+  address addr;
   
   assert( size);
 
-  blk_size = SLAB_SIZE - sizeof( char *);
+  blk_size = SLAB_SIZE - sizeof( address);
   
-  while( blk_size % size || blk_size % sizeof( char *)){
+  while( blk_size % size || blk_size % sizeof( address)){
     blk_size -= blk_size % size;
-    blk_size -= blk_size % sizeof( char *);
+    blk_size -= blk_size % sizeof( address);
   }
   
   
@@ -55,19 +54,19 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
 		      .blk_size = blk_size,
 		      .size = size);
   
-  ptr = ( char *)MS_CreateSlab();
+  addr = ( address)MS_CreateSlab();
   
-  *( char **)( ptr + Stream -> blk_size) = ptr;
+  *( address *)( addr + Stream -> blk_size) = addr;
   
-  Stream -> blk_fetch  = ptr;
-  Stream -> blk_push   = ptr;
-  Stream -> blk_releas = ptr;
-  Stream -> blk_finish = ptr;
+  Stream -> blk_fetch  = addr;
+  Stream -> blk_push   = addr;
+  Stream -> blk_releas = addr;
+  Stream -> blk_finish = addr;
   
-  Stream -> fetch  = ptr;
-  Stream -> push   = ptr;
-  Stream -> releas = ptr;
-  Stream -> finish = ptr;
+  Stream -> fetch  = addr;
+  Stream -> push   = addr;
+  Stream -> releas = addr;
+  Stream -> finish = addr;
   
   return Stream;
 }
@@ -76,38 +75,40 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
 
 static inline void *
 CS_Fetch( ComandStream *Stream){
-  void *ret = NULL;
+  address ret;
   assert( Stream != NULL);
   
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
-    if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
-      char *ptr = ( char *)MS_CreateSlab();
+    if unlikely( *( address *)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
+      address addr = ( address)MS_CreateSlab();
       // lock
-      *( char **)( ptr + Stream -> blk_size) = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
-      *( char **)( Stream -> blk_fetch + Stream -> blk_size) = ptr;
+      *( address *)( addr + Stream -> blk_size) = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
+      *( address *)( Stream -> blk_fetch + Stream -> blk_size) = addr;
       // unlock
     }
-    Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
+    Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
     Stream -> fetch  = Stream -> blk_fetch;
   }
   
   ret = Stream -> fetch;
   Stream -> fetch = Stream -> fetch + Stream -> size;
   
-  return ret;
+  return ( void *)ret;
 }
 
 
 static inline void
 CS_Push( ComandStream *Stream, const void *ptr){
+  address addr;
   assert( Stream != NULL);
+  addr = ( address)ptr;
   
   if unlikely( Stream -> push == Stream -> blk_push + Stream -> blk_size){
-    Stream -> blk_push = *( char **)( Stream -> blk_push + Stream -> blk_size);
+    Stream -> blk_push = *( address *)( Stream -> blk_push + Stream -> blk_size);
     Stream -> push = Stream -> blk_push;
   }
   
-  assert( ptr == Stream -> push);
+  assert( addr == Stream -> push);
   
   Stream -> push = Stream -> push + Stream -> size;
 }
@@ -118,13 +119,13 @@ CS_Push( ComandStream *Stream, const void *ptr){
 //
 static inline void *
 CS_Releas( ComandStream *Stream){
-  void *ret = NULL;
+  address ret = 0;
   assert( Stream != NULL);
   
   if unlikely( Stream -> push == Stream -> releas) goto end;
   
   if unlikely( Stream -> releas == Stream -> blk_releas + Stream -> blk_size){
-    Stream -> blk_releas = *( char **)( Stream -> blk_releas + Stream -> blk_size);
+    Stream -> blk_releas = *( address *)( Stream -> blk_releas + Stream -> blk_size);
     Stream -> releas = Stream -> blk_releas;
   }
   
@@ -132,27 +133,29 @@ CS_Releas( ComandStream *Stream){
   Stream -> releas = Stream -> releas + Stream -> size;
   
  end:
-  return ret;
+  return ( void *)ret;
 }
 
 
 static inline void
 CS_Finish( ComandStream *Stream, const void *ptr){
+  address addr;
   assert( Stream != NULL);
+  addr = ( address)ptr;
   
   if unlikely( Stream -> finish == Stream -> blk_finish + Stream -> blk_size){
-    if unlikely( *( char **)( Stream -> blk_fetch + Stream -> blk_size) != Stream -> blk_finish){
+    if unlikely( *( address *)( Stream -> blk_fetch + Stream -> blk_size) != Stream -> blk_finish){
       // lock
-      char *lptr =  *( char **)( Stream -> blk_fetch + Stream -> blk_size);
-      *( char **)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( char **)( lptr + Stream -> blk_size);
+      address blk_free =  *( address *)( Stream -> blk_fetch + Stream -> blk_size);
+      *( address *)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( address *)( blk_free + Stream -> blk_size);
       // unlock
-      MS_FreeSlab( lptr);
+      MS_FreeSlab( ( void *)blk_free);
     }
-    Stream -> blk_finish = *( char **)( Stream -> blk_finish + Stream -> blk_size);
+    Stream -> blk_finish = *( address *)( Stream -> blk_finish + Stream -> blk_size);
     Stream -> finish = Stream -> blk_finish;
   }
   
-  dassert( ptr == Stream -> finish);
+  dassert( addr == Stream -> finish);
   
   Stream -> finish = Stream -> finish + Stream -> size;
 }
@@ -164,14 +167,14 @@ CS_Finish( ComandStream *Stream, const void *ptr){
 static inline void
 CS_Free( FreeNode *freenode, ComandStream *Stream){
   if likely( Stream != NULL){
-    char *ptr = Stream -> blk_fetch;
-    Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
-    *( char **)( ptr + Stream -> blk_size) = NULL;
+    address addr = Stream -> blk_fetch;
+    Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
+    *( address *)( addr + Stream -> blk_size) = 0;
     
-    while( Stream -> blk_fetch != NULL){
-      ptr = Stream -> blk_fetch;
-      Stream -> blk_fetch = *( char **)( Stream -> blk_fetch + Stream -> blk_size);
-      MS_FreeSlab( ptr);
+    while( Stream -> blk_fetch != 0){
+      addr = Stream -> blk_fetch;
+      Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
+      MS_FreeSlab( ( void *)addr);
     }
     
     MS_Free( freenode, Stream);
