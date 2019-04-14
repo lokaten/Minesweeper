@@ -11,7 +11,6 @@ extern "C" {
 
 #include "MS_util.h"
 
-typedef uintptr_t address;
 
 typedef struct{
   const size_t blk_size;
@@ -54,7 +53,7 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
 		      .blk_size = blk_size,
 		      .size = size);
   
-  addr = ( address)MS_CreateSlab();
+  addr = MS_CreateSlab();
   
   *( address *)( addr + Stream -> blk_size) = addr;
   
@@ -80,7 +79,7 @@ CS_Fetch( ComandStream *Stream){
   
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
     if unlikely( *( address *)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
-      address addr = ( address)MS_CreateSlab();
+      address addr = MS_CreateSlab();
       // lock
       *( address *)( addr + Stream -> blk_size) = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       *( address *)( Stream -> blk_fetch + Stream -> blk_size) = addr;
@@ -149,7 +148,7 @@ CS_Finish( ComandStream *Stream, const void *ptr){
       address blk_free =  *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       *( address *)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( address *)( blk_free + Stream -> blk_size);
       // unlock
-      MS_FreeSlab( ( void *)blk_free);
+      MS_FreeSlab( blk_free);
     }
     Stream -> blk_finish = *( address *)( Stream -> blk_finish + Stream -> blk_size);
     Stream -> finish = Stream -> blk_finish;
@@ -174,7 +173,7 @@ CS_Free( FreeNode *freenode, ComandStream *Stream){
     while( Stream -> blk_fetch != 0){
       addr = Stream -> blk_fetch;
       Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
-      MS_FreeSlab( ( void *)addr);
+      MS_FreeSlab( addr);
     }
     
     MS_Free( freenode, Stream);

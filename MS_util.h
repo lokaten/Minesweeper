@@ -85,6 +85,8 @@ typedef int_fast16_t  s16;
 typedef int_fast8_t   s8;
 #endif
 
+typedef uintptr_t address;
+
 #define U64C   ( u64)UINT64_C
 #define U32C   ( u32)UINT32_C
 #define U16C   ( u16)UINT16_C
@@ -117,10 +119,10 @@ typedef struct{
 }MS_stream;
 
 typedef struct{
-  uintptr_t prev;
-  uintptr_t next;
-  uintptr_t begining;
-  uintptr_t end;
+  address prev;
+  address next;
+  address begining;
+  address end;
 }FreeNode;
 
 #define MS_RAND_MAX U32C( 0xffffffff)
@@ -135,8 +137,8 @@ typedef struct{
 #define FUNC_DEC( pre, name, arg) struct parm##name{ arg};pre name( const struct parm##name *)
 #define FUNC_DEF( pre, name) pre name( const struct parm##name *parm)
 
-static inline void *MS_CreateSlabFromSize( size_t size);
-static inline const void *MS_FreeSlabFromSize( void *, const size_t);
+static inline address MS_CreateSlabFromSize( size_t size);
+static inline address MS_FreeSlabFromSize( address , const size_t);
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
 static inline u32 div_( u32, u32, u32);
@@ -162,42 +164,44 @@ const void *MS_FreeFromSize( FreeNode *, const void *, const size_t);
 
 
 #define SLAB_SIZE ( size_t)sysconf( _SC_PAGE_SIZE)
-#define ALIGNMENT sizeof( uintptr_t)
+#define ALIGNMENT sizeof( FreeNode)
 
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
 #define MS_CreateLocalFromSize( size) alloca( size)
 #define MS_CreateLocalFromLocal( local) ( typeof( local))&( ( union{ typeof( *local) type;}){ .type = *local})
 
-static inline void *
+static inline address
 MS_CreateSlabFromSize( size_t size){
-  void * addr;
+  address addr;
+  void *ptr;
   size_t alo_size = ( size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
   assert( alo_size == size);
 #ifdef MAP_ANONYMOUS
-  addr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
-  assert( addr != MAP_FAILED);
+  ptr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+  assert( ptr != MAP_FAILED);
 #else
-  addr = malloc( alo_size);
-  assert( addr != NULL);
+  ptr = malloc( alo_size);
+  assert( ptr != NULL);
 #endif
-  assert( ( uintptr_t)addr % SLAB_SIZE == 0);
+  addr = ( address)ptr;
+  assert( addr % SLAB_SIZE == 0);
   DEBUG_PRINT( stdout, "\raloc_slab!!    \n");
   return addr;
 }
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
 
 
-static inline const void *
-MS_FreeSlabFromSize( void *addr, const size_t size){
+static inline address
+MS_FreeSlabFromSize( address addr, const size_t size){
   size_t alo_size = size + SLAB_SIZE - 1;
   alo_size -= alo_size % SLAB_SIZE;
   assert( alo_size == size);
-  assert( ( uintptr_t)addr % SLAB_SIZE == 0);
-  if( addr != NULL){
-    munmap( addr, alo_size);
-    DEBUG_PRINT( stdout, "\rFrre_slab!!    \n");
+  assert( addr % SLAB_SIZE == 0);
+  if( addr != 0){
+    munmap( ( void *)addr, alo_size);
+    DEBUG_PRINT( stdout, "\rFree_slab!!    \n");
   }
-  return NULL;
+  return 0;
 }
 #define MS_FreeSlab( addr) MS_FreeSlabFromSize( addr, SLAB_SIZE)
 
