@@ -266,8 +266,6 @@ MS_rand_seed( void){
 }
 
 
-_Pragma("GCC diagnostic ignored \"-Wformat-nonliteral\"")
-
 static inline int
 MS_print( FILE *stream, const char * format, ...){
   int ret = 0;
@@ -275,6 +273,8 @@ MS_print( FILE *stream, const char * format, ...){
   ( void) stream;
   ( void) format;
 #else
+_Pragma("GCC diagnostic ignored \"-Wformat-nonliteral\"")
+  
   if( stream != NULL){
     va_list args;
     va_start( args, format);
@@ -282,6 +282,8 @@ MS_print( FILE *stream, const char * format, ...){
     fflush( stream);
     va_end( args);
   }
+ 
+// pragma to turn back on -wformat-nonliteral?
 #endif
   return ret;
 }
