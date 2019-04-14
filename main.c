@@ -29,8 +29,8 @@ FUNC_DEF( void, FUNC_quit){
 
 static inline const MS_root *
 ROOT_FreeRoot( const MS_root *proot){
-  const MS_root *root = MS_CreateLocalFromLocal( proot);
-  FreeNode *ff = MS_CreateLocalFromLocal( root -> freenode);
+  const MS_root *root = MS_CreateLocalFromLocal( MS_root, proot);
+  FreeNode *ff = MS_CreateLocalFromLocal( FreeNode, root -> freenode);
   ( ( FreeNode *) root -> freenode -> prev) -> next = ( uintptr_t)ff;
   ( ( FreeNode *) root -> freenode -> next) -> prev = ( uintptr_t)ff;
   GW_Free( ff, root -> GW);
@@ -128,7 +128,7 @@ ROOT_Init( const int argc, const char **argv){
   freenode -> next     = ( uintptr_t)freenode;
   freenode -> prev     = ( uintptr_t)freenode;
   
-  freenode = MS_CreateFromLocal( freenode, freenode);
+  freenode = MS_CreateFromLocal( freenode, FreeNode, freenode);
   
   freenode -> next     = ( uintptr_t)freenode;
   freenode -> prev     = ( uintptr_t)freenode;
@@ -152,7 +152,7 @@ ROOT_Init( const int argc, const char **argv){
     real.height = real.realheight / real.element_height;
   }
   
-  mss = MS_CreateFromLocal( freenode, mss);
+  mss = MS_CreateFromLocal( freenode, MS_stream, mss);
   
   assert( minefield -> title != NULL);
   

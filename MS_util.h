@@ -152,11 +152,11 @@ static inline __uint64_t getnanosec( void);
 void *MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
 #define MS_Create( freenode, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){ __VA_ARGS__})
 #define MS_CreateFromSize( freenode, size) ( void *)MS_CreateArrayFromSizeAndLocal( freenode, size, sizeof( char), &( const char){0})
-#define MS_CreateFromLocal( freenode, local) ( typeof( *local) *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( *local), local)
+#define MS_CreateFromLocal( freenode, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), local)
 #define MS_CreateEmpty( freenode, type) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){0})
 #define MS_CreateEmptyArray( freenode, num_mem, type) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), &( const type){0})
 #define MS_CreateArray( freenode, num_mem, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), &( const type){ __VA_ARGS__})
-#define MS_CreateArrayFromLocal( freenode, num_mem, local) ( typeof( *local) *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( *local), local)
+#define MS_CreateArrayFromLocal( freenode, num_mem, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), local)
 
 const void *MS_FreeFromSize( FreeNode *, const void *, const size_t);
 #define MS_Free( freenode, addr) MS_FreeFromSize( freenode, addr, sizeof( *addr))
@@ -168,7 +168,7 @@ const void *MS_FreeFromSize( FreeNode *, const void *, const size_t);
 
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
 #define MS_CreateLocalFromSize( size) alloca( size)
-#define MS_CreateLocalFromLocal( local) ( typeof( local))&( ( union{ typeof( *local) type;}){ .type = *local})
+#define MS_CreateLocalFromLocal( type, local) ( type *)&( ( union{ type T;}){ .T = *local})
 
 static inline address
 MS_CreateSlabFromSize( size_t size){

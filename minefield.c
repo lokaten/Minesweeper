@@ -45,7 +45,7 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
 
 void
 MF_FreeField(  FreeNode *freenode, const MS_field *pminefield){
-  const MS_field *minefield = MS_CreateLocalFromLocal( pminefield);
+  const MS_field *minefield = MS_CreateLocalFromLocal( MS_field, pminefield);
   if( minefield != NULL){
     MS_Free( freenode, pminefield);
     
