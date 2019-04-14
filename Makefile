@@ -1,28 +1,28 @@
 
 ifeq ($(CLANG), yes)
 CC = clang -std=gnu99
-CXX = clang++ -std=c++11
-CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded -Wno-error=bad-function-cast -Wno-error=shorten-64-to-32 -Wno-error=language-extension-token
+CXX = clang++ -std=gnu++11
+CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
 endif
 
 ifeq ($(GCC), yes)
 CC = gcc -std=gnu99
-CXX = g++ -std=c++2a
+CXX = g++ -std=gnu++2a
 CFLAGS += -Wlogical-op -faggressive-loop-optimizations
 CFLAGS += -pedantic -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes -Wdeclaration-after-statement
 CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -fdiagnostics-show-option
 endif
 
 ifeq ($(CLANGPP), yes)
-CC = clang++ -std=c++11
-CXX = clang++ -std=c++11
+CC = clang++ -std=gnu++11
+CXX = clang++ -std=gnu++11
 CFLAGS += -Wevrything -Wno-address-of-temporary -Wno-missing-field-initializers
 CFLAGS += -Wno-old-style-cast -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary
 endif
 
 ifeq ($(GPP), yes)
-CC = g++ -std=c++2a
-CXX = g++ -std=c++2a
+CC = g++ -std=gnu++2a
+CXX = g++ -std=gnu++2a
 CFLAGS += -Wlogical-op -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel -Wno-error=missing-field-initializers -Wno-missing-field-initializers -Wno-error=pedantic -Wno-error
 CXXFLAGS += -Wnoexcept -Wstrict-null-sentinel
 CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -fdiagnostics-show-option
@@ -52,7 +52,7 @@ ifeq ($(NATIVE), yes)
 CC += -march=native
 endif
 
-CFLAGS += -Wall -Wextra -Wformat-security -Werror=format-security -Wno-c99-extensions
+CFLAGS += -Wall -Wextra -Wformat-security -Werror=format-security
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo
 
@@ -97,7 +97,7 @@ endif
 all: $(TARGET)
 
 analyze:
-	clang-check -analyze *.c
+	clang-check -analyze *.c *.h
 
 clean:
 	$(RM) *.o *.su *.plist *.gcda *~ $(TARGET)
