@@ -41,6 +41,11 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   addr           = ff -> begining;
   ff -> begining += alo_size;
   
+  if( addr == ( address)ff &&
+      ff -> end > ff -> begining){
+    MS_FreeFromSize( freenode, ( void *)ff -> begining, ff -> end - ff -> begining);
+  }
+  
   DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   {
@@ -99,22 +104,17 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     MS_FreeSlabFromSize( ff -> begining, slab_size);
     ff -> begining += slab_size;
   }
-
-#ifdef DEBUG
+  
   if( ff -> end == ff -> begining){
-    ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
-    ( ( FreeNode *)ff -> prev) -> next = ff -> next;
     if( ff != freenode){
-      MS_Free( freenode, ff);
+      ff -> begining = ( address)ff;
+      ff -> end      = ( address)ff + sizeof( FreeNode);
     }else if( ff -> next != ( address)freenode){
-      *ff = *( FreeNode *)( ff -> next);
-      ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
-      ( ( FreeNode *)ff -> prev) -> next = ( address)ff;
+      // do something
     }else{
       // do nothing
     }
   }
-#endif
   
   DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
