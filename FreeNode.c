@@ -2,72 +2,49 @@
 #include "MS_util.h"
 
 void *
-MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const size_t size, const void *ptr){
+MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const size_t size, const void *local){
   address addr = 0;
   FreeNode *ff = NULL;
   size_t alo_size = ( num_mem * size + ALIGNMENT - 1) & ~( ALIGNMENT - 1);
   assert( alo_size);
   assert( freenode != NULL);
-  if( freenode -> end >= freenode -> begining + alo_size){
-    ff = freenode;
-  }else{
-    {
-      FreeNode *nf = ( FreeNode *)freenode -> next;
-      
-      while( nf != freenode){
-	if( nf -> end >= nf -> begining + alo_size){
-	  ff = MS_CreateLocal( FreeNode,
-			       .begining = nf -> begining,
-			       .end      = nf -> end);
-	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	  MS_Free( freenode, nf);
-	  break;
-	}
-	
-	nf = ( FreeNode *)nf -> next;
-      }
-    }
+  if( freenode -> begining != freenode -> end){
+    FreeNode *nf = freenode;
     
-    if( ff == NULL){
-      size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-      address new_slab = MS_CreateSlabFromSize( slab_alo_size);
-      if( freenode -> end == freenode -> begining){
-	ff = freenode;
-      }else{
-	ff = MS_CreateLocal( FreeNode, 0);
+    do{
+      if( nf -> end >= nf -> begining + alo_size){
+	ff = nf;
+	break;
       }
-      ff -> begining = new_slab;
-      ff -> end      = new_slab + slab_alo_size;
+      nf = ( FreeNode *)nf -> next;
+    }while( nf -> next != ( address)freenode);
+  }
+  
+  if( ff == NULL){
+    size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
+    address new_slab = MS_CreateSlabFromSize( slab_alo_size);
+    if( freenode -> end == freenode -> begining){
+      ff = freenode;
+    }else{
+      ff = MS_Create( freenode, FreeNode, 0);
+      ff -> next = freenode -> next;
+      ff -> prev = ( address)freenode;
+      ( ( FreeNode *)freenode -> next) -> prev = ( address)ff;
+      freenode -> next = ( address)ff;
     }
+    ff -> begining = new_slab;
+    ff -> end      = new_slab + slab_alo_size;
   }
   
   addr           = ff -> begining;
   ff -> begining += alo_size;
-  
-  if( ff -> end != ff -> begining &&
-      ff != freenode){
-    ff -> next = ( address)ff;
-    ff -> prev = ( address)ff;
-    if( freenode -> end >= freenode -> begining + sizeof( FreeNode)){
-      ff = MS_CreateFromLocal( freenode, FreeNode, ff);
-    }else{
-      // FIXME: we shold probably look a bit harder for free heap space too alocate the freenode...
-      assert( ff -> end >= ff -> begining + sizeof( FreeNode));
-      ff = MS_CreateFromLocal( ff, FreeNode, ff);
-    }
-    ff -> next = freenode -> next;
-    ff -> prev = ( address)freenode;
-    ( ( FreeNode *)freenode -> next) -> prev = ( address)ff;
-    freenode -> next = ( address)ff;
-  }
   
   DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   {
     u32 i = num_mem;
     while( i--){
-      memcpy( ( void *)( addr + i * size), ptr, size);
+      memcpy( ( void *)( addr + i * size), local, size);
     }
   }
   return ( void *)addr;
@@ -77,73 +54,41 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
 const void *
 MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
   const address addr = ( const address)vaddr;
-  FreeNode *ff;
+  FreeNode *ff = NULL;
   size_t alo_size = ( size + ALIGNMENT - 1) & ~( ALIGNMENT - 1);
   assert( freenode != NULL);
   assert( addr != 0);
-  
-  ff = MS_CreateLocal( FreeNode,
-		       .begining = addr,
-		       .end      = addr + alo_size);
-  
-  if( ff -> begining == freenode -> end){
-    freenode -> end = ff -> end;
-    ff = freenode;
-  }else if( ff -> end == freenode -> begining){
-    freenode -> begining = ff -> begining;
-    ff = freenode;
-  }
-  
-  {
-    FreeNode *nf = ( FreeNode *)freenode -> next;
-    
-    while( nf != freenode){
-      if( nf -> end == ff -> begining){
-	nf -> end = ff -> end;
-	ff -> begining = ff -> end;
-      }else if( nf -> begining == ff -> end){
-	nf -> begining = ff -> begining;
-	ff -> end = ff -> begining;
-      }
-      
-      if( freenode -> begining == ( address)nf + sizeof( FreeNode) &&
-	  nf -> end >= nf -> begining + sizeof( FreeNode)){
-	memcpy( ( FreeNode *)nf -> begining, nf, sizeof( FreeNode));
-	nf = ( FreeNode *)nf -> begining;
-	nf -> begining += sizeof( FreeNode);
-	( ( FreeNode *)nf -> next) -> prev = ( address)nf;
-	( ( FreeNode *)nf -> prev) -> next = ( address)nf;
-	freenode -> begining -= sizeof( FreeNode);
-      }
 
-      {
-	FreeNode *hf = nf;
-	nf = MS_CreateLocalFromLocal( FreeNode, nf);
-      
-      if( freenode -> begining == nf -> end){
-	freenode -> begining = nf -> begining;
-	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	MS_Free( freenode, hf); // FIXME: recursion is a bad idea
+  {
+    FreeNode *nf = freenode;
+    
+    do{
+      if( nf -> begining == addr + alo_size ||
+	  nf -> end      == addr){
+	ff = nf;
+	break;
       }
-      
-      if( nf -> end >= nf -> begining + SLAB_SIZE){
-	size_t slab_size = nf -> end - nf -> begining;
-	slab_size -= slab_size % SLAB_SIZE;
-	MS_FreeSlabFromSize( nf -> begining, slab_size);
-	nf -> begining += slab_size;
-	if( nf -> end == nf -> begining){
-	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	  MS_Free( freenode, hf); // FIXME: recursion is a bad idea
-	}
-      }
-      
-      DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, nf -> end - nf -> begining, alo_size);
-      
       nf = ( FreeNode *)nf -> next;
-      }
-    }
+    }while( nf -> next != ( address)freenode);
+  }
+
+  if( ff == NULL){
+    ff = MS_Create( freenode, FreeNode, 0);
+    ff -> next = freenode -> next;
+    ff -> prev = ( address)freenode;
+    ( ( FreeNode *)freenode -> next) -> prev = ( address)ff;
+    freenode -> next = ( address)ff;
+    ff -> begining = addr;
+    ff -> end      = addr;
+  }
+
+  if( ff -> begining == addr + alo_size){
+    ff -> begining = addr;
+  }else if( ff -> end == addr){
+    ff -> end = addr + alo_size;
+  }else{
+    // panic
+    assert( FALSE);
   }
   
   if( ff -> end >= ff -> begining + SLAB_SIZE){
@@ -153,17 +98,15 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     ff -> begining += slab_size;
   }
   
-  if( ff -> end != ff -> begining &&
+  
+  if( ff -> end == ff -> begining &&
       ff != freenode){
-    ff = MS_CreateFromLocal( freenode, FreeNode, ff);
-    ff -> next = freenode -> next;
-    ff -> prev = ( address)freenode;
-    ( ( FreeNode *)freenode -> next) -> prev = ( address)ff;
-    freenode -> next = ( address)ff;
-    DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
-  }else if( ff == freenode){
-    DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
+    ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
+    ( ( FreeNode *)ff -> prev) -> next = ff -> next;
+    MS_Free( freenode, ff);
   }
+  
+  DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   return NULL;
 }
