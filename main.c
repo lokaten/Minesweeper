@@ -237,6 +237,8 @@ main( const int argc, const char** argv){
       }
     }else if( !root -> minefield -> mine -> set){
       gameover = FALSE;
+    }else{
+      // do nothing
     }
     
     draw( root -> GW, *root -> minefield);
@@ -258,21 +260,18 @@ printtime( FILE * stream, u64 time){
   ( void) stream;
   ( void) time;
 #else
-  if( time > 3600000lu){
-    MS_print( stream, "\r%lu:",    ( ( time) / 3600000)       );
-    MS_print( stream, "%02lu:",    ( ( time) / 60000  ) % 60  );
-    MS_print( stream, "%02lu.",    ( ( time) / 1000   ) % 60  );
-    MS_print( stream, "%03lu    ", ( ( time)          ) % 1000);
-  }else{
-    if( time > 60000lu){
-      MS_print( stream, "\r%lu:",    ( ( time) / 60000  ) % 60  );
-      MS_print( stream, "%02lu.",    ( ( time) / 1000   ) % 60  );
-      MS_print( stream, "%03lu    ", ( ( time) / 1      ) % 1000);
+  if( time > U64C( 60000)){
+    if( time > U64C( 3600000)){
+      MS_print( stream, "\r%lu:", ( time / U64C( 3600000))            );
+      MS_print( stream, "%02lu:", ( time / U64C( 60000  )) % U64C( 60));
     }else{
-      MS_print( stream, "\r%lu.",    ( ( time) / 1000   ) % 60  );
-      MS_print( stream, "%03lu    ", ( ( time) / 1      ) % 1000);
+      MS_print( stream, "\r%lu:", ( time / U64C( 60000  )) % U64C( 60));
     }
+    MS_print( stream, "%02lu.", ( time / U64C( 1000   )) % U64C( 60));
+  }else{
+    MS_print( stream, "\r%lu.", ( time / U64C( 1000   )) % U64C( 60));
   }
+  MS_print( stream, "%03lu    ", time % U64C( 1000));
 #endif
   return;
 }
