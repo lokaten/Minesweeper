@@ -11,6 +11,8 @@
 #include "minefield.h"
 #include "OPT.h"
 
+#include "debug.h"
+
 static inline const MS_root * ROOT_FreeRoot( const MS_root *);
 MS_root *ROOT_Init( const int, const char **);
 static inline void printtime( FILE *, u64);
@@ -76,6 +78,10 @@ ROOT_Init( const int argc, const char **argv){
   
   mss = def_out;
   minefield = field_beginner;
+  
+#ifdef DEBUG
+  global_root = MS_CreateLocal( MS_root, .mss = def_out);
+#endif
   
   {
     MS_options opt[] = {
@@ -186,6 +192,10 @@ ROOT_Init( const int argc, const char **argv){
 		    .minefield = minefield,
 		    .mss = mss,
 		    .no_resize = no_resize);
+
+#ifdef DEBUG
+  global_root = root;
+#endif
   
   root -> GW = GW_Init( root -> freenode, root);
   

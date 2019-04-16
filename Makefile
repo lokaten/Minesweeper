@@ -125,8 +125,8 @@ endif
 	$(CC) $(CFLAGS) $(PFLAGS) $(LTO_FLAGS) -c -o $@ $<
 
 # Dependencies
-main.o:          main.c           MS_util.h userinterface.h minefield.h                OPT.h
-FreeNode.o:      FreeNode.c       MS_util.h
-userinterface.o: userinterface.c  MS_util.h userinterface.h minefield.h
-epoxy.o:         epoxy.c          MS_util.h userinterface.h minefield.h
-minefield.o:     minefield.c      MS_util.h                 minefield.h ComandStream.h
+main.o:          main.c           MS_util.h debug.h userinterface.h minefield.h                OPT.h
+FreeNode.o:      FreeNode.c       MS_util.h debug.h 
+userinterface.o: userinterface.c  MS_util.h debug.h userinterface.h minefield.h
+epoxy.o:         epoxy.c          MS_util.h debug.h userinterface.h minefield.h
+minefield.o:     minefield.c      MS_util.h debug.h                 minefield.h ComandStream.h

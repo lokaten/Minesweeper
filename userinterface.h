@@ -8,7 +8,6 @@
 extern "C" {
 #endif
 
-#include "MS_util.h"
 #include "minefield.h"
 
 typedef struct{

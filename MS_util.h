@@ -1,5 +1,4 @@
 
-
 #ifdef MS_UTIL_H__
 #else
 #define MS_UTIL_H__
@@ -34,7 +33,6 @@ extern "C" {
 
 #define TRUE  1
 #define FALSE 0
-
 
 #ifdef __builtin_expect
 #define likely(   x)     ( __builtin_expect( !!( x), TRUE))
@@ -127,18 +125,14 @@ typedef struct{
 
 #define MS_RAND_MAX U32C( 0xffffffff)
 
-#ifdef DEBUG
-#define DEBUG_PRINT( file, ...) fprintf( file, __VA_ARGS__)
-#else
-#define DEBUG_PRINT( ...) (void)0
-#endif
-
 #define FUNC_CALL( name, ...) name( &( const struct parm##name){__VA_ARGS__})
 #define FUNC_DEC( pre, name, arg) struct parm##name{ arg};pre name( const struct parm##name *)
 #define FUNC_DEF( pre, name) pre name( const struct parm##name *parm)
 
 static inline address MS_CreateSlabFromSize( size_t size);
+#define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
 static inline address MS_FreeSlabFromSize( address , const size_t);
+#define MS_FreeSlab( addr) MS_FreeSlabFromSize( addr, SLAB_SIZE)
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
 static inline u32 div_( u32, u32, u32);
@@ -148,6 +142,12 @@ static inline u32 MS_rand_seed( void);
 static inline int MS_print( FILE *, const char *, ...);
 static inline __uint64_t getmicrosec( void);
 static inline __uint64_t getnanosec( void);
+
+#ifdef DEBUG
+#define DEBUG_PRINT( file, ...) MS_print( file, __VA_ARGS__)
+#else
+#define DEBUG_PRINT( ...) (void)0
+#endif
 
 void *MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
 #define MS_Create( freenode, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){ __VA_ARGS__})
@@ -170,6 +170,8 @@ const void *MS_FreeFromSize( FreeNode *, const void *, const size_t);
 #define MS_CreateLocalFromSize( size) alloca( size)
 #define MS_CreateLocalFromLocal( type, local) ( type *)&( ( union{ type T;}){ .T = *local})
 
+#include "debug.h"
+
 static inline address
 MS_CreateSlabFromSize( size_t size){
   address addr;
@@ -185,10 +187,9 @@ MS_CreateSlabFromSize( size_t size){
 #endif
   addr = ( address)ptr;
   assert( addr % SLAB_SIZE == 0);
-  DEBUG_PRINT( stdout, "\raloc_slab!!    \n");
+  DEBUG_PRINT( global_root -> mss -> out, "\raloc_slab!!    \n");
   return addr;
 }
-#define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
 
 
 static inline address
@@ -199,11 +200,11 @@ MS_FreeSlabFromSize( address addr, const size_t size){
   assert( addr % SLAB_SIZE == 0);
   if( addr != 0){
     munmap( ( void *)addr, alo_size);
-    DEBUG_PRINT( stdout, "\rFree_slab!!    \n");
+    DEBUG_PRINT( global_root -> mss -> out, "\rFree_slab!!    \n");
   }
   return 0;
 }
-#define MS_FreeSlab( addr) MS_FreeSlabFromSize( addr, SLAB_SIZE)
+
 
 // divsion is slow, make sure we don't do it more then we have to
 

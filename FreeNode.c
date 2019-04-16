@@ -1,6 +1,8 @@
 
 #include "MS_util.h"
 
+#include "debug.h"
+
 void *
 MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const size_t size, const void *local){
   address addr = 0;
@@ -46,7 +48,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     MS_FreeFromSize( freenode, ( void *)ff -> begining, ff -> end - ff -> begining);
   }
   
-  DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, ff -> end - ff -> begining, alo_size);
+  DEBUG_PRINT( global_root -> mss -> out, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   {
     u32 i = num_mem;
@@ -110,13 +112,21 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
       ff -> begining = ( address)ff;
       ff -> end      = ( address)ff + sizeof( FreeNode);
     }else if( ff -> next != ( address)freenode){
-      // do something
+#ifdef DEBUG
+      ff = ( FreeNode *)ff -> next;
+      ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
+      ( ( FreeNode *)ff -> prev) -> next = ff -> next;
+      freenode -> begining = ff -> begining;
+      freenode -> end      = ff -> end;
+      MS_Free( freenode, ff);
+      ff = freenode;
+#endif
     }else{
       // do nothing
     }
   }
   
-  DEBUG_PRINT( stdout, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
+  DEBUG_PRINT( global_root -> mss -> out, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   return NULL;
 }
