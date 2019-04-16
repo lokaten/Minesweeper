@@ -24,7 +24,9 @@ FUNC_DEF( void, FUNC_quit){
   assert( parm -> root != NULL);
   assert( parm -> root -> mss != NULL);
   f = parm -> root -> mss -> out;
-  ROOT_FreeRoot( parm -> root);
+  if( parm -> root -> freenode != NULL){
+    ROOT_FreeRoot( parm -> root);
+  }
   MS_print( f, TERM("\rBye!                                \n"));
   exit( ret);
 }
