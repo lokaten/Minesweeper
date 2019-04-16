@@ -80,7 +80,7 @@ ROOT_Init( const int argc, const char **argv){
   minefield = field_beginner;
   
 #ifdef DEBUG
-  global_root = MS_CreateLocal( MS_root, .mss = def_out);
+  debug_global_root = MS_CreateLocal( MS_root, .mss = def_out);
 #endif
   
   {
@@ -194,7 +194,7 @@ ROOT_Init( const int argc, const char **argv){
 		    .no_resize = no_resize);
 
 #ifdef DEBUG
-  global_root = root;
+  debug_global_root = root;
 #endif
   
   root -> GW = GW_Init( root -> freenode, root);

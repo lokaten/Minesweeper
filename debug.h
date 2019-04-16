@@ -5,7 +5,7 @@
 
 #include "userinterface.h"
 
-MS_root volatile *global_root;
+MS_root *debug_global_root;
 
 #endif
 #endif

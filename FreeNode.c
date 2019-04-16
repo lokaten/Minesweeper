@@ -48,7 +48,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     MS_FreeFromSize( freenode, ( void *)ff -> begining, ff -> end - ff -> begining);
   }
   
-  DEBUG_PRINT( global_root -> mss -> out, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, ff -> end - ff -> begining, alo_size);
+  DEBUG_PRINT( debug_global_root -> mss -> out, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   {
     u32 i = num_mem;
@@ -126,7 +126,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     }
   }
   
-  DEBUG_PRINT( global_root -> mss -> out, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
+  DEBUG_PRINT( debug_global_root -> mss -> out, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   return NULL;
 }
