@@ -14,7 +14,8 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     FreeNode *nf = freenode;
     
     do{
-      if( nf -> end >= nf -> begining + alo_size){
+      if( nf -> end >= nf -> begining + alo_size &&
+	  nf -> begining != ( address)freenode){
 	ff = nf;
 	break;
       }
@@ -27,26 +28,36 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     address new_slab = MS_CreateSlabFromSize( slab_alo_size);
     if( freenode -> end == freenode -> begining){
       ff = freenode;
-    }else{
-      ff = MS_Create( freenode, FreeNode,
-		      .next = freenode -> next,
-		      .prev = ( address)freenode);
+      ff -> end      = new_slab + slab_alo_size;
+    }else if( slab_alo_size > alo_size){
+      ff = ( FreeNode *)( new_slab + slab_alo_size - sizeof( FreeNode));
+      ff -> next = freenode -> next;
+      ff -> prev = ( address)freenode;
       ( ( FreeNode *) freenode -> next) -> prev = ( address)ff;
       freenode -> next = ( address)ff;
+      ff -> end      = ( address)ff;
+    }else if( freenode -> end > freenode -> begining + sizeof( FreeNode)){
+      freenode -> begining += sizeof( FreeNode);
+      ff = ( FreeNode *)( freenode -> end);
+      ff -> next = freenode -> next;
+      ff -> prev = ( address)freenode;
+      ( ( FreeNode *) freenode -> next) -> prev = ( address)ff;
+      freenode -> next = ( address)ff;
+      ff -> end      = new_slab + slab_alo_size;
+    }else{
+      // we have no idea where to dump the FreeNode
+      // panic
+      assert( FALSE);
     }
     ff -> begining = new_slab;
-    ff -> end      = new_slab + slab_alo_size;
   }
   
   assert( ff != NULL);
   
   if( ( address)ff <= ff -> end - sizeof( FreeNode) &&
       ( address)ff >= ff -> begining){
-    assert( ff != freenode);
     ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
     ( ( FreeNode *)ff -> prev) -> next = ff -> next;
-    ff -> next = 0;
-    ff -> prev = 0;
     if( ff -> end > ff -> begining + alo_size){
       FreeNode *nf = ( FreeNode *)( ff -> begining + alo_size);
       ff -> next = freenode -> next;
@@ -96,6 +107,17 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
 	ff = nf;
 	break;
       }
+      if( freenode -> end == nf -> begining){
+	freenode -> end = nf -> end;
+	if( ( address)nf <= nf -> end - sizeof( FreeNode) &&
+	    ( address)nf >= nf -> begining){
+	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
+	}else{
+	  nf -> begining = ( address)nf;
+	  nf -> end      = ( address)nf + sizeof( FreeNode);
+	}
+      }
       nf = ( FreeNode *)nf -> next;
     }while( nf -> next != ( address)freenode);
   }
@@ -125,10 +147,8 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
       assert( ff != freenode);
       ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
       ( ( FreeNode *)ff -> prev) -> next = ff -> next;
-      ff -> next = 0;
-      ff -> prev = 0;
-    }
-    {
+      ff = MS_CreateLocalFromLocal( FreeNode, ff);
+    }else{
       size_t slab_size = ff -> end - ff -> begining;
       slab_size -= slab_size % SLAB_SIZE;
       MS_FreeSlabFromSize( ff -> begining, slab_size);
@@ -137,22 +157,8 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
   }
   
   if( ff -> end == ff -> begining){
-    if( ff != freenode){
-      ff -> begining = ( address)ff;
-      ff -> end      = ( address)ff + sizeof( FreeNode);
-    }else if( ff -> next != ( address)freenode){
-#ifdef DEBUG
-      ff = ( FreeNode *)ff -> next;
-      ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
-      ( ( FreeNode *)ff -> prev) -> next = ff -> next;
-      freenode -> begining = ff -> begining;
-      freenode -> end      = ff -> end;
-      MS_Free( freenode, ff);
-      ff = freenode;
-#endif
-    }else{
-      // do nothing
-    }
+    ff -> begining = ( address)ff;
+    ff -> end      = ( address)ff + sizeof( FreeNode);
   }
   
   DEBUG_PRINT( debug_out, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
