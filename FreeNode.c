@@ -45,9 +45,8 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
       freenode -> next = ( address)ff;
       ff -> end      = new_slab + slab_alo_size;
     }else{
-      // we have no idea where to dump the FreeNode
       // panic
-      assert( FALSE);
+      assert( FALSE && ( _Bool)"we have no idea where to dump the FreeNode");
     }
     ff -> begining = new_slab;
   }

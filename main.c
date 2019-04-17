@@ -120,10 +120,6 @@ ROOT_Init( const int argc, const char **argv){
     
     real = ( MS_video){ .element_width = 15, .element_height = 15};
     
-#ifdef DEBUG
-    debug_out = mss -> out;
-#endif
-    
     if( procopt( mss, opt, argc, argv)){
       MS_print( mss -> err, TERM("\rWRong or broken input, pleas refer to --help\n"));
     }
@@ -135,6 +131,10 @@ ROOT_Init( const int argc, const char **argv){
     }
 #endif
   }
+  
+#ifdef DEBUG
+  debug_out = mss -> out;
+#endif
   
   {
     size_t alo_size = sizeof( FreeNode);
