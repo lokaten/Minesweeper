@@ -85,10 +85,6 @@ ROOT_Init( const int argc, const char **argv){
   mss = def_out;
   minefield = field_beginner;
   
-#ifdef DEBUG
-  debug_global_root = MS_CreateLocal( MS_root, .mss = def_out);
-#endif
-  
   {
     MS_options opt[] = {
       { OPTSW_GRP, TERM("Options"                                ), ""               , 0  , NULL                        , NULL},
@@ -123,6 +119,10 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_NUL, TERM(""/* Last elemnt is a NULL termination */), ""               , 0  , NULL                       , NULL}};
     
     real = ( MS_video){ .element_width = 15, .element_height = 15};
+    
+#ifdef DEBUG
+    debug_out = mss -> out;
+#endif
     
     if( procopt( mss, opt, argc, argv)){
       MS_print( mss -> err, TERM("\rWRong or broken input, pleas refer to --help\n"));
@@ -198,10 +198,6 @@ ROOT_Init( const int argc, const char **argv){
 		    .minefield = minefield,
 		    .mss = mss,
 		    .no_resize = no_resize);
-
-#ifdef DEBUG
-  debug_global_root = root;
-#endif
   
   root -> GW = GW_Init( root -> freenode, root);
   

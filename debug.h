@@ -3,9 +3,9 @@
 #define DEBUG_H
 #ifdef DEBUG
 
-#include "userinterface.h"
+#include <stdio.h> // FILE
 
-MS_root *debug_global_root;
+FILE *debug_out;
 
 #endif
 #endif

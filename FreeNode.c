@@ -40,6 +40,25 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   
   assert( ff != NULL);
   
+  if( ( address)ff <= ff -> end - sizeof( FreeNode) &&
+      ( address)ff >= ff -> begining){
+    assert( ff != freenode);
+    ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
+    ( ( FreeNode *)ff -> prev) -> next = ff -> next;
+    ff -> next = 0;
+    ff -> prev = 0;
+    if( ff -> end > ff -> begining + alo_size){
+      FreeNode *nf = ( FreeNode *)( ff -> begining + alo_size);
+      ff -> next = freenode -> next;
+      ff -> prev = ( address)freenode;
+      ( ( FreeNode *) freenode -> next) -> prev = ( address)nf;
+      freenode -> next = ( address)nf;
+      nf -> begining = ff -> begining;
+      nf -> end      = ff -> end;
+      ff = nf;
+    }
+  }
+  
   addr           = ff -> begining;
   ff -> begining += alo_size;
   
@@ -48,7 +67,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     MS_FreeFromSize( freenode, ( void *)ff -> begining, ff -> end - ff -> begining);
   }
   
-  DEBUG_PRINT( debug_global_root -> mss -> out, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, ff -> end - ff -> begining, alo_size);
+  DEBUG_PRINT( debug_out, "\rslab: %u  \tleft %u   alo_size: %u  \n", SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   {
     u32 i = num_mem;
@@ -101,10 +120,20 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
   }
   
   if( ff -> end >= ff -> begining + SLAB_SIZE){
-    size_t slab_size = ff -> end - ff -> begining;
-    slab_size -= slab_size % SLAB_SIZE;
-    MS_FreeSlabFromSize( ff -> begining, slab_size);
-    ff -> begining += slab_size;
+    if( ( address)ff <= ff -> end - sizeof( FreeNode) &&
+	( address)ff >= ff -> begining){
+      assert( ff != freenode);
+      ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
+      ( ( FreeNode *)ff -> prev) -> next = ff -> next;
+      ff -> next = 0;
+      ff -> prev = 0;
+    }
+    {
+      size_t slab_size = ff -> end - ff -> begining;
+      slab_size -= slab_size % SLAB_SIZE;
+      MS_FreeSlabFromSize( ff -> begining, slab_size);
+      ff -> begining += slab_size;
+    }
   }
   
   if( ff -> end == ff -> begining){
@@ -126,7 +155,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     }
   }
   
-  DEBUG_PRINT( debug_global_root -> mss -> out, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
+  DEBUG_PRINT( debug_out, "\rslab: %u  \tleft %u   free_size: %u  \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size);
   
   return NULL;
 }
