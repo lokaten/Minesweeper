@@ -200,7 +200,7 @@ MS_FreeSlabFromSize( address addr, const size_t size){
   assert( addr % SLAB_SIZE == 0);
   if( addr != 0){
     munmap( ( void *)addr, alo_size);
-    DEBUG_PRINT( debug_global_root -> mss -> out, "\rFree_slab!!    \n");
+    DEBUG_PRINT( stdout, "\rFree_slab!!    \n");
   }
   return 0;
 }
