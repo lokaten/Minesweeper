@@ -15,7 +15,8 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     
     do{
       if( nf -> end >= nf -> begining + alo_size &&
-	  nf -> begining != ( address)freenode){
+	  !( ( address)freenode + sizeof( FreeNode) > nf -> begining &&
+	     ( address)freenode                     < nf -> begining + alo_size)){
 	ff = nf;
 	break;
       }
@@ -53,8 +54,8 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   
   assert( ff != NULL);
   
-  if( ( address)ff <= ff -> end - sizeof( FreeNode) &&
-      ( address)ff >= ff -> begining){
+  if( ( address)ff + sizeof( FreeNode) > ff -> begining &&
+      ( address)ff                     < ff -> begining + alo_size){
     ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
     ( ( FreeNode *)ff -> prev) -> next = ff -> next;
     if( ff -> end > ff -> begining + alo_size){
@@ -135,18 +136,19 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
   }
   
   if( ff -> end >= ff -> begining + SLAB_SIZE){
-    if( ( address)ff <= ff -> end - sizeof( FreeNode) &&
+    size_t slab_size = ff -> end - ff -> begining;
+    
+    if( ( address)ff <= ff -> begining + slab_size &&
 	( address)ff >= ff -> begining){
       assert( ff != freenode);
       ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
       ( ( FreeNode *)ff -> prev) -> next = ff -> next;
       ff = MS_CreateLocalFromLocal( FreeNode, ff);
-    }else{
-      size_t slab_size = ff -> end - ff -> begining;
-      slab_size -= slab_size % SLAB_SIZE;
-      MS_FreeSlabFromSize( ff -> begining, slab_size);
-      ff -> begining += slab_size;
     }
+    
+    slab_size -= slab_size % SLAB_SIZE;
+    MS_FreeSlabFromSize( ff -> begining, slab_size);
+    ff -> begining += slab_size;
   }
   
   if( ff -> end == ff -> begining){
