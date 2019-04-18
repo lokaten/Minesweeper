@@ -155,7 +155,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     if( ff != freenode){
       if( ff -> end == ff -> begining + slab_size){
 	ff = MS_CreateLocalFromLocal( FreeNode, ff);
-      }else if( ff -> end < ff -> begining + slab_size){
+      }else if( ff -> end > ff -> begining + slab_size){
 	*( FreeNode *)( ff -> begining + slab_size) = *ff;
 	ff = ( FreeNode *)( ff -> begining + slab_size);
       }else{
