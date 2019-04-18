@@ -133,7 +133,7 @@ ROOT_Init( const int argc, const char **argv){
   }
   
 #ifdef DEBUG
-  debug_out = mss -> out;
+  debug_out = mss -> deb;
 #endif
   
   {
