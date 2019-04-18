@@ -29,14 +29,12 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     address new_slab = MS_CreateSlabFromSize( slab_alo_size);
     if( freenode -> end == freenode -> begining){
       ff = freenode;
-      ff -> end      = new_slab + slab_alo_size;
     }else if( slab_alo_size > alo_size){
-      ff = ( FreeNode *)( new_slab + slab_alo_size - sizeof( FreeNode));
+      ff = ( FreeNode *)( new_slab + alo_size);
       ff -> next = freenode -> next;
       ff -> prev = ( address)freenode;
       ( ( FreeNode *) freenode -> next) -> prev = ( address)ff;
       freenode -> next = ( address)ff;
-      ff -> end      = ( address)ff;
     }else if( freenode -> end > freenode -> begining + sizeof( FreeNode)){
       freenode -> begining += sizeof( FreeNode);
       ff = ( FreeNode *)( freenode -> end);
@@ -44,12 +42,12 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
       ff -> prev = ( address)freenode;
       ( ( FreeNode *) freenode -> next) -> prev = ( address)ff;
       freenode -> next = ( address)ff;
-      ff -> end      = new_slab + slab_alo_size;
     }else{
       // panic
       assert( FALSE && ( _Bool)"we have no idea where to dump the FreeNode");
     }
     ff -> begining = new_slab;
+    ff -> end      = new_slab + slab_alo_size;
   }
   
   assert( ff != NULL);
@@ -117,7 +115,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
   }
 
   if( ff == NULL){
-    ff = MS_Create( freenode, FreeNode, 0);
+    ff = ( FreeNode *)addr;
     ff -> next = freenode -> next;
     ff -> prev = ( address)freenode;
     ( ( FreeNode *)freenode -> next) -> prev = ( address)ff;
