@@ -6,19 +6,17 @@
 
 FreeNode *
 MS_CreateFreeList( void){
-  FreeNode *freenode;
+  FreeNode *freenode = MS_CreateLocal( FreeNode, 0);
   size_t alo_size = sizeof( FreeNode);
+  size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
+  address new_slab = ( address)MS_CreateEmpty( freenode, FreeNode);
   
-  {
-    size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-    address new_slab = MS_CreateSlabFromSize( slab_alo_size);
-    freenode = ( FreeNode *)new_slab;
-    freenode -> prev = ( address)freenode;
-    freenode -> next = ( address)freenode;
-    freenode -> begining = new_slab + alo_size;
-    freenode -> end      = new_slab + slab_alo_size;
-  }
-
+  freenode = ( FreeNode *)new_slab;
+  freenode -> prev = ( address)freenode;
+  freenode -> next = ( address)freenode;
+  freenode -> begining = new_slab + alo_size;
+  freenode -> end      = new_slab + slab_alo_size;
+  
   return freenode;
 }
 
