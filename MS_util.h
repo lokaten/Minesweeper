@@ -149,6 +149,9 @@ static inline __uint64_t getnanosec( void);
 #define DEBUG_PRINT( ...) (void)0
 #endif
 
+FreeNode *MS_CreateFreeList( void);
+void *MS_FreeFreeList( FreeNode *);
+
 void *MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
 #define MS_Create( freenode, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){ __VA_ARGS__})
 #define MS_CreateFromSize( freenode, size) ( void *)MS_CreateArrayFromSizeAndLocal( freenode, size, sizeof( char), &( const char){0})

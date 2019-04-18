@@ -34,18 +34,14 @@ FUNC_DEF( void, FUNC_quit){
 static inline const MS_root *
 ROOT_FreeRoot( const MS_root *proot){
   const MS_root *root;
-  FreeNode *ff;
   assert( proot != NULL);
   assert( proot -> freenode != NULL);
   root = MS_CreateLocalFromLocal( MS_root, proot);
-  ff = MS_CreateLocalFromLocal( FreeNode, root -> freenode);
-  ( ( FreeNode *) root -> freenode -> prev) -> next = ( uintptr_t)ff;
-  ( ( FreeNode *) root -> freenode -> next) -> prev = ( uintptr_t)ff;
-  GW_Free( ff, root -> GW);
-  MS_Free( ff, proot);
-  MS_Free( ff, root -> mss);
-  MF_FreeField( ff, root -> minefield);
-  MS_Free( ff, root -> freenode);
+  GW_Free( root -> freenode, root -> GW);
+  MS_Free( root -> freenode, proot);
+  MS_Free( root -> freenode, root -> mss);
+  MF_FreeField( root -> freenode, root -> minefield);
+  MS_FreeFreeList( root -> freenode);
   return NULL;
 }
 
@@ -135,21 +131,8 @@ ROOT_Init( const int argc, const char **argv){
 #ifdef DEBUG
   debug_out = mss -> deb;
 #endif
-  
-  {
-    size_t alo_size = sizeof( FreeNode);
-    
-    {
-      size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-      address new_slab = MS_CreateSlabFromSize( slab_alo_size);
-      freenode = ( FreeNode *)new_slab;
-      freenode -> prev = ( address)freenode;
-      freenode -> next = ( address)freenode;
-      freenode -> begining = new_slab + alo_size;
-      freenode -> end      = new_slab + alo_size;
-      MS_FreeFromSize( freenode, ( void *)( new_slab + alo_size), slab_alo_size - alo_size);
-    }
-  }
+
+  freenode = MS_CreateFreeList();
   
   if( custom){
     if( custom_level >= ( custom_width * custom_height)){

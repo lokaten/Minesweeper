@@ -3,6 +3,34 @@
 
 #include "debug.h"
 
+
+FreeNode *
+MS_CreateFreeList( void){
+  FreeNode *freenode;
+  size_t alo_size = sizeof( FreeNode);
+  
+  {
+    size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
+    address new_slab = MS_CreateSlabFromSize( slab_alo_size);
+    freenode = ( FreeNode *)new_slab;
+    freenode -> prev = ( address)freenode;
+    freenode -> next = ( address)freenode;
+    freenode -> begining = new_slab + alo_size;
+    freenode -> end      = new_slab + slab_alo_size;
+  }
+
+  return freenode;
+}
+
+void *
+MS_FreeFreeList( FreeNode *freenode){
+  FreeNode *ff = MS_CreateLocalFromLocal( FreeNode, freenode);
+  ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
+  ( ( FreeNode *)ff -> prev) -> next = ( address)ff;
+  MS_Free( ff, freenode);
+  return NULL;
+}
+
 void *
 MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const size_t size, const void *local){
   address addr = 0;
