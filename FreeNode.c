@@ -91,7 +91,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
   size_t alo_size = ( size + ALIGNMENT - 1) & ~( ALIGNMENT - 1);
   assert( freenode != NULL);
   assert( addr != 0);
-
+  
   if( ff -> begining == addr + alo_size){
     ff -> begining = addr;
   }else if( ff -> end == addr){
@@ -100,28 +100,28 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     ff = ( FreeNode *)addr;
     ff -> begining = addr;
     ff -> end      = addr + alo_size;
+  }
+  
+  {
+    FreeNode *nf = ( FreeNode*)freenode -> next;
     
-    {
-      FreeNode *nf = ( FreeNode*)freenode -> next;
-      
-      while( nf != freenode){
-	if( nf -> begining == ff -> end){
-	  ff -> end = nf -> end;
-	}else if( nf -> end == ff -> begining){
-	  ff -> begining = nf -> begining;
-	}else{
+    while( nf != freenode){
+      if( nf -> begining == ff -> end){
+	ff -> end = nf -> end;
+      }else if( nf -> end == ff -> begining){
+	ff -> begining = nf -> begining;
+      }else{
 	// do nothing
-	}
-	if( ( address)nf >= ff -> begining &&
-	    ( address)nf <  ff -> end){
-	  ( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	  ( ( FreeNode *)nf -> prev) -> next = nf -> next;
-	}
-	nf = ( FreeNode *)nf -> next;
       }
+      if( ( address)nf >= ff -> begining &&
+	  ( address)nf <  ff -> end){
+	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
+	( ( FreeNode *)nf -> prev) -> next = nf -> next;
+      }
+      nf = ( FreeNode *)nf -> next;
     }
   }
-    
+  
   if( ff -> end >= ff -> begining + SLAB_SIZE){
     size_t slab_size = ff -> end - ff -> begining;
     slab_size -= slab_size % SLAB_SIZE;
@@ -140,7 +140,7 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
     MS_FreeSlabFromSize( ff -> begining, slab_size);
     ff -> begining += slab_size;
   }
-
+  
   if( ff -> begining != ff ->  end &&
       ff != freenode){
     ff -> next = freenode -> next;
