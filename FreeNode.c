@@ -3,6 +3,14 @@
 
 #include "debug.h"
 
+#define SLAB_SIZE ( size_t)sysconf( _SC_PAGE_SIZE)
+#define ALIGNMENT sizeof( FreeNode)
+
+static inline address MS_CreateSlabFromSize( size_t size);
+#define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
+static inline address MS_FreeSlabFromSize( address , const size_t);
+#define MS_FreeSlab( addr) MS_FreeSlabFromSize( addr, SLAB_SIZE)
+
 
 FreeNode *
 MS_CreateFreeList( void){
@@ -179,3 +187,38 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
   
   return NULL;
 }
+
+
+static inline address
+MS_CreateSlabFromSize( size_t size){
+  address addr;
+  void *ptr;
+  size_t alo_size = ( size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
+  assert( alo_size == size);
+#ifdef MAP_ANONYMOUS
+  ptr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+  assert( ptr != MAP_FAILED);
+#else
+  ptr = malloc( alo_size);
+  assert( ptr != NULL);
+#endif
+  addr = ( address)ptr;
+  assert( addr % SLAB_SIZE == 0);
+  DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
+  return addr;
+}
+
+
+static inline address
+MS_FreeSlabFromSize( address addr, const size_t size){
+  size_t alo_size = size + SLAB_SIZE - 1;
+  alo_size -= alo_size % SLAB_SIZE;
+  assert( alo_size == size);
+  assert( addr % SLAB_SIZE == 0);
+  if( addr != 0){
+    munmap( ( void *)addr, alo_size);
+    DEBUG_PRINT( debug_out, "\rFree_slab!!    \n");
+  }
+  return 0;
+}
+

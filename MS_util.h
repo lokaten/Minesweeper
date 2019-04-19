@@ -129,10 +129,6 @@ typedef struct{
 #define FUNC_DEC( pre, name, arg) struct parm##name{ arg};pre name( const struct parm##name *)
 #define FUNC_DEF( pre, name) pre name( const struct parm##name *parm)
 
-static inline address MS_CreateSlabFromSize( size_t size);
-#define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
-static inline address MS_FreeSlabFromSize( address , const size_t);
-#define MS_FreeSlab( addr) MS_FreeSlabFromSize( addr, SLAB_SIZE)
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
 static inline u32 div_( u32, u32, u32);
@@ -165,49 +161,9 @@ const void *MS_FreeFromSize( FreeNode *, const void *, const size_t);
 #define MS_Free( freenode, addr) MS_FreeFromSize( freenode, addr, sizeof( *addr))
 #define MS_FreeArray( freenode, addr, num_mem) MS_FreeFromSize( freenode, addr, num_mem * sizeof( *addr))
 
-
-#define SLAB_SIZE ( size_t)sysconf( _SC_PAGE_SIZE)
-#define ALIGNMENT sizeof( FreeNode)
-
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
 #define MS_CreateLocalFromSize( size) alloca( size)
 #define MS_CreateLocalFromLocal( type, local) ( type *)&( ( union{ type T;}){ .T = *local})
-
-#include "debug.h"
-
-static inline address
-MS_CreateSlabFromSize( size_t size){
-  address addr;
-  void *ptr;
-  size_t alo_size = ( size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-  assert( alo_size == size);
-#ifdef MAP_ANONYMOUS
-  ptr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
-  assert( ptr != MAP_FAILED);
-#else
-  ptr = malloc( alo_size);
-  assert( ptr != NULL);
-#endif
-  addr = ( address)ptr;
-  assert( addr % SLAB_SIZE == 0);
-  DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
-  return addr;
-}
-
-
-static inline address
-MS_FreeSlabFromSize( address addr, const size_t size){
-  size_t alo_size = size + SLAB_SIZE - 1;
-  alo_size -= alo_size % SLAB_SIZE;
-  assert( alo_size == size);
-  assert( addr % SLAB_SIZE == 0);
-  if( addr != 0){
-    munmap( ( void *)addr, alo_size);
-    DEBUG_PRINT( debug_out, "\rFree_slab!!    \n");
-  }
-  return 0;
-}
-
 
 // divsion is slow, make sure we don't do it more then we have to
 
