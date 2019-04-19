@@ -1,4 +1,12 @@
 
+#include <sys/mman.h> // mmap
+#include <string.h> // memcpy
+#include <unistd.h> // _SC_PAGE_SIZE
+
+#ifndef MAP_ANONYMOUS
+#include <stdlib.h> // malloc
+#endif
+
 #include "MS_util.h"
 
 #include "debug.h"

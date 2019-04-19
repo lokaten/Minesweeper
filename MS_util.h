@@ -7,24 +7,17 @@ extern "C" {
 #endif
 
 
-#include <sys/mman.h> // mmap
 #include <sys/time.h> // clock_gettime
 
 #include <assert.h>
-#include <string.h> // memcpy
 
 #include <stdint.h>
 
-#include <unistd.h> // _SC_PAGE_SIZE
 
 #include <stdio.h> // FILE
 
 #ifndef NO_TERM
 #include <stdarg.h> // va_list
-#endif
-
-#ifndef MAP_ANONYMOUS
-#include <stdlib.h> // malloc
 #endif
 
 #ifndef CLOCK_REALTIME
