@@ -61,10 +61,11 @@ ROOT_Init( const int argc, const char **argv){
   u16 custom_height;
   u16 custom_level;
   
-  MS_field *field_beginner  = MS_CreateLocal( MS_field, .title = "beginner" , .width =    9, .height =    9, .level = 10, .global = 0, .reseed = 0);
-  MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level = 40, .global = 0, .reseed = 0);
-  MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "expert"   , .width =   30, .height =   16, .level = 99, .global = 0, .reseed = 0);
-  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "benchmark", .width = 3200, .height = 1800, .level =  1, .global = 1, .reseed = 0);
+  MS_field *field_beginner  = MS_CreateLocal( MS_field, .title = "beginner" , .width =    9, .height =    9, .level =  10, .global = 0, .reseed = 0);
+  MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level =  40, .global = 0, .reseed = 0);
+  MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "expert"   , .width =   30, .height =   16, .level =  99, .global = 0, .reseed = 0);
+  MS_field *field_extrem    = MS_CreateLocal( MS_field, .title = "extrem"   , .width =   32, .height =   18, .level = 127, .global = 0, .reseed = 0);
+  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "benchmark", .width = 3200, .height = 1800, .level =   1, .global = 0, .reseed = 0);
   
 #ifndef NO_TERM
   MS_stream *very_quiet = MS_CreateLocal( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
@@ -102,6 +103,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_CPY, TERM("Mimic windows minesweeper beginner mode"), "beginner"       , 'b', &minefield                  , field_beginner },
       { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &minefield                  , field_advanced },
       { OPTSW_CPY, TERM("Mimic windows minesweeper expert mode"  ), "expert"         , 'e', &minefield                  , field_expert   },
+      { OPTSW_CPY, TERM(""                                       ), "extrem"         , 'x', &minefield                  , field_extrem   },
       { OPTSW_CPY, TERM(""                                       ), "benchmark"      , 'B', &minefield                  , field_benchmark},
 #ifndef NO_TERM
       { OPTSW_GRP, TERM("Output"                                 ), ""               , 0  , NULL                       , NULL},
@@ -167,12 +169,10 @@ ROOT_Init( const int argc, const char **argv){
   
   if( strstr( minefield -> title, "benchmark")){
     setminefield( minefield, NULL);
-    setzero( minefield, ( MS_video){ .xdiff = -1, .ydiff = -1, .width  = 3, .height = 3});
-    uncov_elements( minefield, ( MS_video){ .xdiff =  0, .ydiff =  0, .width  = 1, .height = 1});
+    setzero( minefield, ( MS_video){ .xdiff = 0, .ydiff = 0, .width  = 3, .height = 3});
+    uncov_elements( minefield, ( MS_video){ .xdiff =  1, .ydiff =  1, .width  = 1, .height = 1});
     uncov( minefield, NULL);
-    MF_FreeField( freenode, minefield);
-    MS_Free( freenode, mss);
-    quit( NULL);
+    quit( MS_Create( freenode, MS_root, .freenode = freenode, .minefield = minefield, .mss = mss));
   }
   
   root = MS_Create( freenode, MS_root,
