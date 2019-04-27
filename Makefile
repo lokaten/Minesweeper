@@ -1,4 +1,16 @@
 
+ifeq ($(DEBUG), yes)
+CFLAGS = -Og -ggdb -DDEBUG -v
+CC += -v
+endif
+
+ifeq ($(SMALL), yes)
+CFLAGS ?= -Os -DSMALL
+endif
+
+CFLAGS ?= -Ofast
+
+
 ifeq ($(CLANG), yes)
 CC = clang -std=gnu99
 CXX = clang++ -std=gnu++11
@@ -27,17 +39,6 @@ CFLAGS += -Wlogical-op -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsig
 CXXFLAGS += -Wnoexcept -Wstrict-null-sentinel
 CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -fdiagnostics-show-option
 endif
-
-ifeq ($(DEBUG), yes)
-CFLAGS = -Og -ggdb -DDEBUG -v
-CC += -v
-endif
-
-ifeq ($(SMALL), yes)
-CFLAGS ?= -Os -DSMALL
-endif
-
-CFLAGS ?= -Ofast
 
 ifeq ($(NO_TERM), yes)
 CFLAGS += -DNO_TERM
