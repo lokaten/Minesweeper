@@ -11,6 +11,7 @@
 
 #include "debug.h"
 
+
 #define SLAB_SIZE ( size_t)sysconf( _SC_PAGE_SIZE)
 #define ALIGNMENT sizeof( FreeNode)
 
@@ -57,8 +58,8 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     
     do{
       if( nf -> end >= nf -> begining + alo_size &&
-	  !( ( address)freenode + sizeof( FreeNode) > nf -> begining &&
-	     ( address)freenode                     < nf -> begining + alo_size)){
+	  !( ( address)freenode >= nf -> begining &&
+	     ( address)freenode <  nf -> begining + alo_size)){
 	ff = nf;
 	break;
       }
@@ -89,8 +90,8 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   
   assert( ff != NULL);
   
-  if( ( address)ff + sizeof( FreeNode) > ff -> begining &&
-      ( address)ff                     < ff -> begining + alo_size){
+  if( ( address)ff >= ff -> begining &&
+      ( address)ff <  ff -> begining + alo_size){
     ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
     ( ( FreeNode *)ff -> prev) -> next = ff -> next;
     if( ff -> end > ff -> begining + alo_size){
@@ -156,24 +157,38 @@ MS_FreeFromSize( FreeNode *freenode, const void * vaddr, const size_t size){
       nf = ( FreeNode *)nf -> next;
     }
   }
-  
-  if( ff -> end >= ff -> begining + SLAB_SIZE){
-    size_t slab_size = ff -> end - ff -> begining;
-    slab_size -= slab_size % SLAB_SIZE;
+
+  if( ( ff -> end & ~( SLAB_SIZE - 1)) >
+      ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))){
+    size_t slab_size = ( ( ff -> end - ff -> end % SLAB_SIZE)) -
+      ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1));
+    FreeNode *nf = MS_CreateLocal( FreeNode, 0);
+    
+    nf -> end = ff -> end;
+    nf -> begining = ff -> end & ~( SLAB_SIZE - 1);
+    
+    ff -> end = ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
+    ff -> begining = ff -> begining;
     
     if( ff != freenode){
-      if( ff -> end == ff -> begining + slab_size){
+      if( ff -> end == ff -> begining){
 	ff = MS_CreateLocalFromLocal( FreeNode, ff);
-      }else if( ff -> end > ff -> begining + slab_size){
-	*( FreeNode *)( ff -> begining + slab_size) = *ff;
-	ff = ( FreeNode *)( ff -> begining + slab_size);
       }else{
-	assert( FALSE);
+	*( FreeNode *)( ff -> begining) = *ff;
+	ff = ( FreeNode *)( ff -> begining);
       }
     }
     
-    MS_FreeSlabFromSize( ff -> begining, slab_size);
-    ff -> begining += slab_size;
+    if( nf -> end != nf -> begining){
+      *( FreeNode *)( nf -> begining) = *nf;
+      nf = ( FreeNode *)( nf -> begining);
+      nf -> next = freenode -> next;
+      nf -> prev = ( address)freenode;
+      ( ( FreeNode *)freenode -> next) -> prev = ( address)nf;
+      freenode -> next = ( address)nf;
+    }
+    
+    MS_FreeSlabFromSize( ff -> end, slab_size);
   }
   
   if( ff -> begining != ff ->  end &&
