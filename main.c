@@ -65,7 +65,7 @@ ROOT_Init( const int argc, const char **argv){
   MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level =  40, .global = 0, .reseed = 0);
   MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "expert"   , .width =   30, .height =   16, .level =  99, .global = 0, .reseed = 0);
   MS_field *field_extrem    = MS_CreateLocal( MS_field, .title = "extrem"   , .width =   32, .height =   18, .level = 127, .global = 0, .reseed = 0);
-  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "benchmark", .width = 3200, .height = 1800, .level =   1, .global = 0, .reseed = 0);
+  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "benchmark", .width = 3200, .height = 1800, .level = 127, .global = 1, .reseed = 0);
   
 #ifndef NO_TERM
   MS_stream *very_quiet = MS_CreateLocal( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
@@ -110,9 +110,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_CPY, TERM("Print generic help mesage"              ), "help"           , 'h', &( def_out -> hlp         ), stdout},
       { OPTSW_CPY, TERM("Supres reguler output"                  ), "quiet"          , 'q', &( def_out -> out         ), NULL},
       { OPTSW_CPY, TERM("Supres all output"                      ), "very-quiet"     , 'Q', &(mss                     ), very_quiet},
-#ifdef DEBUG
       { OPTSW_CPY, TERM("Debug data"                             ), "debug"          , 'd', &( def_out -> deb         ), stdout},
-#endif
 #endif
       { OPTSW_NUL, TERM(""/* Last elemnt is a NULL termination */), ""               , 0  , NULL                       , NULL}};
     
@@ -161,16 +159,16 @@ ROOT_Init( const int argc, const char **argv){
   
   MS_print( mss -> out, "\rMode: %s\n", minefield -> title);
   
-  if( custom){
+  if( custom || mss -> deb != NULL){
     MS_print( mss -> out, "\rwidth: %lu   ", minefield -> subwidth);
     MS_print( mss -> out, "\r\t\theight: %lu   ", minefield -> subheight);
     MS_print( mss -> out, "\r\t\t\t\tlevel: %lu   \n", minefield -> level);
   }
   
-  if( strstr( minefield -> title, "benchmark")){
+  if( strstr( minefield -> title, field_benchmark -> title)){
     setminefield( minefield, NULL);
-    setzero( minefield, ( MS_video){ .xdiff = 0, .ydiff = 0, .width  = 3, .height = 3});
-    uncov_elements( minefield, ( MS_video){ .xdiff =  1, .ydiff =  1, .width  = 1, .height = 1});
+    setzero( minefield, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
+    uncov_elements( minefield, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
     uncov( minefield, NULL);
     quit( MS_Create( freenode, MS_root, .freenode = freenode, .minefield = minefield, .mss = mss));
   }

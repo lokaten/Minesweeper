@@ -48,13 +48,14 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
     blk_size -= blk_size % size;
     blk_size -= blk_size % sizeof( address);
   }
-  
+
+  assert( blk_size >= size);
   
   Stream = MS_Create( freenode, ComandStream,
 		      .blk_size = blk_size,
 		      .size = size);
   
-  addr = ( address)MS_CreateFromSize( freenode, blk_size + sizeof( address));
+  addr = MS_CreateFromSize( freenode, blk_size + sizeof( address));
   
   Stream -> freenode = freenode;
   
@@ -82,7 +83,7 @@ CS_Fetch( ComandStream *Stream){
   
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
     if unlikely( *( address *)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
-      address addr = ( address)MS_CreateFromSize( Stream -> freenode, Stream -> blk_size + sizeof( address));
+      address addr = MS_CreateFromSize( Stream -> freenode, Stream -> blk_size + sizeof( address));
       // lock
       *( address *)( addr + Stream -> blk_size) = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       *( address *)( Stream -> blk_fetch + Stream -> blk_size) = addr;
@@ -151,7 +152,7 @@ CS_Finish( ComandStream *Stream, const void *ptr){
       address blk_free =  *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       *( address *)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( address *)( blk_free + Stream -> blk_size);
       // unlock
-      MS_FreeFromSize( Stream -> freenode, ( void *)blk_free, Stream -> blk_size + sizeof( address));
+      MS_FreeFromSize( Stream -> freenode, blk_free, Stream -> blk_size + sizeof( address));
     }
     Stream -> blk_finish = *( address *)( Stream -> blk_finish + Stream -> blk_size);
     Stream -> finish = Stream -> blk_finish;
@@ -176,7 +177,7 @@ CS_Free( FreeNode *freenode, ComandStream *Stream){
     while( Stream -> blk_fetch != 0){
       addr = Stream -> blk_fetch;
       Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
-      MS_FreeFromSize( Stream -> freenode, ( void *)addr, Stream -> blk_size + sizeof( address));
+      MS_FreeFromSize( Stream -> freenode, addr, Stream -> blk_size + sizeof( address));
     }
     
     MS_Free( freenode, Stream);

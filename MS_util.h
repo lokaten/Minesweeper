@@ -141,28 +141,31 @@ static inline __uint64_t getnanosec( void);
 FreeNode *MS_CreateFreeList( void);
 void *MS_FreeFreeList( FreeNode *);
 
-void *MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
+address MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
 #define MS_Create( freenode, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){ __VA_ARGS__})
-#define MS_CreateFromSize( freenode, size) ( void *)MS_CreateArrayFromSizeAndLocal( freenode, size, sizeof( char), &( const char){0})
+#define MS_CreateFromSize( freenode, size) MS_CreateArrayFromSizeAndLocal( freenode, size, sizeof( char), &( const char){0})
 #define MS_CreateFromLocal( freenode, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), local)
 #define MS_CreateEmpty( freenode, type) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){0})
 #define MS_CreateEmptyArray( freenode, num_mem, type) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), &( const type){0})
 #define MS_CreateArray( freenode, num_mem, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), &( const type){ __VA_ARGS__})
 #define MS_CreateArrayFromLocal( freenode, num_mem, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), local)
 
-const void *MS_FreeFromSize( FreeNode *, const void *, const size_t);
-#define MS_Free( freenode, addr) MS_FreeFromSize( freenode, addr, sizeof( *addr))
-#define MS_FreeArray( freenode, addr, num_mem) MS_FreeFromSize( freenode, addr, num_mem * sizeof( *addr))
+address MS_FreeFromSize( FreeNode *, const address, const size_t);
+#define MS_Free( freenode, addr) MS_FreeFromSize( freenode, ( const address)addr, sizeof( *addr))
+#define MS_FreeArray( freenode, addr, num_mem) MS_FreeFromSize( freenode, ( const address)addr, num_mem * sizeof( *addr))
 
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
-#define MS_CreateLocalFromSize( size) alloca( size)
+#define MS_CreateLocalFromSize( size) ( void *)char[ size]
 #define MS_CreateLocalFromLocal( type, local) ( type *)&( ( union{ type T;}){ .T = *local})
+
 
 // divsion is slow, make sure we don't do it more then we have to
 
 // genrate a divobj from the divaider
 static inline u32
 gen_divobj( u32 a){
+  dassert( a > 0);
+  dassert( a < U32C( 0xffff));
   return (u32)( ( U64C( 0xffffffff) + (u64)a) / (u64)a);
 }
 

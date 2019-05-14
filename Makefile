@@ -62,22 +62,14 @@ LTO_FLAGS =
 LDFLAGS =
 
 ifeq ($(LTO),yes)
-LTO_FLAGS += -flto
+LTO_FLAGS += -flto -flto=jobserv
 endif
 
 ifeq ($(PROFILE_GEN),yes)
-PFLAGS += -fprofile-generate
-ifeq ($(DEV), yes)
-else
-PFLAGS += -Wno-error=coverage-mismatch
-endif
+PFLAGS += -fprofile-generate -Wno-error=coverage-mismatch
 else
 ifeq ($(PROFILE_USE),yes)
-PFLAGS += -fprofile-use
-ifeq ($(DEV), yes)
-else
-PFLAGS += -Wno-error=coverage-mismatch
-endif
+PFLAGS += -fprofile-use -Wno-error=coverage-mismatch
 endif
 endif
 
