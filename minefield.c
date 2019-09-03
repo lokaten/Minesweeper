@@ -65,7 +65,7 @@ setminefield( const MS_field  *minefield,
   i = minefield -> width * minefield -> subheight;
   
   while( i--){
-    if( ( i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width)) <= minefield -> subwidth){
+    if( ( i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width)) < minefield -> subwidth){
       if( ( minefield -> data + i) -> cover == 0 ||
 	  ( minefield -> data + i) -> flag == 1){
 	
