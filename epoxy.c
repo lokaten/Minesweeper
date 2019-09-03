@@ -1,12 +1,16 @@
 
+
 #include "MS_util.h"
 #include "minefield.h"
 #include "userinterface.h"
+
+#include <string.h>
 
 #include <wayland-egl.h>
 #include <epoxy/gl.h>
 #include <epoxy/egl.h>
 
+#include "debug.h"
 
 typedef struct{
   EGLContext              egl_context;
@@ -64,6 +68,7 @@ GW_Init( FreeNode *freenode, MS_root *root){
     assert( ctx -> registry);
     
     wl_registry_add_listener( ctx -> registry, &( struct wl_registry_listener){ &registry_add_object, &registry_remove_object}, NULL);
+    DEBUG_PRINT( stdout, "\r yey!  \n");
     wl_display_roundtrip( ctx -> display);
     
     ctx -> egl_display = eglGetDisplay( ctx -> display);
@@ -170,6 +175,8 @@ registry_add_object( void *data, struct wl_registry *registry, uint32_t id, cons
   }else if( !strcmp(interface, "wl_seat")){
     global_ctx -> seat = wl_registry_bind( registry, id, &wl_seat_interface, 1);
     wl_seat_add_listener( global_ctx -> seat, &( struct wl_seat_listener){ .capabilities = &seat_handle_capabilities, .name = &seat_listener_name}, NULL);
+  }else{
+    // do nothing
   }
 }
 

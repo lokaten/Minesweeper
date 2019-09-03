@@ -1,4 +1,16 @@
 
+ifeq ($(DEBUG), yes)
+CFLAGS = -Og -ggdb -DDEBUG -v
+CC += -v
+endif
+
+ifeq ($(SMALL), yes)
+CFLAGS ?= -Os -DSMALL
+endif
+
+CFLAGS ?= -Ofast
+
+
 ifeq ($(CLANG), yes)
 CC = clang -std=gnu99
 CXX = clang++ -std=gnu++11
@@ -28,17 +40,6 @@ CXXFLAGS += -Wnoexcept -Wstrict-null-sentinel
 CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -fdiagnostics-show-option
 endif
 
-ifeq ($(DEBUG), yes)
-CFLAGS = -Og -ggdb -DDEBUG -v
-CC += -v
-endif
-
-ifeq ($(SMALL), yes)
-CFLAGS ?= -Os -DSMALL
-endif
-
-CFLAGS ?= -Ofast
-
 ifeq ($(NO_TERM), yes)
 CFLAGS += -DNO_TERM
 endif
@@ -61,22 +62,14 @@ LTO_FLAGS =
 LDFLAGS =
 
 ifeq ($(LTO),yes)
-LTO_FLAGS += -flto
+LTO_FLAGS += -flto -flto=jobserv
 endif
 
 ifeq ($(PROFILE_GEN),yes)
-PFLAGS += -fprofile-generate
-ifeq ($(DEV), yes)
-else
-PFLAGS += -Wno-error=coverage-mismatch
-endif
+PFLAGS += -fprofile-generate -Wno-error=coverage-mismatch
 else
 ifeq ($(PROFILE_USE),yes)
-PFLAGS += -fprofile-use
-ifeq ($(DEV), yes)
-else
-PFLAGS += -Wno-error=coverage-mismatch
-endif
+PFLAGS += -fprofile-use -Wno-error=coverage-mismatch
 endif
 endif
 

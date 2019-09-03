@@ -7,24 +7,17 @@ extern "C" {
 #endif
 
 
-#include <sys/mman.h> // mmap
 #include <sys/time.h> // clock_gettime
 
 #include <assert.h>
-#include <string.h> // memcpy
 
 #include <stdint.h>
 
-#include <unistd.h> // _SC_PAGE_SIZE
 
 #include <stdio.h> // FILE
 
 #ifndef NO_TERM
 #include <stdarg.h> // va_list
-#endif
-
-#ifndef MAP_ANONYMOUS
-#include <stdlib.h> // malloc
 #endif
 
 #ifndef CLOCK_REALTIME
@@ -129,10 +122,6 @@ typedef struct{
 #define FUNC_DEC( pre, name, arg) struct parm##name{ arg};pre name( const struct parm##name *)
 #define FUNC_DEF( pre, name) pre name( const struct parm##name *parm)
 
-static inline address MS_CreateSlabFromSize( size_t size);
-#define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
-static inline address MS_FreeSlabFromSize( address , const size_t);
-#define MS_FreeSlab( addr) MS_FreeSlabFromSize( addr, SLAB_SIZE)
 static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
 static inline u32 div_( u32, u32, u32);
@@ -152,61 +141,22 @@ static inline __uint64_t getnanosec( void);
 FreeNode *MS_CreateFreeList( void);
 void *MS_FreeFreeList( FreeNode *);
 
-void *MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
+address MS_CreateArrayFromSizeAndLocal( FreeNode *, const size_t, const size_t, const void *);
 #define MS_Create( freenode, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){ __VA_ARGS__})
-#define MS_CreateFromSize( freenode, size) ( void *)MS_CreateArrayFromSizeAndLocal( freenode, size, sizeof( char), &( const char){0})
+#define MS_CreateFromSize( freenode, size) MS_CreateArrayFromSizeAndLocal( freenode, size, sizeof( char), &( const char){0})
 #define MS_CreateFromLocal( freenode, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), local)
 #define MS_CreateEmpty( freenode, type) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, 1, sizeof( type), &( const type){0})
 #define MS_CreateEmptyArray( freenode, num_mem, type) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), &( const type){0})
 #define MS_CreateArray( freenode, num_mem, type, ...) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), &( const type){ __VA_ARGS__})
 #define MS_CreateArrayFromLocal( freenode, num_mem, type, local) ( type *)MS_CreateArrayFromSizeAndLocal( freenode, num_mem, sizeof( type), local)
 
-const void *MS_FreeFromSize( FreeNode *, const void *, const size_t);
-#define MS_Free( freenode, addr) MS_FreeFromSize( freenode, addr, sizeof( *addr))
-#define MS_FreeArray( freenode, addr, num_mem) MS_FreeFromSize( freenode, addr, num_mem * sizeof( *addr))
-
-
-#define SLAB_SIZE ( size_t)sysconf( _SC_PAGE_SIZE)
-#define ALIGNMENT sizeof( FreeNode)
+address MS_FreeFromSize( FreeNode *, const address, const size_t);
+#define MS_Free( freenode, addr) MS_FreeFromSize( freenode, ( const address)addr, sizeof( *addr))
+#define MS_FreeArray( freenode, addr, num_mem) MS_FreeFromSize( freenode, ( const address)addr, num_mem * sizeof( *addr))
 
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
-#define MS_CreateLocalFromSize( size) alloca( size)
+#define MS_CreateLocalFromSize( size) ( void *)char[ size]
 #define MS_CreateLocalFromLocal( type, local) ( type *)&( ( union{ type T;}){ .T = *local})
-
-#include "debug.h"
-
-static inline address
-MS_CreateSlabFromSize( size_t size){
-  address addr;
-  void *ptr;
-  size_t alo_size = ( size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-  assert( alo_size == size);
-#ifdef MAP_ANONYMOUS
-  ptr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
-  assert( ptr != MAP_FAILED);
-#else
-  ptr = malloc( alo_size);
-  assert( ptr != NULL);
-#endif
-  addr = ( address)ptr;
-  assert( addr % SLAB_SIZE == 0);
-  DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
-  return addr;
-}
-
-
-static inline address
-MS_FreeSlabFromSize( address addr, const size_t size){
-  size_t alo_size = size + SLAB_SIZE - 1;
-  alo_size -= alo_size % SLAB_SIZE;
-  assert( alo_size == size);
-  assert( addr % SLAB_SIZE == 0);
-  if( addr != 0){
-    munmap( ( void *)addr, alo_size);
-    DEBUG_PRINT( debug_out, "\rFree_slab!!    \n");
-  }
-  return 0;
-}
 
 
 // divsion is slow, make sure we don't do it more then we have to
@@ -214,6 +164,8 @@ MS_FreeSlabFromSize( address addr, const size_t size){
 // genrate a divobj from the divaider
 static inline u32
 gen_divobj( u32 a){
+  dassert( a > 0);
+  dassert( a < U32C( 0xffff));
   return (u32)( ( U64C( 0xffffffff) + (u64)a) / (u64)a);
 }
 

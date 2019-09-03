@@ -65,12 +65,12 @@ setminefield( const MS_field  *minefield,
   i = minefield -> width * minefield -> subheight;
   
   while( i--){
-    if( mol_( i, minefield -> width, minefield -> width_divobj) < minefield -> subwidth){
+    if( ( i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width)) < minefield -> subwidth){
       if( ( minefield -> data + i) -> cover == 0 ||
 	  ( minefield -> data + i) -> flag == 1){
 	
-	if( GW != NULL)
-	  drawelement( GW, &( MS_element){ .cover = 1}, ( s32)mol_(i, minefield -> width, minefield -> width_divobj), ( s32)div_( i, minefield -> width, minefield -> width_divobj));
+	if( GW  != NULL)
+	  drawelement( GW, &( MS_element){ .cover = 1}, ( s32)mol_( i, minefield -> width, minefield -> width_divobj), ( s32)div_( i, minefield -> width, minefield -> width_divobj));
       }
       
       *( minefield -> data + i) = ( MS_element){ .count = 15, .cover = 1};
