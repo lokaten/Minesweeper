@@ -197,6 +197,9 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     
     ff -> end = ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
     ff -> begining = ff -> begining;
+
+    assert( slab_size == ( slab_size & ~( SLAB_SIZE - 1)));
+    assert( ff -> end + slab_size == nf -> begining);
     
     if( ff != freenode){
       ff = MS_CreateLocalFromLocal( FreeNode, ff);
