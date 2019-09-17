@@ -75,13 +75,11 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   if( ff == NULL){
     size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
     address new_slab = MS_CreateSlabFromSize( slab_alo_size);
-    if( slab_alo_size < alo_size + MIN_ALO_SIZE){
-      ff = MS_CreateLocal( FreeNode, 0);
-    }else if( freenode -> begining + MIN_ALO_SIZE > freenode -> end){
+    if( freenode -> begining + MIN_ALO_SIZE > freenode -> end){
+      assert( freenode -> begining == freenode -> end);
       ff = freenode;
     }else{
-      assert( slab_alo_size >= alo_size + MIN_ALO_SIZE);
-      ff = ( FreeNode *)( new_slab + alo_size);
+      ff = ( FreeNode *)( new_slab);
       ff -> next = freenode -> next;
       ff -> prev = ( address)freenode;
       ( ( FreeNode *) freenode -> next) -> prev = ( address)ff;
