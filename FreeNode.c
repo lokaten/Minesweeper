@@ -199,16 +199,7 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     ff -> begining = ff -> begining;
     
     if( ff != freenode){
-      if( ff -> end == ff -> begining){
-	ff = MS_CreateLocalFromLocal( FreeNode, ff);
-      }else if( ff -> end > ff -> begining + slab_size){
-	*( FreeNode *)( ff -> begining + slab_size) = *ff;
-	ff = ( FreeNode *)( ff -> begining + slab_size);
-      }else{
-	assert( ff -> end >= ff -> begining + MIN_ALO_SIZE);
-	*( FreeNode *)( ff -> begining) = *ff;
-	ff = ( FreeNode *)( ff -> begining);
-      }
+      ff = MS_CreateLocalFromLocal( FreeNode, ff);
     }
     
     if( nf -> end != nf -> begining){
