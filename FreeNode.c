@@ -15,6 +15,7 @@
 #define SLAB_SIZE ( size_t)sysconf( _SC_PAGE_SIZE)
 #define ALIGNMENT sizeof( address)
 #define MIN_ALO_SIZE sizeof( FreeNode)
+#define CASH_LINE 64 //my need tuning per arch
 
 static inline address MS_CreateSlabFromSize( const size_t size);
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
@@ -65,8 +66,8 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     do{
       if( ( ( nf -> end == nf -> begining + alo_size) ||
 	    ( nf -> end >= nf -> begining + alo_size + MIN_ALO_SIZE)) &&
-	  ( nf -> begining + alo_size >= ( ( nf -> begining + alo_size) & ~( SLAB_SIZE - 1)) + MIN_ALO_SIZE ||
-	    nf -> begining + alo_size == ( ( nf -> begining + alo_size) & ~( SLAB_SIZE - 1)))){
+	  ( nf -> begining + alo_size >= ( ( nf -> begining + alo_size) & ~( CASH_LINE - 1)) + MIN_ALO_SIZE ||
+	    nf -> begining + alo_size == ( ( nf -> begining + alo_size) & ~( CASH_LINE - 1)))){
 	ff = nf;
 	break;
       }
@@ -159,8 +160,8 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     ff -> begining = addr;
     ff -> end      = addr + alo_size;
     
-    if( ( ff -> end + MIN_ALO_SIZE > ( ( ff -> end + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1)))){
-      ff -> end = ( ff -> end + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
+    if( ( ff -> end + MIN_ALO_SIZE > ( ( ff -> end + CASH_LINE - 1) & ~( CASH_LINE - 1)))){
+      ff -> end = ( ff -> end + CASH_LINE - 1) & ~( CASH_LINE - 1);
     }
   }
   
@@ -168,22 +169,32 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     FreeNode *nf = ( FreeNode*)freenode -> next;
     
     while( nf != freenode){
-      if( nf -> begining == ff -> end){
+      if( nf -> begining + MIN_ALO_SIZE >= ff -> end &&
+	  nf -> begining < ff -> end){
 	ff -> end = nf -> end;
       }else if( nf -> end == ff -> begining){
 	ff -> begining = nf -> begining;
       }else{
-	// do nothing
+	assert( nf -> begining == (address)nf);
+	
+	if( ff -> end > nf -> begining && ff -> end < nf -> begining + MIN_ALO_SIZE){
+	  assert( nf -> end >= ff -> end + MIN_ALO_SIZE);
+	  nf -> begining = ff -> end;
+	  *( FreeNode *)( nf -> begining) = *nf;
+	  nf = ( FreeNode *)( nf -> begining);
+	  ( ( FreeNode *)nf -> next) -> prev = nf -> begining;
+	  ( ( FreeNode *)nf -> prev) -> next = nf -> begining;
+	}
       }
-      if( ( address)nf >= ff -> begining &&
-	  ( address)nf <  ff -> end){
-	assert( ff -> end       >= ( address)nf + sizeof( FreeNode));
-	assert( ff -> begining  <= ( address)nf);
+      
+      if( nf -> begining >= ff -> begining &&
+	  nf -> begining <  ff -> end){
 	assert( ff -> end       >= nf -> end);
 	assert( ff -> begining  <= nf -> begining);
 	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
 	( ( FreeNode *)nf -> prev) -> next = nf -> next;
       }
+      
       nf = ( FreeNode *)nf -> next;
     }
   }
