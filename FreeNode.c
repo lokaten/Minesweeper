@@ -160,10 +160,8 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     ff = ( FreeNode *)addr;
     ff -> begining = addr;
     ff -> end      = addr + alo_size;
-        
-    if( ( ff -> end + MIN_ALO_SIZE > ( ( ff -> end + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1)))){
-      ff -> end = ( ( ff -> end + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1));
-    }
+    
+    assert( ( ff -> end + MIN_ALO_SIZE <= ( ( ff -> end + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))));
   }
   
   {
