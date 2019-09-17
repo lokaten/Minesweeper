@@ -63,8 +63,10 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     FreeNode *nf = freenode;
     
     do{
-      if( ( nf -> end == nf -> begining + alo_size) ||
-	  ( nf -> end >= nf -> begining + alo_size + MIN_ALO_SIZE)){
+      if( ( ( nf -> end == nf -> begining + alo_size) ||
+	    ( nf -> end >= nf -> begining + alo_size + MIN_ALO_SIZE)) &&
+	  ( nf -> begining + alo_size >= ( ( nf -> begining + alo_size) & ~( SLAB_SIZE - 1)) + MIN_ALO_SIZE ||
+	    nf -> begining + alo_size == ( ( nf -> begining + alo_size) & ~( SLAB_SIZE - 1)))){
 	ff = nf;
 	break;
       }
