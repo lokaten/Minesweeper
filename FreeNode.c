@@ -95,6 +95,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   
   if( ( address)ff >= ff -> begining &&
       ( address)ff <  ff -> begining + alo_size){
+    assert( ( address)ff == ff -> begining);
     if( ff -> end > ff -> begining + alo_size){
       assert( ff -> end >= ff -> begining + alo_size + MIN_ALO_SIZE);
       *( FreeNode *)( ff -> begining + alo_size) = *ff;
