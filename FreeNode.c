@@ -17,6 +17,7 @@
 #define MIN_ALO_SIZE sizeof( FreeNode)
 #define CASH_LINE 64 //my need tuning per arch
 
+static inline void MoveFreeNode( const address addr, FreeNode *ff);
 static inline address MS_CreateSlabFromSize( const size_t size);
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
 static inline address MS_FreeSlabFromSize( const address addr, const size_t size);
@@ -98,10 +99,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
       ( address)ff <  ff -> begining + alo_size){
     assert( ( address)ff == ff -> begining);
     if( ff -> end > ff -> begining + alo_size + MIN_ALO_SIZE){
-      *( FreeNode *)( ff -> begining + alo_size) = *ff;
-      ff = ( FreeNode *)( ff -> begining + alo_size);
-      ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
-      ( ( FreeNode *)ff -> prev) -> next = ( address)ff;
+      MoveFreeNode( ff -> begining + alo_size, ff);
     }else{
       ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
       ( ( FreeNode *)ff -> prev) -> next = ff -> next;
@@ -180,10 +178,7 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
 	if( ff -> end > nf -> begining && ff -> end < nf -> begining + MIN_ALO_SIZE){
 	  assert( nf -> end >= ff -> end + MIN_ALO_SIZE);
 	  nf -> begining = ff -> end;
-	  *( FreeNode *)( nf -> begining) = *nf;
-	  nf = ( FreeNode *)( nf -> begining);
-	  ( ( FreeNode *)nf -> next) -> prev = nf -> begining;
-	  ( ( FreeNode *)nf -> prev) -> next = nf -> begining;
+	  MoveFreeNode( ff -> end, nf);
 	}
       }
       
@@ -251,6 +246,15 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   }
     
   return 0;
+}
+
+
+static inline void
+MoveFreeNode( const address addr, FreeNode *ff){
+  *( FreeNode *)( addr) = *ff;
+  ff = ( FreeNode *)( addr);
+  ( ( FreeNode *)ff -> next) -> prev = addr;
+  ( ( FreeNode *)ff -> prev) -> next = addr;
 }
 
 
