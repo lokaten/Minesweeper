@@ -104,8 +104,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
       MoveFreeNode( ff -> begining, ff);
       ff = ( FreeNode *)ff -> begining;
     }else{
-      ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
-      ( ( FreeNode *)ff -> prev) -> next = ff -> next;
+      ExcludeFreeNode( ff);
     }
   }
   
