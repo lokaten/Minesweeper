@@ -39,6 +39,9 @@ MS_CreateFreeList( void){
   freenode -> end      = ( address)nf;
   MoveFreeNode( ( address)nf, freenode);
   
+  freenode -> begining = 0;
+  freenode -> end      = 0;
+  
   return nf;
 }
 
