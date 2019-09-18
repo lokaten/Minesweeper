@@ -17,6 +17,7 @@
 #define MIN_ALO_SIZE sizeof( FreeNode)
 #define CASH_LINE 64 //my need tuning per arch
 
+static inline void ExcludeFreeNode( FreeNode *ff);
 static inline void InsertFreeNode( FreeNode *freenode, const FreeNode *pf);
 static inline void MoveFreeNode( const address addr, FreeNode *ff);
 static inline address MS_CreateSlabFromSize( const size_t size);
@@ -163,32 +164,30 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   }
   
   {
-    FreeNode *nf = ( FreeNode*)freenode -> next;
+    FreeNode *nf = freenode;
     
-    while( nf != freenode){
-      if( nf -> begining + MIN_ALO_SIZE >= ff -> end &&
-	  nf -> begining < ff -> end){
-	ff -> end = nf -> end;
-      }else if( nf -> end == ff -> begining){
-	ff -> begining = nf -> begining;
-      }else{
-	if( ff -> end > nf -> begining && ff -> end < nf -> begining + MIN_ALO_SIZE){
-	  assert( nf -> end >= ff -> end + MIN_ALO_SIZE);
-	  nf -> begining = ff -> end;
-	  MoveFreeNode( ff -> end, nf);
-	  nf = ( FreeNode *)nf -> begining;
-	}
-      }
-      
-      if( nf -> begining >= ff -> begining &&
-	  nf -> begining <  ff -> end){
-	assert( ff -> end       >= nf -> end);
-	assert( ff -> begining  <= nf -> begining);
-	( ( FreeNode *)nf -> next) -> prev = nf -> prev;
-	( ( FreeNode *)nf -> prev) -> next = nf -> next;
-      }
-      
+    while( ff -> begining > nf -> begining &&
+	   ff -> begining < ( ( FreeNode *)( nf -> next)) -> begining){
       nf = ( FreeNode *)nf -> next;
+    }
+    
+    if( ( ( FreeNode *) nf -> next) -> begining + MIN_ALO_SIZE >= ff -> end &&
+	( ( FreeNode *) nf -> next) -> begining < ff -> end){
+      ff -> end = ( ( FreeNode *) nf -> next) -> end;
+      ExcludeFreeNode( ( FreeNode *) nf -> next);
+    }
+    
+    if( nf -> end == ff -> begining){
+      ff -> begining = nf -> begining;
+      MoveFreeNode( ff -> begining, nf);
+      ff = nf;
+    }else{
+      if( ff -> end > nf -> begining && ff -> end < nf -> begining + MIN_ALO_SIZE){
+	assert( nf -> end >= ff -> end + MIN_ALO_SIZE);
+	nf -> begining = ff -> end;
+	MoveFreeNode( ff -> end, nf);
+	nf = ( FreeNode *)nf -> begining;
+      }
     }
   }
   
@@ -234,6 +233,13 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   }
     
   return 0;
+}
+
+
+static inline void
+ExcludeFreeNode( FreeNode *ff){
+  ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
+  ( ( FreeNode *)ff -> prev) -> next = ff -> next;
 }
 
 
