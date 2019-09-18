@@ -17,6 +17,7 @@
 #define MIN_ALO_SIZE sizeof( FreeNode)
 #define CASH_LINE 64 //my need tuning per arch
 
+static inline void InsertFreeNode( FreeNode *freenode, const FreeNode *pf);
 static inline void MoveFreeNode( const address addr, FreeNode *ff);
 static inline address MS_CreateSlabFromSize( const size_t size);
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
@@ -83,7 +84,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
       assert( freenode -> begining == freenode -> end);
       ff = freenode;
     }else{
-      ff = ( FreeNode *)( new_slab);
+      ff = ( FreeNode *)new_slab;
       ff -> next = freenode -> next;
       ff -> prev = ( address)freenode;
       ( ( FreeNode *) freenode -> next) -> prev = ( address)ff;
@@ -214,13 +215,7 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     }
     
     if( nf -> end != nf -> begining){
-      assert( nf -> end >= nf -> begining + MIN_ALO_SIZE);
-      *( FreeNode *)( nf -> begining) = *nf;
-      nf = ( FreeNode *)( nf -> begining);
-      nf -> next = freenode -> next;
-      nf -> prev = ( address)freenode;
-      ( ( FreeNode *)freenode -> next) -> prev = ( address)nf;
-      freenode -> next = ( address)nf;
+      InsertFreeNode( freenode, nf);
     }
     
     MS_FreeSlabFromSize( ff -> end, slab_size);
@@ -228,13 +223,7 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   
   if( ff != freenode &&
       ff -> begining != ff ->  end){
-    assert( ff -> end >= ff -> begining + MIN_ALO_SIZE);
-    *( FreeNode *)( ff -> begining) = *ff;
-    ff = ( FreeNode *)( ff -> begining);
-    ff -> next = freenode -> next;
-    ff -> prev = ( address)freenode;
-    ( ( FreeNode *)freenode -> next) -> prev = ( address)ff;
-    freenode -> next = ( address)ff;
+    InsertFreeNode( freenode, ff);
   }
   
   {
@@ -246,6 +235,18 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   }
     
   return 0;
+}
+
+
+static inline void
+InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
+  FreeNode *ff = ( FreeNode *)( pf -> begining);
+  assert( pf -> end >= pf -> begining + MIN_ALO_SIZE);
+  *ff = *pf;
+  ff -> next = freenode -> next;
+  ff -> prev = ( address)freenode;
+  ( ( FreeNode *)freenode -> next) -> prev = pf -> begining;
+  freenode -> next = pf -> begining;
 }
 
 
