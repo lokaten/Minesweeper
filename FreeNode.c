@@ -30,7 +30,7 @@ MS_CreateFreeList( void){
   FreeNode *freenode = MS_CreateLocal( FreeNode, 0);
   size_t alo_size = sizeof( FreeNode);
   size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-  address new_slab = ( address)MS_CreateEmpty( freenode, FreeNode);
+  address new_slab = ( address)MS_CreateSlab();
   
   freenode = ( FreeNode *)new_slab;
   freenode -> prev = ( address)freenode;
@@ -62,7 +62,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   alo_size = alo_size < MIN_ALO_SIZE ? MIN_ALO_SIZE : alo_size;
   assert( alo_size);
   assert( freenode != NULL);
-  if( freenode -> begining + MIN_ALO_SIZE <= freenode -> end){
+  if( alo_size + MIN_ALO_SIZE < SLAB_SIZE){
     FreeNode *nf = freenode;
     
     do{
