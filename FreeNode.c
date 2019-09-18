@@ -239,18 +239,24 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
 
 static inline void
 InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
+  FreeNode *nf = freenode;
   FreeNode *ff = ( FreeNode *)( pf -> begining);
   assert( pf -> end >= pf -> begining + MIN_ALO_SIZE);
   *ff = *pf;
-  ff -> next = freenode -> next;
-  ff -> prev = ( address)freenode;
-  ( ( FreeNode *)freenode -> next) -> prev = pf -> begining;
-  freenode -> next = pf -> begining;
+  while( pf -> begining > nf -> begining &&
+	 pf -> begining < ( ( FreeNode *)( nf -> next)) -> begining){
+    nf = ( FreeNode *)nf -> next;
+  }
+  ff -> next = nf -> next;
+  ff -> prev = ( address)nf;
+  ( ( FreeNode *)nf -> next) -> prev = pf -> begining;
+  nf -> next = pf -> begining;
 }
 
 
 static inline void
 MoveFreeNode( const address addr, FreeNode *ff){
+  assert( addr == ff -> begining);
   *( FreeNode *)( addr) = *ff;
   ff = ( FreeNode *)( addr);
   ( ( FreeNode *)ff -> next) -> prev = addr;
