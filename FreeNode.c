@@ -178,6 +178,7 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
 	  assert( nf -> end >= ff -> end + MIN_ALO_SIZE);
 	  nf -> begining = ff -> end;
 	  MoveFreeNode( ff -> end, nf);
+	  nf = ( FreeNode *)nf -> begining;
 	}
       }
       
