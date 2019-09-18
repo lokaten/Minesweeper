@@ -29,17 +29,17 @@ static inline address MS_FreeSlabFromSize( const address addr, const size_t size
 FreeNode *
 MS_CreateFreeList( void){
   FreeNode *freenode = MS_CreateLocal( FreeNode, 0);
-  size_t alo_size = sizeof( FreeNode);
-  size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-  address new_slab = ( address)MS_CreateSlab();
+  FreeNode *nf;
   
-  freenode = ( FreeNode *)new_slab;
   freenode -> prev = ( address)freenode;
   freenode -> next = ( address)freenode;
-  freenode -> begining = new_slab + alo_size;
-  freenode -> end      = new_slab + slab_alo_size;
   
-  return freenode;
+  nf = MS_CreateEmpty( freenode, FreeNode);
+  freenode -> begining = ( address)nf;
+  freenode -> end      = ( address)nf;
+  MoveFreeNode( ( address)nf, freenode);
+  
+  return nf;
 }
 
 void *
@@ -81,14 +81,9 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   if( ff == NULL){
     size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
     address new_slab = MS_CreateSlabFromSize( slab_alo_size);
-    if( freenode -> begining + MIN_ALO_SIZE > freenode -> end){
-      assert( freenode -> begining == freenode -> end);
-      ff = freenode;
-    }else{
-      ff = MS_CreateLocal( FreeNode, .begining = new_slab, .end = new_slab + slab_alo_size);
-      InsertFreeNode( freenode, ff);
-      ff = ( FreeNode *)ff -> begining;
-    }
+    ff = MS_CreateLocal( FreeNode, .begining = new_slab, .end = new_slab + slab_alo_size);
+    InsertFreeNode( freenode, ff);
+    ff = ( FreeNode *)ff -> begining;
     ff -> begining = new_slab;
     ff -> end      = new_slab + slab_alo_size;
   }
@@ -148,14 +143,8 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   assert( addr >= ( addr & ~( SLAB_SIZE - 1)) + MIN_ALO_SIZE ||
 	  addr == ( addr & ~( SLAB_SIZE - 1)));
   
-  if( ff -> begining == addr + alo_size){
-    ff -> begining = addr;
-  }else if( ff -> end == addr){
-    ff -> end = addr + alo_size;
-  }else{
-    ff = ( FreeNode *)addr;
-    ff -> begining = addr;
-    ff -> end      = addr + alo_size;
+  {
+    ff = MS_CreateLocal( FreeNode, .begining = addr, .end = addr + alo_size);
     
     if( ( ff -> end + MIN_ALO_SIZE > ( ( ff -> end + CASH_LINE - 1) & ~( CASH_LINE - 1)))){
       ff -> end = ( ff -> end + CASH_LINE - 1) & ~( CASH_LINE - 1);
@@ -165,8 +154,9 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   {
     FreeNode *nf = freenode;
     
-    while( ff -> begining > nf -> begining &&
-	   ff -> begining < ( ( FreeNode *)( nf -> next)) -> begining){
+    while( ( nf -> next != ( address)freenode) &&
+	   ( ff -> begining > nf -> begining) ==
+	   ( ff -> begining > ( ( FreeNode *)( nf -> next)) -> begining)){
       nf = ( FreeNode *)nf -> next;
     }
     
@@ -248,8 +238,9 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   FreeNode *ff = ( FreeNode *)( pf -> begining);
   assert( pf -> end >= pf -> begining + MIN_ALO_SIZE);
   *ff = *pf;
-  while( pf -> begining > nf -> begining &&
-	 pf -> begining < ( ( FreeNode *)( nf -> next)) -> begining){
+  while( ( nf -> next != ( address)freenode) &&
+	 ( pf -> begining > nf -> begining) ==
+	 ( pf -> begining > ( ( FreeNode *)( nf -> next)) -> begining)){
     nf = ( FreeNode *)nf -> next;
   }
   ff -> next = nf -> next;
