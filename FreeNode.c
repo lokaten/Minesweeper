@@ -80,8 +80,8 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   address addr = 0;
   FreeNode *ff = NULL;
   size_t alo_size;
-  size_t frag = 0;
 #ifdef DEBUG
+  size_t frag = 0;
   u64 tutime = getnanosec();
 #endif
   alo_size = ( num_mem * size + ALIGNMENT - 1) & ~( ALIGNMENT - 1);
@@ -124,7 +124,9 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     tf -> end = ff -> begining;
     if( tf -> begining != tf ->  end){
       assert( tf -> begining + MIN_ALO_SIZE <= tf ->  end);
+#ifdef DEBUG
       frag = tf -> end - tf -> begining;
+#endif
       tf -> next = ff -> begining;
       MoveFreeNode( tf -> begining, tf);
     }
@@ -179,6 +181,7 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   alo_size = alo_size < MIN_ALO_SIZE ? MIN_ALO_SIZE : alo_size;
   assert( freenode != NULL);
   assert( addr != 0);
+  assert( size != 0);
   
   ff = MS_CreateLocal( FreeNode, .begining = addr, .end = addr + alo_size);
   
