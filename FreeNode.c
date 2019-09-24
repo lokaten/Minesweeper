@@ -127,10 +127,14 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     ff = InsertFreeNode( freenode, ff);
   }
   
-  if( ff -> end >= ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size &&
-      ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1))){
+  if unlikely( ff -> end >= ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size &&
+	       ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1))){
     FreeNode *tf = MS_CreateLocalFromLocal( FreeNode, ff);
     ff -> begining = ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1);
+    if unlikely( ff -> end >= ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1)) + alo_size &&
+		 ff -> begining + alo_size > ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))){
+      ff -> begining = ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
+    }
     MoveFreeNode( ff -> begining, ff);
     ff = ( FreeNode *) ff -> begining;
     tf -> end = ff -> begining;
