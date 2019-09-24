@@ -65,7 +65,7 @@ MS_CreateFreeList( void){
     u64 mytime = getnanosec();
     mytime = mytime < tutime ? 0 : mytime - tutime;
     
-    DEBUG_PRINT( debug_out, "\rslab: %u  \t left %u   \t alo_size:  %u   \t %llu.%09llu \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size, mytime / U64C( 1000000000), mytime % U64C( 1000000000));
+    DEBUG_PRINT( debug_out, "\rslab: %u  \t left %u   \t alo_size:  %u   \t % 6llu.%03llu \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size, mytime / U64C( 1000), mytime % U64C( 1000));
 #endif
   }
   
@@ -178,7 +178,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     u64 mytime = getnanosec();
     mytime = mytime < tutime ? 0 : mytime - tutime;
     
-    DEBUG_PRINT( debug_out, "\rslab: %u  \t left %u   \t alo_size:  %u   \t %llu.%09llu \t frag: %lu \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size, mytime / U64C( 1000000000), mytime % U64C( 1000000000), frag);
+    DEBUG_PRINT( debug_out, "\rslab: %u  \t left %u   \t alo_size:  %u   \t % 6llu.%03llu \t frag: %lu \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size, mytime / U64C( 1000), mytime % U64C( 1000), frag);
 #endif
   }
   
@@ -240,7 +240,7 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
 #ifdef DEBUG
     u64 mytime = getnanosec();
     mytime = mytime < tutime ? 0 : mytime - tutime;
-    DEBUG_PRINT( debug_out, "\rslab: %u  \t left %u   \t free_size: %u   \t %llu.%09llu \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size, mytime / U64C( 1000000000), mytime % U64C( 1000000000));
+    DEBUG_PRINT( debug_out, "\rslab: %u  \t left %u   \t free_size: %u   \t % 6llu.%03llu \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size, mytime / U64C( 1000), mytime % U64C( 1000));
 #endif
   }
   
