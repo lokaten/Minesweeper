@@ -92,10 +92,10 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   if likely( alo_size + MIN_ALO_SIZE < SLAB_SIZE){
     FreeNode *nf = ( FreeNode *)freenode -> next;
     
-    while unlikely( nf != freenode){
-      if likely( nf -> end >= ( ( nf -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size ||
-	  ( ( nf -> end == nf -> begining + alo_size ||
-	      nf -> end >= nf -> begining + alo_size + MIN_ALO_SIZE))){
+    while likely( nf != freenode){
+      if unlikely( nf -> end >= ( ( nf -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size ||
+		   ( ( nf -> end == nf -> begining + alo_size ||
+		       nf -> end >= nf -> begining + alo_size + MIN_ALO_SIZE))){
 	
 	assert( nf -> end >= ( ( nf -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size ||
 		nf -> begining + alo_size >= ( ( nf -> begining + alo_size) & ~( CASH_LINE - 1)) + MIN_ALO_SIZE ||
