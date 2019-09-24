@@ -89,7 +89,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   assert( alo_size);
   assert( freenode != NULL);
   
-  if( alo_size + MIN_ALO_SIZE < SLAB_SIZE){
+  if likely( alo_size + MIN_ALO_SIZE < SLAB_SIZE){
     FreeNode *nf = ( FreeNode *)freenode -> next;
     
     while( nf != freenode){
@@ -108,7 +108,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     }
   }
   
-  if( ff == NULL){
+  if unlikely( ff == NULL){
     size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
     address new_slab = MS_CreateSlabFromSize( slab_alo_size);
     ff = MS_CreateLocal( FreeNode, .begining = new_slab, .end = new_slab + slab_alo_size);
@@ -139,11 +139,11 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     ff -> begining = ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1);
   }
   
-  if( ff -> end == ff -> begining){
-    ExcludeFreeNode( ff);
-  }else{
+  if likely( ff -> end != ff -> begining){
     MoveFreeNode( ff -> begining, ff);
     ff = ( FreeNode *)ff -> begining;
+  }else{
+    ExcludeFreeNode( ff);
   }
   
   ff = MS_CreateLocalFromLocal( FreeNode, ff);
@@ -188,8 +188,8 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   
   ff = InsertFreeNode( freenode, ff);
   
-  if( ( ( ff -> end) & ~( SLAB_SIZE - 1)) >
-      ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))){
+  if unlikely( ( ( ff -> end) & ~( SLAB_SIZE - 1)) >
+	       ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))){
     size_t slab_size = ( ( ff -> end) & ~( SLAB_SIZE - 1)) -
       ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1));
     FreeNode *nf = MS_CreateLocal( FreeNode, 0);
@@ -239,7 +239,7 @@ ExcludeFreeNode( FreeNode *ff){
 
 static inline FreeNode *
 InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
-  FreeNode *nf = ( FreeNode *) freenode -> next;
+  FreeNode *nf = freenode;
   FreeNode *ff = MS_CreateLocalFromLocal( FreeNode, pf);
   assert( pf -> end >= pf -> begining + MIN_ALO_SIZE);
   
@@ -249,10 +249,8 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   assert( pf -> end >= ( pf -> end & ~( CASH_LINE - 1)) + MIN_ALO_SIZE ||
 	  pf -> end == ( pf -> end & ~( CASH_LINE - 1)));
   
-  nf = freenode;
-  
-  while( ( FreeNode *)nf -> next != freenode &&
-	 ( ( FreeNode *)nf -> next) -> begining < pf -> begining){
+  while likely( ( ( FreeNode *)nf -> next) -> begining < pf -> begining &&
+		( FreeNode *)nf -> next != freenode){
     assert( nf -> begining <= ( ( FreeNode *)nf -> next) -> begining);
     nf = ( FreeNode *)nf -> next;
   }
@@ -263,14 +261,14 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   ff -> prev = ( address)nf;
   ff -> next = nf -> next;
   
-  if( ff -> begining == nf -> end){
+  if unlikely( ff -> begining == nf -> end){
     ff -> begining = nf -> begining;
     ff -> prev = nf -> prev;
   }
   
   nf = ( FreeNode *)nf -> next;
   
-  if( ff -> end == nf -> begining){
+  if unlikely( ff -> end == nf -> begining){
     ff -> end = nf -> end;
     ff -> next = nf -> next;
   }
