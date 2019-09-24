@@ -11,7 +11,6 @@ extern "C" {
 
 #include "MS_util.h"
 
-
 typedef struct{
   const size_t blk_size;
   const size_t size;
@@ -39,10 +38,9 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
   ComandStream *Stream;
   size_t blk_size;
   address addr;
-  
   assert( size);
-
-  blk_size = 4096 - sizeof( address);
+  
+  blk_size = 512 - sizeof( address);
   
   while( blk_size % size || blk_size % sizeof( address)){
     blk_size -= blk_size % size;
