@@ -18,7 +18,7 @@
 #define CASH_LINE 64 //my need tuning per arch
 
 static inline void ExcludeFreeNode( FreeNode *ff);
-static inline void InsertFreeNode( FreeNode *freenode, const FreeNode *pf);
+static inline FreeNode * InsertFreeNode( FreeNode *freenode, const FreeNode *pf);
 static inline void MoveFreeNode( const address addr, FreeNode *ff);
 static inline address MS_CreateSlabFromSize( const size_t size);
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
@@ -28,21 +28,42 @@ static inline address MS_FreeSlabFromSize( const address addr, const size_t size
 
 FreeNode *
 MS_CreateFreeList( void){
-  FreeNode *freenode = MS_CreateLocal( FreeNode, 0);
-  FreeNode *nf;
+  address addr = 0;
+  FreeNode *ff = NULL;
+  size_t alo_size;
+#ifdef DEBUG
+  u64 tutime = getnanosec();
+#endif
+  alo_size = MIN_ALO_SIZE;
   
-  freenode -> prev = ( address)freenode;
-  freenode -> next = ( address)freenode;
+  {
+    size_t slab_alo_size = SLAB_SIZE;
+    address new_slab = MS_CreateSlab();
+    ff = MS_CreateLocal( FreeNode, .begining = new_slab, .end = new_slab + slab_alo_size, .prev = new_slab, .next = new_slab);
+  }
   
-  nf = MS_CreateEmpty( freenode, FreeNode);
-  freenode -> begining = ( address)nf;
-  freenode -> end      = ( address)nf;
-  MoveFreeNode( ( address)nf, freenode);
+  assert( ff -> begining + alo_size <= ff -> end);
   
-  freenode -> begining = 0;
-  freenode -> end      = 0;
+  addr           = ff -> begining;
+  ff -> begining += alo_size;
   
-  return nf;
+  assert( ff -> begining < ff -> end);
+  
+  *( FreeNode *)addr = ( FreeNode){ .prev = ff -> begining, .next = ff -> begining, .begining = 0, .end = 0};
+  
+  MoveFreeNode( ff -> begining, ff);
+  ff = ( FreeNode *)ff -> begining;
+  
+  {
+#ifdef DEBUG
+    u64 mytime = getnanosec();
+    mytime = mytime < tutime ? 0 : mytime - tutime;
+    
+    DEBUG_PRINT( debug_out, "\rslab: %u  \t left %u   \t alo_size:  %u   \t %llu.%09llu \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size, mytime / U64C( 1000000000), mytime % U64C( 1000000000));
+#endif
+  }
+  
+  return ( FreeNode *)addr;
 }
 
 void *
@@ -59,6 +80,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   address addr = 0;
   FreeNode *ff = NULL;
   size_t alo_size;
+  size_t frag = 0;
 #ifdef DEBUG
   u64 tutime = getnanosec();
 #endif
@@ -66,45 +88,65 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   alo_size = alo_size < MIN_ALO_SIZE ? MIN_ALO_SIZE : alo_size;
   assert( alo_size);
   assert( freenode != NULL);
+  
   if( alo_size + MIN_ALO_SIZE < SLAB_SIZE){
-    FreeNode *nf = freenode;
+    FreeNode *nf = ( FreeNode *)freenode -> next;
     
-    do{
-      if( ( ( nf -> end == nf -> begining + alo_size) ||
-	    ( nf -> end >= nf -> begining + alo_size + MIN_ALO_SIZE)) &&
-	  ( nf -> begining + alo_size >= ( ( nf -> begining + alo_size) & ~( CASH_LINE - 1)) + MIN_ALO_SIZE ||
-	    nf -> begining + alo_size == ( ( nf -> begining + alo_size) & ~( CASH_LINE - 1)))){
+    while( nf != freenode){
+      if( nf -> end >= ( ( nf -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size ||
+	  ( ( nf -> end == nf -> begining + alo_size ||
+	      nf -> end >= nf -> begining + alo_size + MIN_ALO_SIZE))){
+	
+	assert( nf -> end >= ( ( nf -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size ||
+		nf -> begining + alo_size >= ( ( nf -> begining + alo_size) & ~( CASH_LINE - 1)) + MIN_ALO_SIZE ||
+		nf -> begining + alo_size == ( ( nf -> begining + alo_size) & ~( CASH_LINE - 1)));
+	
 	ff = nf;
 	break;
       }
       nf = ( FreeNode *)nf -> next;
-    }while( nf -> next != ( address)freenode);
+    }
   }
   
   if( ff == NULL){
     size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
     address new_slab = MS_CreateSlabFromSize( slab_alo_size);
     ff = MS_CreateLocal( FreeNode, .begining = new_slab, .end = new_slab + slab_alo_size);
-    InsertFreeNode( freenode, ff);
-    ff = ( FreeNode *)ff -> begining;
-    ff -> begining = new_slab;
-    ff -> end      = new_slab + slab_alo_size;
+    ff = InsertFreeNode( freenode, ff);
   }
   
-  assert( ff != NULL);
+  if( ff -> end >= ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size &&
+      ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1))){
+    FreeNode *tf = MS_CreateLocalFromLocal( FreeNode, ff);
+    ff -> begining = ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1);
+    MoveFreeNode( ff -> begining, ff);
+    ff = ( FreeNode *) ff -> begining;
+    tf -> end = ff -> begining;
+    if( tf -> begining != tf ->  end){
+      assert( tf -> begining + MIN_ALO_SIZE <= tf ->  end);
+      frag = tf -> end - tf -> begining;
+      tf -> next = ff -> begining;
+      MoveFreeNode( tf -> begining, tf);
+    }
+  }
+  
   assert( ff -> begining + alo_size <= ff -> end);
   
   addr           = ff -> begining;
   ff -> begining += alo_size;
   
-  if( ff != freenode){
-    if( ff -> end >= ff -> begining + MIN_ALO_SIZE){
-      MoveFreeNode( ff -> begining, ff);
-      ff = ( FreeNode *)ff -> begining;
-    }else{
-      ExcludeFreeNode( ff);
-    }
+  if( ff -> begining + MIN_ALO_SIZE > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1))){
+    ff -> begining = ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1);
   }
+  
+  if( ff -> end == ff -> begining){
+    ExcludeFreeNode( ff);
+  }else{
+    MoveFreeNode( ff -> begining, ff);
+    ff = ( FreeNode *)ff -> begining;
+  }
+  
+  ff = MS_CreateLocalFromLocal( FreeNode, ff);
   
   {
     u32 i = num_mem;
@@ -118,12 +160,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     u64 mytime = getnanosec();
     mytime = mytime < tutime ? 0 : mytime - tutime;
     
-    if( ff != freenode &&
-	ff -> end < ff -> begining + MIN_ALO_SIZE){
-      ff -> begining = ff -> end;
-    }
-    
-    DEBUG_PRINT( debug_out, "\rslab: %u  \t left %u   \t alo_size:  %u   \t %llu.%09llu \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size, mytime / U64C( 1000000000), mytime % U64C( 1000000000));
+    DEBUG_PRINT( debug_out, "\rslab: %u  \t left %u   \t alo_size:  %u   \t %llu.%09llu \t frag: %lu \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size, mytime / U64C( 1000000000), mytime % U64C( 1000000000), frag);
 #endif
   }
   
@@ -143,45 +180,13 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   assert( freenode != NULL);
   assert( addr != 0);
   
-  assert( addr >= ( addr & ~( SLAB_SIZE - 1)) + MIN_ALO_SIZE ||
-	  addr == ( addr & ~( SLAB_SIZE - 1)));
+  ff = MS_CreateLocal( FreeNode, .begining = addr, .end = addr + alo_size);
   
-  {
-    ff = MS_CreateLocal( FreeNode, .begining = addr, .end = addr + alo_size);
-    
-    if( ( ff -> end + MIN_ALO_SIZE > ( ( ff -> end + CASH_LINE - 1) & ~( CASH_LINE - 1)))){
-      ff -> end = ( ff -> end + CASH_LINE - 1) & ~( CASH_LINE - 1);
-    }
+  if( ( ff -> end + MIN_ALO_SIZE > ( ( ff -> end + CASH_LINE - 1) & ~( CASH_LINE - 1)))){
+    ff -> end = ( ff -> end + CASH_LINE - 1) & ~( CASH_LINE - 1);
   }
   
-  {
-    FreeNode *nf = freenode;
-    
-    while( ( nf -> next != ( address)freenode) &&
-	   ( ff -> begining > nf -> begining) ==
-	   ( ff -> begining > ( ( FreeNode *)( nf -> next)) -> begining)){
-      nf = ( FreeNode *)nf -> next;
-    }
-    
-    if( ( ( FreeNode *) nf -> next) -> begining + MIN_ALO_SIZE >= ff -> end &&
-	( ( FreeNode *) nf -> next) -> begining < ff -> end){
-      ff -> end = ( ( FreeNode *) nf -> next) -> end;
-      ExcludeFreeNode( ( FreeNode *) nf -> next);
-    }
-    
-    if( nf -> end == ff -> begining){
-      ff -> begining = nf -> begining;
-      MoveFreeNode( ff -> begining, nf);
-      ff = nf;
-    }else{
-      if( ff -> end > nf -> begining && ff -> end < nf -> begining + MIN_ALO_SIZE){
-	assert( nf -> end >= ff -> end + MIN_ALO_SIZE);
-	nf -> begining = ff -> end;
-	MoveFreeNode( ff -> end, nf);
-	nf = ( FreeNode *)nf -> begining;
-      }
-    }
-  }
+  ff = InsertFreeNode( freenode, ff);
   
   if( ( ( ff -> end) & ~( SLAB_SIZE - 1)) >
       ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))){
@@ -194,26 +199,22 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     
     ff -> end = ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
     ff -> begining = ff -> begining;
-
+    
     assert( slab_size == ( slab_size & ~( SLAB_SIZE - 1)));
     assert( ff -> end + slab_size == nf -> begining);
     
-    if( ff != freenode){
-      ff = MS_CreateLocalFromLocal( FreeNode, ff);
+    if( nf -> end >= nf -> begining + MIN_ALO_SIZE){
+      nf -> prev = ff -> begining;
+      nf -> next = ff -> next;
+      MoveFreeNode( nf -> begining, nf);
     }
     
-    if( nf -> end != nf -> begining){
-      InsertFreeNode( freenode, nf);
-      nf = ( FreeNode *)nf -> begining;
+    if( ff -> begining + MIN_ALO_SIZE > ff -> end){
+      ff = MS_CreateLocalFromLocal( FreeNode, ff);
+      ExcludeFreeNode( ff);
     }
     
     MS_FreeSlabFromSize( ff -> end, slab_size);
-  }
-  
-  if( ff != freenode &&
-      ff -> begining != ff ->  end){
-    InsertFreeNode( freenode, ff);
-    ff = ( FreeNode *)ff -> begining;
   }
   
   {
@@ -223,33 +224,64 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     DEBUG_PRINT( debug_out, "\rslab: %u  \t left %u   \t free_size: %u   \t %llu.%09llu \n",  SLAB_SIZE, ff -> end - ff -> begining, alo_size, mytime / U64C( 1000000000), mytime % U64C( 1000000000));
 #endif
   }
-    
+  
   return 0;
 }
 
 
 static inline void
 ExcludeFreeNode( FreeNode *ff){
+  assert( ff -> begining != 0);
   ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
   ( ( FreeNode *)ff -> prev) -> next = ff -> next;
 }
 
 
-static inline void
+static inline FreeNode *
 InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
-  FreeNode *nf = freenode;
-  FreeNode *ff = ( FreeNode *)( pf -> begining);
+  FreeNode *nf = ( FreeNode *) freenode -> next;
+  FreeNode *ff = MS_CreateLocalFromLocal( FreeNode, pf);
   assert( pf -> end >= pf -> begining + MIN_ALO_SIZE);
-  *ff = *pf;
-  while( ( nf -> next != ( address)freenode) &&
-	 ( pf -> begining > nf -> begining) ==
-	 ( pf -> begining > ( ( FreeNode *)( nf -> next)) -> begining)){
+  
+  assert( pf -> begining >= ( pf -> begining & ~( CASH_LINE - 1)) + MIN_ALO_SIZE ||
+	  pf -> begining == ( pf -> begining & ~( CASH_LINE - 1)));
+  
+  assert( pf -> end >= ( pf -> end & ~( CASH_LINE - 1)) + MIN_ALO_SIZE ||
+	  pf -> end == ( pf -> end & ~( CASH_LINE - 1)));
+  
+  nf = freenode;
+  
+  while( ( FreeNode *)nf -> next != freenode &&
+	 ( ( FreeNode *)nf -> next) -> begining < pf -> begining){
+    assert( nf -> begining <= ( ( FreeNode *)nf -> next) -> begining);
     nf = ( FreeNode *)nf -> next;
   }
-  ff -> next = nf -> next;
+  
+  assert( nf -> begining <= pf -> begining);
+  assert( ( ( FreeNode *)nf -> next) ->  begining > pf -> begining);
+  
   ff -> prev = ( address)nf;
-  ( ( FreeNode *)nf -> next) -> prev = pf -> begining;
-  nf -> next = pf -> begining;
+  ff -> next = nf -> next;
+  
+  if( ff -> begining == nf -> end){
+    ff -> begining = nf -> begining;
+    ff -> prev = nf -> prev;
+  }
+  
+  nf = ( FreeNode *)nf -> next;
+  
+  if( ff -> end == nf -> begining){
+    ff -> end = nf -> end;
+    ff -> next = nf -> next;
+  }
+  
+  assert( ff -> begining <= pf -> begining);
+  assert( ff -> end >= pf -> end);
+  
+  MoveFreeNode( ff -> begining, ff);
+  ff = ( FreeNode *)ff -> begining;
+  
+  return ff;
 }
 
 
