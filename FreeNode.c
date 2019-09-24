@@ -38,7 +38,13 @@ MS_CreateFreeList( void){
   
   {
     size_t slab_alo_size = SLAB_SIZE;
-    address new_slab = MS_CreateSlab();
+    address new_slab;
+    {
+      void *ptr = mmap( ( void *)( 1 << 30), slab_alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+      assert( ptr != MAP_FAILED);
+      new_slab = ( address)ptr;
+      DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
+    }
     ff = MS_CreateLocal( FreeNode, .begining = new_slab, .end = new_slab + slab_alo_size, .prev = new_slab, .next = new_slab);
   }
   
@@ -110,7 +116,13 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   
   if unlikely( ff == NULL){
     size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-    address new_slab = MS_CreateSlabFromSize( slab_alo_size);
+    address new_slab;
+    {
+      void *ptr = mmap( ( void *)( ( ( FreeNode *)freenode -> prev) -> end), slab_alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+      assert( ptr != MAP_FAILED);
+      new_slab = ( address)ptr;
+      DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
+    }
     ff = MS_CreateLocal( FreeNode, .begining = new_slab, .end = new_slab + slab_alo_size);
     ff = InsertFreeNode( freenode, ff);
   }
