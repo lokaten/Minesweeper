@@ -259,7 +259,6 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   }
   
   assert( nf -> begining <= pf -> begining);
-  assert( ( ( FreeNode *)nf -> next) ->  begining > pf -> begining);
   
   ff -> prev = ( address)nf;
   ff -> next = nf -> next;
