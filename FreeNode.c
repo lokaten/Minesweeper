@@ -76,6 +76,7 @@ void *
 MS_FreeFreeList( FreeNode *freenode){
   FreeNode *ff = MS_CreateLocalFromLocal( FreeNode, freenode);
   ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
+  ( ( FreeNode *)ff -> prev) -> next = ( address)ff;
   MS_Free( ff, freenode);
   return NULL;
 }
@@ -159,6 +160,9 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   }
   
   if likely( ff -> end != ff -> begining){
+    if( ff -> next == ( address)freenode){
+      freenode -> prev = ff -> begining;
+    }
     MoveFreeNode( ff -> begining, ff);
     ff = ( FreeNode *)ff -> begining;
   }else{
@@ -226,6 +230,9 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     if( nf -> end >= nf -> begining + MIN_ALO_SIZE){
       nf -> prev = ff -> begining;
       nf -> next = ff -> next;
+      if( freenode -> prev == ( address)ff){
+	freenode -> prev = nf -> begining;
+      }
       MoveFreeNode( nf -> begining, nf);
     }
     
@@ -297,6 +304,9 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   assert( ff -> begining <= pf -> begining);
   assert( ff -> end >= pf -> end);
   
+  if( nf -> next == ( address)freenode){
+    freenode -> prev = ff -> begining;
+  }
   MoveFreeNode( ff -> begining, ff);
   ff = ( FreeNode *)ff -> begining;
   
