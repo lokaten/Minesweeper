@@ -96,10 +96,9 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   
   if likely( alo_size + MIN_ALO_SIZE < SLAB_SIZE){
     ff = ( FreeNode *)ff -> next;
-    while likely( ff != freenode &&
-		  !( ff -> end >= ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size ||
-		     ( ( ff -> end == ff -> begining + alo_size ||
-			 ff -> end >= ff -> begining + alo_size + MIN_ALO_SIZE)))){
+    while likely( ff -> end <= ff -> begining + alo_size + MIN_ALO_SIZE &&
+		  ff -> end != ff -> begining + alo_size &&
+		  ff != freenode){
       ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
       ff = ( FreeNode *)ff -> next;
     }
@@ -150,13 +149,13 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   }
   
   if likely( ff -> end != ff -> begining){
-    if( ff -> next == ( address)freenode){
+    if unlikely( ff -> next == ( address)freenode){
       freenode -> prev = ff -> begining;
     }
     MoveFreeNode( ff -> begining, ff);
     ff = ( FreeNode *)ff -> begining;
   }else{
-    if( ff -> next == ( address)freenode){
+    if unlikely( ff -> next == ( address)freenode){
       freenode -> prev = ff -> prev;
     }
     ExcludeFreeNode( ff);
@@ -271,8 +270,8 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   assert( pf -> end >= ( pf -> end & ~( CASH_LINE - 1)) + MIN_ALO_SIZE ||
 	  pf -> end == ( pf -> end & ~( CASH_LINE - 1)));
   
-  while likely( ( FreeNode *)nf -> next != freenode &&
-		nf -> next < pf -> begining){
+  while likely( nf -> next < pf -> begining &&
+		( FreeNode *)nf -> next != freenode){
     assert( ( ( FreeNode *)nf -> next) -> begining == nf -> next);
     assert( nf -> begining <= ( ( FreeNode *)nf -> next) -> begining);
     ( ( FreeNode *)nf -> next) -> prev = ( address)nf;
@@ -300,7 +299,7 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   assert( ff -> begining <= pf -> begining);
   assert( ff -> end >= pf -> end);
   
-  if( nf -> next == ( address)freenode){
+  if unlikely( nf -> next == ( address)freenode){
     freenode -> prev = ff -> begining;
   }
   MoveFreeNode( ff -> begining, ff);
