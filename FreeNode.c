@@ -76,7 +76,6 @@ void *
 MS_FreeFreeList( FreeNode *freenode){
   FreeNode *ff = MS_CreateLocalFromLocal( FreeNode, freenode);
   ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
-  ( ( FreeNode *)ff -> prev) -> next = ( address)ff;
   MS_Free( ff, freenode);
   return NULL;
 }
@@ -110,6 +109,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
 	ff = nf;
 	break;
       }
+      ( ( FreeNode *)nf -> next) -> prev = ( address)nf;
       nf = ( FreeNode *)nf -> next;
     }
   }
@@ -145,6 +145,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
 #endif
       tf -> next = ff -> begining;
       MoveFreeNode( tf -> begining, tf);
+      ff -> prev = tf -> begining;
     }
   }
   
@@ -251,7 +252,6 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
 static inline void
 ExcludeFreeNode( FreeNode *ff){
   assert( ff -> begining != 0);
-  ( ( FreeNode *)ff -> next) -> prev = ff -> prev;
   ( ( FreeNode *)ff -> prev) -> next = ff -> next;
 }
 
@@ -272,6 +272,7 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
 		nf -> next < pf -> begining){
     assert( ( ( FreeNode *)nf -> next) -> begining == nf -> next);
     assert( nf -> begining <= ( ( FreeNode *)nf -> next) -> begining);
+    ( ( FreeNode *)nf -> next) -> prev = ( address)nf;
     nf = ( FreeNode *)nf -> next;
   }
   
@@ -287,6 +288,7 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   
   if unlikely( ff -> end == nf -> next){
     assert( ( ( FreeNode *)nf -> next) -> begining == nf -> next);
+    ( ( FreeNode *)nf -> next) -> prev = ( address)nf;
     nf = ( FreeNode *)nf -> next;
     ff -> end = nf -> end;
     ff -> next = nf -> next;
@@ -307,7 +309,6 @@ MoveFreeNode( const address addr, FreeNode *ff){
   assert( addr == ff -> begining);
   *( FreeNode *)( addr) = *ff;
   ff = ( FreeNode *)( addr);
-  ( ( FreeNode *)ff -> next) -> prev = addr;
   ( ( FreeNode *)ff -> prev) -> next = addr;
 }
 
