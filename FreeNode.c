@@ -268,8 +268,9 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   assert( pf -> end >= ( pf -> end & ~( CASH_LINE - 1)) + MIN_ALO_SIZE ||
 	  pf -> end == ( pf -> end & ~( CASH_LINE - 1)));
   
-  while likely( ( ( FreeNode *)nf -> next) -> begining < pf -> begining &&
-		( FreeNode *)nf -> next != freenode){
+  while likely( ( FreeNode *)nf -> next != freenode &&
+		nf -> next < pf -> begining){
+    assert( ( ( FreeNode *)nf -> next) -> begining == nf -> next);
     assert( nf -> begining <= ( ( FreeNode *)nf -> next) -> begining);
     nf = ( FreeNode *)nf -> next;
   }
@@ -284,9 +285,9 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
     ff -> prev = nf -> prev;
   }
   
-  nf = ( FreeNode *)nf -> next;
-  
-  if unlikely( ff -> end == nf -> begining){
+  if unlikely( ff -> end == nf -> next){
+    assert( ( ( FreeNode *)nf -> next) -> begining == nf -> next);
+    nf = ( FreeNode *)nf -> next;
     ff -> end = nf -> end;
     ff -> next = nf -> next;
   }
