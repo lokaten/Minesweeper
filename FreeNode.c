@@ -84,7 +84,7 @@ MS_FreeFreeList( FreeNode *freenode){
 address
 MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const size_t size, const void *local){
   address addr = 0;
-  FreeNode *ff = NULL;
+  FreeNode *ff = freenode;
   size_t alo_size;
 #ifdef DEBUG
   size_t frag = 0;
@@ -92,30 +92,20 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
 #endif
   alo_size = ( num_mem * size + ALIGNMENT - 1) & ~( ALIGNMENT - 1);
   alo_size = alo_size < MIN_ALO_SIZE ? MIN_ALO_SIZE : alo_size;
-  assert( alo_size);
   assert( freenode != NULL);
   
   if likely( alo_size + MIN_ALO_SIZE < SLAB_SIZE){
-    FreeNode *nf = ( FreeNode *)freenode -> next;
-    
-    while likely( nf != freenode){
-      if unlikely( nf -> end >= ( ( nf -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size ||
-		   ( ( nf -> end == nf -> begining + alo_size ||
-		       nf -> end >= nf -> begining + alo_size + MIN_ALO_SIZE))){
-	
-	assert( nf -> end >= ( ( nf -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size ||
-		nf -> begining + alo_size >= ( ( nf -> begining + alo_size) & ~( CASH_LINE - 1)) + MIN_ALO_SIZE ||
-		nf -> begining + alo_size == ( ( nf -> begining + alo_size) & ~( CASH_LINE - 1)));
-	
-	ff = nf;
-	break;
-      }
-      ( ( FreeNode *)nf -> next) -> prev = ( address)nf;
-      nf = ( FreeNode *)nf -> next;
+    ff = ( FreeNode *)ff -> next;
+    while likely( ff != freenode &&
+		  !( ff -> end >= ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size ||
+		     ( ( ff -> end == ff -> begining + alo_size ||
+			 ff -> end >= ff -> begining + alo_size + MIN_ALO_SIZE)))){
+      ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
+      ff = ( FreeNode *)ff -> next;
     }
   }
   
-  if unlikely( ff == NULL){
+  if unlikely( ff == freenode){
     size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
     address new_slab;
     {
