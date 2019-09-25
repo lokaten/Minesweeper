@@ -166,6 +166,9 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     MoveFreeNode( ff -> begining, ff);
     ff = ( FreeNode *)ff -> begining;
   }else{
+    if( ff -> next == ( address)freenode){
+      freenode -> prev = ff -> prev;
+    }
     ExcludeFreeNode( ff);
   }
   
@@ -238,6 +241,9 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     
     if( ff -> begining + MIN_ALO_SIZE > ff -> end){
       ff = MS_CreateLocalFromLocal( FreeNode, ff);
+      if( freenode -> prev == ( address)ff){
+	freenode -> prev = ff -> prev;
+      }
       ExcludeFreeNode( ff);
     }
     
