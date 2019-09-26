@@ -95,53 +95,48 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   assert( freenode != NULL);
   
   if likely( alo_size + MIN_ALO_SIZE < SLAB_SIZE){
-    address tmp_beg;
-    ff = freenode;
-    
     do{
       ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
       ff = ( FreeNode *)ff -> next;
-      tmp_beg = ( ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) ?
-		  ( unlikely( ff -> begining + alo_size > ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))) ?
-		    ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1):
-		    ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)):
-		  ff -> begining);
-    }while likely( ff -> end <= tmp_beg + alo_size + MIN_ALO_SIZE &&
-		   ff -> end != tmp_beg + alo_size &&
-		   ff != freenode);
+      addr = ( ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) ?
+	       ( unlikely( ff -> begining + alo_size > ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))) ?
+		 ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1):
+		 ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)):
+	       ff -> begining);
+    }while unlikely( ff -> end <= addr + alo_size &&
+		     ff != freenode);
   }
   
   if unlikely( ff == freenode){
     size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-    address new_slab;
     {
       void *ptr = mmap( ( void *)( ( ( FreeNode *)freenode -> prev) -> end), slab_alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
       assert( ptr != MAP_FAILED);
-      new_slab = ( address)ptr;
+      addr = ( address)ptr;
       DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
     }
-    ff = MS_CreateLocal( FreeNode, .begining = new_slab, .end = new_slab + slab_alo_size);
+    ff = MS_CreateLocal( FreeNode, .begining = addr, .end = addr + slab_alo_size);
     ff = InsertFreeNode( freenode, ff);
+    addr = ( ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) ?
+	     ( unlikely( ff -> begining + alo_size > ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))) ?
+	       ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1):
+	       ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)):
+	     ff -> begining);
   }
   
-  if( ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1))){
+  if( addr != ff -> begining){
     FreeNode *tf = MS_CreateLocalFromLocal( FreeNode, ff);
-    ff -> begining = ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1);
-    if unlikely( ff -> begining + alo_size > ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))){
-      ff -> begining = ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-    }
-    MoveFreeNode( ff -> begining, ff);
-    ff = ( FreeNode *) ff -> begining;
-    tf -> end = ff -> begining;
-    if( tf -> begining != tf ->  end){
-      assert( tf -> begining + MIN_ALO_SIZE <= tf ->  end);
+    assert( ff -> begining + MIN_ALO_SIZE <= addr);
 #ifdef DEBUG
-      frag = tf -> end - tf -> begining;
+    frag = addr - ff -> begining;
 #endif
-      tf -> next = ff -> begining;
-      MoveFreeNode( tf -> begining, tf);
-      ff -> prev = tf -> begining;
-    }
+    tf -> next = ff -> begining;
+    tf -> end = addr;
+    ff -> begining = addr;
+    MoveFreeNode( ff -> begining, ff);
+    ff = ( FreeNode *)ff -> begining;
+    MoveFreeNode( tf -> begining, tf);
+    ff -> prev = tf -> begining;
   }
   
   assert( ff -> begining + alo_size <= ff -> end);
