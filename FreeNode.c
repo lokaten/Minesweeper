@@ -55,7 +55,7 @@ MS_CreateFreeList( void){
   
   assert( ff -> begining < ff -> end);
   
-  *( FreeNode *)addr = ( FreeNode){ .prev = ff -> begining, .next = ff -> begining, .begining = 0, .end = 0};
+  *( FreeNode *)addr = ( FreeNode){ .prev = ff -> begining, .next = ff -> begining, .begining = ff -> begining, .end = ff -> end};
   
   MoveFreeNode( ff -> begining, ff);
   ff = ( FreeNode *)ff -> begining;
@@ -110,11 +110,13 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   if unlikely( ff == freenode){
     size_t slab_alo_size = ( alo_size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
     {
-      void *ptr = mmap( ( void *)( ( ( FreeNode *)freenode -> prev) -> end), slab_alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+      void *ptr = mmap( ( void *)freenode -> end, slab_alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
       assert( ptr != MAP_FAILED);
       addr = ( address)ptr;
       DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
     }
+    freenode -> end = ff -> end > freenode -> end? ff -> end: freenode -> end;
+    freenode -> begining = ff -> begining < freenode -> begining? ff -> begining: freenode -> begining;
     ff = MS_CreateLocal( FreeNode, .begining = addr, .end = addr + slab_alo_size);
     ff = InsertFreeNode( freenode, ff);
     addr = ( ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) ?
@@ -149,15 +151,9 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   }
   
   if likely( ff -> end != ff -> begining){
-    if unlikely( ff -> next == ( address)freenode){
-      freenode -> prev = ff -> begining;
-    }
     MoveFreeNode( ff -> begining, ff);
     ff = ( FreeNode *)ff -> begining;
   }else{
-    if unlikely( ff -> next == ( address)freenode){
-      freenode -> prev = ff -> prev;
-    }
     ExcludeFreeNode( ff);
   }
   
@@ -222,17 +218,11 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     if( nf -> end >= nf -> begining + MIN_ALO_SIZE){
       nf -> prev = ff -> begining;
       nf -> next = ff -> next;
-      if( freenode -> prev == ( address)ff){
-	freenode -> prev = nf -> begining;
-      }
       MoveFreeNode( nf -> begining, nf);
     }
     
     if( ff -> begining + MIN_ALO_SIZE > ff -> end){
       ff = MS_CreateLocalFromLocal( FreeNode, ff);
-      if( freenode -> prev == ( address)ff){
-	freenode -> prev = ff -> prev;
-      }
       ExcludeFreeNode( ff);
     }
     
@@ -278,8 +268,6 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
     nf = ( FreeNode *)nf -> next;
   }
   
-  assert( nf -> begining <= pf -> begining);
-  
   ff -> prev = ( address)nf;
   ff -> next = nf -> next;
   
@@ -299,9 +287,6 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   assert( ff -> begining <= pf -> begining);
   assert( ff -> end >= pf -> end);
   
-  if unlikely( nf -> next == ( address)freenode){
-    freenode -> prev = ff -> begining;
-  }
   MoveFreeNode( ff -> begining, ff);
   ff = ( FreeNode *)ff -> begining;
   
