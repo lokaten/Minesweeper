@@ -95,13 +95,20 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
   assert( freenode != NULL);
   
   if likely( alo_size + MIN_ALO_SIZE < SLAB_SIZE){
-    ff = ( FreeNode *)ff -> next;
-    while likely( ff -> end <= ff -> begining + alo_size + MIN_ALO_SIZE &&
-		  ff -> end != ff -> begining + alo_size &&
-		  ff != freenode){
+    address tmp_beg;
+    ff = freenode;
+    
+    do{
       ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
       ff = ( FreeNode *)ff -> next;
-    }
+      tmp_beg = ( ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) ?
+		  ( unlikely( ff -> begining + alo_size > ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))) ?
+		    ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1):
+		    ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)):
+		  ff -> begining);
+    }while likely( ff -> end <= tmp_beg + alo_size + MIN_ALO_SIZE &&
+		   ff -> end != tmp_beg + alo_size &&
+		   ff != freenode);
   }
   
   if unlikely( ff == freenode){
@@ -117,12 +124,10 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     ff = InsertFreeNode( freenode, ff);
   }
   
-  if unlikely( ff -> end >= ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) + alo_size &&
-	       ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1))){
+  if( ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1))){
     FreeNode *tf = MS_CreateLocalFromLocal( FreeNode, ff);
     ff -> begining = ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1);
-    if unlikely( ff -> end >= ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1)) + alo_size &&
-		 ff -> begining + alo_size > ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))){
+    if unlikely( ff -> begining + alo_size > ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))){
       ff -> begining = ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
     }
     MoveFreeNode( ff -> begining, ff);
