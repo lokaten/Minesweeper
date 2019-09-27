@@ -25,6 +25,7 @@ typedef struct{
   address finish;
 }ComandStream;
 
+static const size_t true_blk_size = 512;
 
 static inline ComandStream *CS_CreateStreamFromSize( FreeNode *, const size_t);
 static inline void *CS_Fetch( ComandStream *);
@@ -40,7 +41,7 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
   address addr;
   assert( size);
   
-  blk_size = 512 - sizeof( address);
+  blk_size = true_blk_size - sizeof( address);
   
   while( blk_size % size || blk_size % sizeof( address)){
     blk_size -= blk_size % size;
@@ -53,7 +54,7 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
 		      .blk_size = blk_size,
 		      .size = size);
   
-  addr = MS_CreateFromSize( freenode, blk_size + sizeof( address));
+  addr = MS_CreateFromSize( freenode, true_blk_size);
   
   Stream -> freenode = freenode;
   
@@ -81,7 +82,7 @@ CS_Fetch( ComandStream *Stream){
   
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
     if unlikely( *( address *)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
-      address addr = MS_CreateFromSize( Stream -> freenode, Stream -> blk_size + sizeof( address));
+      address addr = MS_CreateFromSize( Stream -> freenode, true_blk_size);
       // lock
       *( address *)( addr + Stream -> blk_size) = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       *( address *)( Stream -> blk_fetch + Stream -> blk_size) = addr;
@@ -150,7 +151,7 @@ CS_Finish( ComandStream *Stream, const void *ptr){
       address blk_free =  *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       *( address *)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( address *)( blk_free + Stream -> blk_size);
       // unlock
-      MS_FreeFromSize( Stream -> freenode, blk_free, Stream -> blk_size + sizeof( address));
+      MS_FreeFromSize( Stream -> freenode, blk_free, true_blk_size);
     }
     Stream -> blk_finish = *( address *)( Stream -> blk_finish + Stream -> blk_size);
     Stream -> finish = Stream -> blk_finish;
@@ -175,7 +176,7 @@ CS_Free( FreeNode *freenode, ComandStream *Stream){
     while( Stream -> blk_fetch != 0){
       addr = Stream -> blk_fetch;
       Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
-      MS_FreeFromSize( Stream -> freenode, addr, Stream -> blk_size + sizeof( address));
+      MS_FreeFromSize( Stream -> freenode, addr, true_blk_size);
     }
     
     MS_Free( freenode, Stream);
