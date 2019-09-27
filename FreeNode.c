@@ -115,7 +115,6 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
       void *ptr = mmap( ( void *)freenode -> end, slab_alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
       assert( ptr != MAP_FAILED);
       addr = ( address)ptr;
-      DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
     }
     ff = MS_CreateLocal( FreeNode, .begining = addr, .end = addr + slab_alo_size);
     freenode -> end = ff -> end > freenode -> end? ff -> end: freenode -> end;
@@ -126,8 +125,10 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
 	       ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1):
 	       ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)):
 	     ff -> begining);
-    
-    DEBUG_PRINT( debug_out, "\rfreenode -> begining: %lu \t freenode -> end: %lu \n", freenode -> begining, freenode -> end);
+    if unlikely( alo_size > SLAB_SIZE){
+      addr = ( addr + slab_alo_size + MIN_ALO_SIZE - 1 - alo_size) & ~( MIN_ALO_SIZE - 1);
+    }
+    DEBUG_PRINT( debug_out, "\raloc_slab!!    \n\rfreenode -> begining: %lu \t freenode -> end: %lu \n", freenode -> begining, freenode -> end);
   }
   
   if( addr != ff -> begining){
