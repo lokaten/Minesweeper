@@ -78,7 +78,7 @@ void *
 MS_FreeFreeList( FreeNode *freenode){
   FreeNode *ff = MS_CreateLocalFromLocal( FreeNode, freenode);
   ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
-  ( ( FreeNode *)ff -> prev) -> next = ( address)ff;
+  //( ( FreeNode *)ff -> prev) -> next = ( address)ff;
   MS_Free( ff, freenode);
   return NULL;
 }
