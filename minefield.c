@@ -23,9 +23,9 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
 		    .level = proto -> level,
 		    .noelements = proto -> width * proto -> height);
   
-  uncovque = CS_CreateStream( freenode, MS_pos);
-  
   data = MS_CreateArray( freenode, truewidth * trueheight, MS_element, .count = 14);
+  
+  uncovque = CS_CreateStream( freenode, MS_pos);
   
   return MS_Create( freenode, MS_field,
 		    .data = data,
@@ -49,9 +49,10 @@ MF_FreeField(  FreeNode *freenode, const MS_field *pminefield){
   if( minefield != NULL){
     MS_Free( freenode, pminefield);
     
+    CS_Free( freenode, minefield -> uncovque);
+    
     MS_FreeArray( freenode, minefield -> data, minefield -> width * minefield -> height);
     
-    CS_Free( freenode, minefield -> uncovque);
     MS_Free( freenode, minefield -> mine);
   }
 }

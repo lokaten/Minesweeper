@@ -46,6 +46,8 @@ MS_CreateFreeList( void){
       DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
     }
     ff = MS_CreateLocal( FreeNode, .begining = new_slab, .end = new_slab + slab_alo_size, .prev = new_slab, .next = new_slab);
+    
+    DEBUG_PRINT( debug_out, "\rfreenode -> begining: %lu \t freenode -> end: %lu \n", ff -> begining, ff -> end);
   }
   
   assert( ff -> begining + alo_size <= ff -> end);
@@ -55,7 +57,7 @@ MS_CreateFreeList( void){
   
   assert( ff -> begining < ff -> end);
   
-  *( FreeNode *)addr = ( FreeNode){ .prev = ff -> begining, .next = ff -> begining, .begining = ff -> begining, .end = ff -> end};
+  *( FreeNode *)addr = ( FreeNode){ .prev = ff -> begining, .next = ff -> begining, .begining = addr, .end = ff -> end};
   
   MoveFreeNode( ff -> begining, ff);
   ff = ( FreeNode *)ff -> begining;
@@ -115,15 +117,17 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
       addr = ( address)ptr;
       DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
     }
+    ff = MS_CreateLocal( FreeNode, .begining = addr, .end = addr + slab_alo_size);
     freenode -> end = ff -> end > freenode -> end? ff -> end: freenode -> end;
     freenode -> begining = ff -> begining < freenode -> begining? ff -> begining: freenode -> begining;
-    ff = MS_CreateLocal( FreeNode, .begining = addr, .end = addr + slab_alo_size);
     ff = InsertFreeNode( freenode, ff);
     addr = ( ff -> begining + alo_size > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)) ?
 	     ( unlikely( ff -> begining + alo_size > ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))) ?
 	       ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1):
 	       ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)):
 	     ff -> begining);
+    
+    DEBUG_PRINT( debug_out, "\rfreenode -> begining: %lu \t freenode -> end: %lu \n", freenode -> begining, freenode -> end);
   }
   
   if( addr != ff -> begining){
@@ -226,7 +230,12 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
       ExcludeFreeNode( ff);
     }
     
+    freenode -> end = freenode -> end == nf -> begining? ff -> end: freenode -> end;
+    freenode -> begining = freenode -> begining == ff -> end? ff -> end + slab_size: freenode -> begining;
+    
     MS_FreeSlabFromSize( ff -> end, slab_size);
+    
+    DEBUG_PRINT( debug_out, "\rfreenode -> begining: %lu \t freenode -> end: %lu \n", freenode -> begining, freenode -> end);
   }
   
   {
@@ -243,7 +252,6 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
 
 static inline void
 ExcludeFreeNode( FreeNode *ff){
-  assert( ff -> begining != 0);
   ( ( FreeNode *)ff -> prev) -> next = ff -> next;
 }
 
