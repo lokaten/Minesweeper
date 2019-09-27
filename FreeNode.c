@@ -17,9 +17,8 @@
 #define MIN_ALO_SIZE sizeof( FreeNode)
 #define CASH_LINE 64 //my need tuning per arch
 
-static inline void ExcludeFreeNode( FreeNode *ff);
 static inline FreeNode * InsertFreeNode( FreeNode *freenode, const FreeNode *pf);
-static inline void MoveFreeNode( const address addr, FreeNode *ff);
+static inline FreeNode * MoveFreeNode( FreeNode *ff);
 static inline address MS_CreateSlabFromSize( const size_t size);
 #define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
 static inline address MS_FreeSlabFromSize( const address addr, const size_t size);
@@ -59,8 +58,7 @@ MS_CreateFreeList( void){
   
   *( FreeNode *)addr = ( FreeNode){ .prev = ff -> begining, .next = ff -> begining, .begining = addr, .end = ff -> end};
   
-  MoveFreeNode( ff -> begining, ff);
-  ff = ( FreeNode *)ff -> begining;
+  ff = MoveFreeNode( ff);
   
   {
 #ifdef DEBUG
@@ -78,7 +76,6 @@ void *
 MS_FreeFreeList( FreeNode *freenode){
   FreeNode *ff = MS_CreateLocalFromLocal( FreeNode, freenode);
   ( ( FreeNode *)ff -> next) -> prev = ( address)ff;
-  //( ( FreeNode *)ff -> prev) -> next = ( address)ff;
   MS_Free( ff, freenode);
   return NULL;
 }
@@ -140,10 +137,8 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     tf -> next = ff -> begining;
     tf -> end = addr;
     ff -> begining = addr;
-    MoveFreeNode( ff -> begining, ff);
-    ff = ( FreeNode *)ff -> begining;
-    MoveFreeNode( tf -> begining, tf);
-    ff -> prev = tf -> begining;
+    ff = MoveFreeNode(  ff);
+    ff -> prev = ( address)MoveFreeNode( tf);
   }
   
   assert( ff -> begining + alo_size <= ff -> end);
@@ -155,12 +150,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
     ff -> begining = ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1);
   }
   
-  if likely( ff -> end != ff -> begining){
-    MoveFreeNode( ff -> begining, ff);
-    ff = ( FreeNode *)ff -> begining;
-  }else{
-    ExcludeFreeNode( ff);
-  }
+  ff = MoveFreeNode( ff);
   
   ff = MS_CreateLocalFromLocal( FreeNode, ff);
   
@@ -220,16 +210,12 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
     assert( slab_size == ( slab_size & ~( SLAB_SIZE - 1)));
     assert( ff -> end + slab_size == nf -> begining);
     
-    if( nf -> end >= nf -> begining + MIN_ALO_SIZE){
-      nf -> prev = ff -> begining;
-      nf -> next = ff -> next;
-      MoveFreeNode( nf -> begining, nf);
-    }
+    nf -> prev = ff -> begining;
+    nf -> next = ff -> next;
+    MoveFreeNode( nf);
     
-    if( ff -> begining + MIN_ALO_SIZE > ff -> end){
-      ff = MS_CreateLocalFromLocal( FreeNode, ff);
-      ExcludeFreeNode( ff);
-    }
+    ff = MS_CreateLocalFromLocal( FreeNode, ff);
+    MoveFreeNode( ff);
     
     freenode -> end = freenode -> end == nf -> begining? ff -> end: freenode -> end;
     freenode -> begining = freenode -> begining == ff -> end? ff -> end + slab_size: freenode -> begining;
@@ -248,12 +234,6 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   }
   
   return 0;
-}
-
-
-static inline void
-ExcludeFreeNode( FreeNode *ff){
-  ( ( FreeNode *)ff -> prev) -> next = ff -> next;
 }
 
 
@@ -296,21 +276,25 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
   assert( ff -> begining <= pf -> begining);
   assert( ff -> end >= pf -> end);
   
-  MoveFreeNode( ff -> begining, ff);
-  ff = ( FreeNode *)ff -> begining;
+  ff = MoveFreeNode( ff);
   
   return ff;
 }
 
 
-static inline void
-MoveFreeNode( const address addr, FreeNode *ff){
-  assert( addr == ff -> begining);
-  *( FreeNode *)( addr) = *ff;
-  ff = ( FreeNode *)( addr);
-  ( ( FreeNode *)ff -> prev) -> next = addr;
+static inline FreeNode *
+MoveFreeNode( FreeNode *ff){
+  if( ff -> end == ff -> begining){
+    ( ( FreeNode *)ff -> prev) -> next = ff -> next;
+  }else{
+    assert( ff -> end >= ff -> begining + MIN_ALO_SIZE);
+    *( FreeNode *)( ff -> begining) = *ff;
+    ff = ( FreeNode *)( ff -> begining);
+    ( ( FreeNode *)ff -> prev) -> next = ff -> begining;
+  }
+  
+  return ff;
 }
-
 
 static inline address
 MS_CreateSlabFromSize( const size_t size){
