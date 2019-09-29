@@ -158,25 +158,29 @@ event_dispatch( const MS_root *root){
 	  break;
 	case SDLK_LEFT:
 	case 'h':
-	  GW -> real.realxdiff = (s32)( (u32)( GW -> real.realxdiff - (s32)( GW -> real.element_width)));
-	  GW -> real.realxdiff = GW -> real.realxdiff >= 0? GW -> real.realxdiff: 0;
+	  GW -> logical.realxdiff = (s32)( (u32)( GW -> logical.realxdiff - (s32)( GW -> logical.element_width)));
+	  GW -> logical.realxdiff = GW -> logical.logicalxdiff >= 0? GW -> logical.realxdiff: 0;
+	  GW -> real.realxdiff = ( GW -> logical.realxdiff * GW -> real.realwidth ) / GW -> logical.realwidth;
 	  break;
 	case SDLK_DOWN:
 	case 'j':
-	  GW -> real.realydiff = (s32)( (u32)( GW -> real.realydiff + (s32)( GW -> real.element_height)));
-	  GW -> real.realydiff = GW -> real.realydiff <= ( s32)( ( GW -> mfvid.height - GW -> real.height) * GW -> real.element_height)?
-	    GW -> real.realydiff: ( s32)( ( GW -> mfvid.height - GW -> real.height) * GW -> real.element_height);
+	  GW -> logical.realydiff = (s32)( (u32)( GW -> logical.realydiff + (s32)( GW -> logical.element_height)));
+	  GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight)?
+	    GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight);
+	  GW -> real.realydiff = ( GW -> logical.realydiff * GW -> real.realheight) / GW -> logical.realheight;
 	  break;
 	case SDLK_UP:
 	case 'k':
-	  GW -> real.realydiff = (s32)( (u32)( GW -> real.realydiff - (s32)( GW -> real.element_height)));
-	  GW -> real.realydiff = GW -> real.realydiff >= 0? GW -> real.realydiff: 0;
+	  GW -> logical.realydiff = (s32)( (u32)( GW -> logical.realydiff - (s32)( GW -> logical.element_height)));
+	  GW -> logical.realydiff = GW -> logical.realydiff >= 0? GW -> logical.realydiff: 0;
+	  GW -> real.realydiff = ( GW -> logical.realydiff * GW -> real.realheight) / GW -> logical.realheight;
 	  break;
 	case SDLK_RIGHT:
 	case 'l':
-	  GW -> real.realxdiff = (s32)( (u32)( GW -> real.realxdiff + (s32)( GW -> real.element_width)));
-	  GW -> real.realxdiff = GW -> real.realxdiff <= ( s32)( ( GW -> mfvid.width - GW -> real.width)  * GW -> real.element_width)?
-	    GW -> real.realxdiff: ( s32)( ( GW -> mfvid.width  - GW -> real.width ) * GW -> real.element_width);
+	  GW -> logical.realxdiff = (s32)( (u32)( GW -> logical.realxdiff + (s32)( GW -> logical.element_width)));
+	  GW -> logical.realxdiff = GW -> logical.realxdiff <= ( s32)( GW -> mfvid.realwidth)?
+	    GW -> logical.realxdiff: ( s32)( GW -> mfvid.realwidth);
+	  GW -> real.realxdiff = ( GW -> logical.realxdiff * GW -> real.realwidth ) / GW -> logical.realwidth;
 	  break;
 	default:
 	  break;
@@ -259,9 +263,6 @@ void
 draw( void *gw_void, MS_field minefield){
   GraphicWraper *GW = (GraphicWraper *)gw_void;
   (void)minefield;
-  
-  GW -> logical.realxdiff = ( GW -> real.realxdiff * GW -> logical.realwidth ) / GW -> real.realwidth;
-  GW -> logical.realydiff = ( GW -> real.realydiff * GW -> logical.realheight) / GW -> real.realheight;
   
   SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = GW -> logical.realwidth, .h = GW -> logical.realheight},
 		    &( SDL_Rect){ .x = 0, .y = 0, .w = GW -> real.realwidth, .h = GW -> real.realheight}, 0, NULL, SDL_FLIP_NONE);
