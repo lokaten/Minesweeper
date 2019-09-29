@@ -159,14 +159,14 @@ event_dispatch( const MS_root *root){
 	case SDLK_LEFT:
 	case 'h':
 	  GW -> logical.realxdiff = (s32)( (u32)( GW -> logical.realxdiff - (s32)( GW -> logical.element_width)));
-	  GW -> logical.realxdiff = GW -> logical.logicalxdiff >= 0? GW -> logical.realxdiff: 0;
+	  GW -> logical.realxdiff = GW -> logical.realxdiff >= 0? GW -> logical.realxdiff: 0;
 	  GW -> real.realxdiff = ( GW -> logical.realxdiff * GW -> real.realwidth ) / GW -> logical.realwidth;
 	  break;
 	case SDLK_DOWN:
 	case 'j':
 	  GW -> logical.realydiff = (s32)( (u32)( GW -> logical.realydiff + (s32)( GW -> logical.element_height)));
-	  GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight)?
-	    GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight);
+	  GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight - GW -> logical.realheight)?
+	    GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
 	  GW -> real.realydiff = ( GW -> logical.realydiff * GW -> real.realheight) / GW -> logical.realheight;
 	  break;
 	case SDLK_UP:
@@ -178,8 +178,8 @@ event_dispatch( const MS_root *root){
 	case SDLK_RIGHT:
 	case 'l':
 	  GW -> logical.realxdiff = (s32)( (u32)( GW -> logical.realxdiff + (s32)( GW -> logical.element_width)));
-	  GW -> logical.realxdiff = GW -> logical.realxdiff <= ( s32)( GW -> mfvid.realwidth)?
-	    GW -> logical.realxdiff: ( s32)( GW -> mfvid.realwidth);
+	  GW -> logical.realxdiff = GW -> logical.realxdiff <= ( s32)( GW -> mfvid.realwidth - GW -> logical.realwidth)?
+	    GW -> logical.realxdiff: ( s32)( GW -> mfvid.realwidth - GW -> logical.realwidth);
 	  GW -> real.realxdiff = ( GW -> logical.realxdiff * GW -> real.realwidth ) / GW -> logical.realwidth;
 	  break;
 	default:
