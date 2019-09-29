@@ -13,18 +13,9 @@ extern "C" {
 
 #include "MS_util.h"
 
-typedef enum{
-  OPTSW_NUL = 0,
-  OPTSW_LU  = 2,
-  OPTSW_X   = 3,
-  OPTSW_GRP = 4,
-  OPTSW_CPY = 5,
-  OPTSW_RAW = 6,
-}opttype;
-
 
 typedef struct{
-  const opttype optsw;
+  uintptr_t func;
   const char *discript;
   const char *name;
   const char chr;
@@ -32,50 +23,67 @@ typedef struct{
   const void *value;
 }MS_options;
 
+
+int arg_too_ul( char *, void *);
+int arg_too_x( char *, void *);
+
+
+#define OPTSW_NUL 0
+#define OPTSW_LU  ( uintptr_t)&arg_too_ul
+#define OPTSW_X   ( uintptr_t)&arg_too_x
+#define OPTSW_GRP 4
+#define OPTSW_CPY 5
+#define OPTSW_RAW 6
+
 #define OPT_MAX 200
 
 static inline int procopt( const MS_stream *, const MS_options *, const int, const char **);
 static inline int help( FILE *, const MS_options *);
 
+int
+arg_too_ul( char *arg, void *popt){
+  int ret = 0;
+  char *lr = NULL;
+  MS_options opt = *(MS_options *)popt;
+  *( unsigned long *)( opt.data) = strtoul( arg, &lr, 10);
+  if( *lr != 0 || ( errno != 0)){
+    ret = -1;
+  }
+  return ret;
+}
+
+int
+arg_too_x( char *arg, void *popt){
+  int ret = 0;
+  char *lr = NULL;
+  MS_options opt = *(MS_options *)popt;
+  *( unsigned long *)( opt.data) = strtoul( arg, &lr, 10);
+  if( *lr != 0 || ( errno != 0)){
+    ret = -1;
+  }
+  return ret;
+}
+
 static inline int
 procopt( const MS_stream *mss, const MS_options *opt, const int argc, const char **argv){
   int ret = 0;
   int i = 0;
-  char *lr = NULL;
   
   while( ++i < argc){
     if( strstr( argv[ i], "--") == argv[ i]){
       signed long j = -1;
       while( ++j < OPT_MAX){
-        if( opt[ j].optsw){
+        if( ( uintptr_t)opt[ j].func){
           if( strcmp( argv[ i] + 2, opt[ j].name) == 0){
             errno = 0;
-            switch( opt[ j].optsw){
-            case OPTSW_LU:
-              if( ++i < argc){
-                *( unsigned long *)( opt[ j].data) = strtoul( argv[ i], &lr, 10);
-                if( *lr != 0 || ( errno != 0)){
-                  ret = -1;
-                }
-              }
-              break;
-            case OPTSW_X:
-              if( ++i < argc){
-                *( unsigned long *)( opt[ j].data) = strtoul( argv[ i], &lr, 16);
-                if( *lr != 0 || ( errno != 0)){
-                  ret = -1;
-                }
-              }
-              break;
-            case OPTSW_CPY:
-              *( const void **)( opt[ j].data) = ( const void *)( opt[ j].value);
-              break;
-            case OPTSW_RAW:
-              /* *( void **)( opt[ j].data) = ( void *)argv[ i]; */
-              break;
-	    default:
-	      ret = -1;
-            }
+	    if( ( uintptr_t)opt[ j].func == OPTSW_CPY){
+	      *( const void **)( opt[ j].data) = ( const void *)( opt[ j].value);
+	    }else{
+	      if( ++i < argc){
+		int ( *func)( const char *, const void *) = ( int( *)( const char *, const void *))opt[j].func;
+		ret = func( argv[ i], ( const void *)&opt[ j]);
+	      }
+	    }
             break;
           }
         }else{
@@ -92,24 +100,17 @@ procopt( const MS_stream *mss, const MS_options *opt, const int argc, const char
       while( ++k < strlen( argv[ i])){
         signed long j = -1;
         while( ++j < OPT_MAX){
-          if( opt[ j].optsw){
+          if( ( uintptr_t)opt[ j].func){
             if( *( argv[ i] + k) &&
                 ( *( argv[ i] + k) == opt[ j].chr)){
               errno = 0;
-              switch( opt[ j].optsw){
-              case OPTSW_LU:
-                if( ( i + 1) < argc){
-                  *( unsigned long *)( opt[ j].data) = strtoul( argv[ i + 1], &lr, 10);
-                  if( *lr != 0 || ( errno != 0)){
-                    ret = -1;
-                  }
-                }
-                break;
-              case OPTSW_CPY:
-                *( const void **)( opt[ j].data) = ( const void *)( opt[ j].value);
-                break;
-	      default:
-		ret = -1;
+	      if( ( uintptr_t)opt[ j].func == OPTSW_CPY){
+		*( const void **)( opt[ j].data) = ( const void *)( opt[ j].value);
+              }else{
+		if( ++i < argc){
+		  int ( *func)( const char *, const void *) = ( int( *)( const char *, const void *))opt[j].func;
+		  ret = func( argv[ i], ( const void *)&opt[ j]);
+		}
               }
               break;
 	    }
@@ -139,30 +140,22 @@ help( FILE *stream, const MS_options *opt){
 #else
   int j = -1;
   
-  while( ++j < OPT_MAX){
-    switch( opt[ j].optsw){
-    case OPTSW_GRP:
+  while( ++j < OPT_MAX &&
+	 opt[ j].func != 0){
+    if( ( uintptr_t)opt[ j].func == OPTSW_GRP){
       MS_print( stream, "\r%s: \n", opt[ j].discript);
-      break;
-    case OPTSW_LU:
+    }else if( ( uintptr_t)opt[ j].func == OPTSW_X){
       MS_print( stream, "\r\t --%s ", opt[ j].name);
       MS_print( stream, "\r\t\t\t\t\t <int> ");
       MS_print( stream, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
-      break;
-    case OPTSW_X:
+    }else if( ( uintptr_t)opt[ j].func == OPTSW_LU){
       MS_print( stream, "\r\t --%s ", opt[ j].name);
       MS_print( stream, "\r\t\t\t\t\t <hex> ");
       MS_print( stream, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
-      break;
-    case OPTSW_CPY:
+    }else if( ( uintptr_t)opt[ j].func == OPTSW_CPY){
       MS_print( stream, "\r\t --%s ", opt[ j].name);
       MS_print( stream, "\r\t\t\t\t %c ", opt[ j].chr);
       MS_print( stream, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
-      break;
-    case OPTSW_NUL:
-      return ret;
-    default:
-      ret = -1;
     }
   }
 #endif
