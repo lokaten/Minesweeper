@@ -46,6 +46,7 @@ arg_too_ul( char **arg, void *popt){
   int ret = 1;
   char *lr = NULL;
   MS_options opt = *(MS_options *)popt;
+  assert( arg[ret] != NULL);
   *( unsigned long *)( opt.data) = strtoul( arg[ ret], &lr, 10);
   if( *lr != 0 || ( errno != 0)){
     ret = -1;
@@ -58,6 +59,7 @@ arg_too_x( char **arg, void *popt){
   int ret = 1;
   char *lr = NULL;
   MS_options opt = *(MS_options *)popt;
+  assert( arg[ret] != NULL);
   *( unsigned long *)( opt.data) = strtoul( arg[ ret], &lr, 10);
   if( *lr != 0 || ( errno != 0)){
     ret = -1;
