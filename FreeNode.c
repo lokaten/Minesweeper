@@ -123,7 +123,7 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
 	       ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1)):
 	     ff -> begining);
     if unlikely( alo_size > SLAB_SIZE){
-      addr = ( addr + slab_alo_size - MIN_ALO_SIZE + 1 - alo_size) & ~( MIN_ALO_SIZE - 1);
+      addr = ( addr + slab_alo_size - alo_size) & ~( MIN_ALO_SIZE - 1);
     }
     DEBUG_PRINT( debug_out, "\raloc_slab!!    \n\rfreenode -> begining: %lu \t freenode -> end: %lu \n", freenode -> begining, freenode -> end);
   }
