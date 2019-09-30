@@ -15,14 +15,11 @@
 #define SLAB_SIZE ( size_t)sysconf( _SC_PAGE_SIZE)
 #define ALIGNMENT sizeof( address)
 #define MIN_ALO_SIZE sizeof( FreeNode)
-#define CASH_LINE 64 //my need tuning per arch
+#define CASH_LINE U64C( 64) //my need tuning per arch
 
 static inline FreeNode * InsertFreeNode( FreeNode *freenode, const FreeNode *pf);
 static inline FreeNode * MoveFreeNode( FreeNode *ff);
-static inline address MS_CreateSlabFromSize( const size_t size);
-#define MS_CreateSlab() MS_CreateSlabFromSize( SLAB_SIZE)
-static inline address MS_FreeSlabFromSize( const address addr, const size_t size);
-#define MS_FreeSlab( addr) MS_FreeSlabFromSize( addr, SLAB_SIZE)
+static inline address MS_FreeSlabFromSize( const address, const size_t size);
 
 
 FreeNode *
@@ -294,25 +291,6 @@ MoveFreeNode( FreeNode *ff){
   }
   
   return ff;
-}
-
-static inline address
-MS_CreateSlabFromSize( const size_t size){
-  address addr;
-  void *ptr;
-  size_t alo_size = ( size + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1);
-  assert( alo_size == size);
-#ifdef MAP_ANONYMOUS
-  ptr = mmap( NULL, alo_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
-  assert( ptr != MAP_FAILED);
-#else
-  ptr = malloc( alo_size);
-  assert( ptr != NULL);
-#endif
-  addr = ( address)ptr;
-  assert( ( addr & ~( SLAB_SIZE - 1)) == addr);
-  DEBUG_PRINT( debug_out, "\raloc_slab!!    \n");
-  return addr;
 }
 
 

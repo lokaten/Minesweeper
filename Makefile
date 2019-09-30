@@ -14,7 +14,7 @@ CFLAGS ?= -Ofast
 ifeq ($(CLANG), yes)
 CC = clang -std=gnu99
 CXX = clang++ -std=gnu++11
-CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded
+CFLAGS += -Weverything -Wno-disabled-macro-expansion -Wno-error=switch-enum -Wno-error=padded -Wno-error=bad-function-cast
 endif
 
 ifeq ($(GCC), yes)

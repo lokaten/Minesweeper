@@ -35,7 +35,6 @@ typedef struct{
 }GraphicWraper;
 
 static inline SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
-static inline int MS_BlitTex(  SDL_Renderer *, SDL_Texture *, int, int, int, int, int, int, int, int);
 static inline int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
 static inline void mousebuttondown( const MS_root *, SDL_Event);
 
@@ -160,27 +159,27 @@ event_dispatch( const MS_root *root){
 	case 'h':
 	  GW -> logical.realxdiff = (s32)( (u32)( GW -> logical.realxdiff - (s32)( GW -> logical.element_width)));
 	  GW -> logical.realxdiff = GW -> logical.realxdiff >= 0? GW -> logical.realxdiff: 0;
-	  GW -> real.realxdiff = ( GW -> logical.realxdiff * GW -> real.realwidth ) / GW -> logical.realwidth;
+	  GW -> real.realxdiff = ( GW -> logical.realxdiff * (s32)GW -> real.realwidth ) / (s32)GW -> logical.realwidth;
 	  break;
 	case SDLK_DOWN:
 	case 'j':
 	  GW -> logical.realydiff = (s32)( (u32)( GW -> logical.realydiff + (s32)( GW -> logical.element_height)));
 	  GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight - GW -> logical.realheight)?
 	    GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
-	  GW -> real.realydiff = ( GW -> logical.realydiff * GW -> real.realheight) / GW -> logical.realheight;
+	  GW -> real.realydiff = ( GW -> logical.realydiff * (s32)GW -> real.realheight) / (s32)GW -> logical.realheight;
 	  break;
 	case SDLK_UP:
 	case 'k':
 	  GW -> logical.realydiff = (s32)( (u32)( GW -> logical.realydiff - (s32)( GW -> logical.element_height)));
 	  GW -> logical.realydiff = GW -> logical.realydiff >= 0? GW -> logical.realydiff: 0;
-	  GW -> real.realydiff = ( GW -> logical.realydiff * GW -> real.realheight) / GW -> logical.realheight;
+	  GW -> real.realydiff = ( GW -> logical.realydiff * (s32)GW -> real.realheight) / (s32)GW -> logical.realheight;
 	  break;
 	case SDLK_RIGHT:
 	case 'l':
 	  GW -> logical.realxdiff = (s32)( (u32)( GW -> logical.realxdiff + (s32)( GW -> logical.element_width)));
 	  GW -> logical.realxdiff = GW -> logical.realxdiff <= ( s32)( GW -> mfvid.realwidth - GW -> logical.realwidth)?
 	    GW -> logical.realxdiff: ( s32)( GW -> mfvid.realwidth - GW -> logical.realwidth);
-	  GW -> real.realxdiff = ( GW -> logical.realxdiff * GW -> real.realwidth ) / GW -> logical.realwidth;
+	  GW -> real.realxdiff = ( GW -> logical.realxdiff * (s32)GW -> real.realwidth ) / (s32)GW -> logical.realwidth;
 	  break;
 	default:
 	  break;
@@ -264,8 +263,8 @@ draw( void *gw_void, MS_field minefield){
   GraphicWraper *GW = (GraphicWraper *)gw_void;
   (void)minefield;
   
-  SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = GW -> logical.realwidth, .h = GW -> logical.realheight},
-		    &( SDL_Rect){ .x = 0, .y = 0, .w = GW -> real.realwidth, .h = GW -> real.realheight}, 0, NULL, SDL_FLIP_NONE);
+  SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = (int)GW -> logical.realwidth, .h = (int)GW -> logical.realheight},
+		    &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_NONE);
   
   SDL_RenderPresent( GW -> renderer);
   
@@ -322,13 +321,6 @@ MS_OpenImage( SDL_Renderer *render, const char *str){
   assert( tex != NULL);
   SDL_free( img);
   return tex;
-}
-
-static inline int
-MS_BlitTex( SDL_Renderer *renderer, SDL_Texture *tex, int dx, int dy, int dw, int dh, int sx, int sy, int sh, int sw){
-  assert( renderer != NULL);
-  assert(      tex != NULL);
-  return SDL_RenderCopyEx( renderer, tex, &( SDL_Rect){ .x = sx, .y = sy, .w = sw, .h = sh}, &( SDL_Rect){ .x = dx, .y = dy, .w = dw, .h = dh}, 0, NULL, SDL_FLIP_NONE);
 }
 
 static inline int
