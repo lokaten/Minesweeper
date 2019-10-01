@@ -195,9 +195,9 @@ div_( u32 b, u32 a, u32 divobj){
 static inline u32
 MS_rand( const u32 seed){
   u32 ret = U32C( 0xaaaaaaaa) ^ seed;
-  ret ^= ( mol_( ( ( seed & U32C( 0x00000fff))      ) * U32C( 1931), 1031, gen_divobj( 1031)) - 7);
-  ret ^= ( mol_( ( ( seed & U32C( 0x003ffc00)) >> 10) * U32C( 787 ), 2053, gen_divobj( 2053)) - 5) << 10;
-  ret ^= ( mol_( ( ( seed & U32C( 0xfff00000)) >> 20) * U32C( 797 ), 2053, gen_divobj( 2053)) - 5) << 21;
+  ret ^= ( mol_( ( ( seed & U32C( 0x00000fff))      ) * U32C( 1931) + 4687767, 1031, gen_divobj( 1031)));
+  ret ^= ( mol_( ( ( seed & U32C( 0x003ffc00)) >> 10) * U32C( 787 ) + 721190 , 2053, gen_divobj( 2053))) << 10;
+  ret ^= ( mol_( ( ( seed & U32C( 0xfff00000)) >> 20) * U32C( 797 ) + 680240 , 2053, gen_divobj( 2053)) - 5) << 21;
   return ret;
 }
 
