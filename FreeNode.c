@@ -281,7 +281,7 @@ InsertFreeNode( FreeNode *freenode, const FreeNode *pf){
 
 static inline FreeNode *
 MoveFreeNode( FreeNode *ff){
-  if( ff -> end == ff -> begining){
+  if unlikely( ff -> end == ff -> begining){
     ( ( FreeNode *)ff -> prev) -> next = ff -> next;
   }else{
     assert( ff -> end >= ff -> begining + MIN_ALO_SIZE);
