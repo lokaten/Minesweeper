@@ -15,7 +15,7 @@
 #define SLAB_SIZE ( size_t)sysconf( _SC_PAGE_SIZE)
 #define ALIGNMENT sizeof( address)
 #define MIN_ALO_SIZE sizeof( FreeNode)
-#define CASH_LINE U64C( 64) //my need tuning per arch
+#define CASH_LINE U32C( 64) //may need tuning per arch
 
 static inline FreeNode * InsertFreeNode( FreeNode *freenode, const FreeNode *pf);
 static inline FreeNode * MoveFreeNode( FreeNode *ff);
@@ -131,17 +131,13 @@ MS_CreateArrayFromSizeAndLocal( FreeNode *freenode, const size_t num_mem, const 
 #ifdef DEBUG
     frag = addr - ff -> begining;
 #endif
-    tf -> next = ff -> begining;
-    tf -> end = addr;
-    ff -> begining = addr;
-    ff = MoveFreeNode(  ff);
-    ff -> prev = ( address)MoveFreeNode( tf);
+    ff -> end = addr;
+    MoveFreeNode( ff);
+    tf -> prev = ff -> begining;
+    ff = tf;
   }
   
-  assert( ff -> begining + alo_size <= ff -> end);
-  
-  addr           = ff -> begining;
-  ff -> begining += alo_size;
+  ff -> begining = addr + alo_size;
   
   if( ff -> begining + MIN_ALO_SIZE > ( ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1))){
     ff -> begining = ( ff -> begining + CASH_LINE - 1) & ~( CASH_LINE - 1);
