@@ -53,7 +53,7 @@ ifeq ($(NATIVE), yes)
 CC += -march=native
 endif
 
-CFLAGS += -Wall -Wextra -Wformat-security -Werror=format-security
+CFLAGS += -fstrict-aliasing -Wall -Wextra -Wformat-security -Werror=format-security
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo
 
