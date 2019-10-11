@@ -162,8 +162,6 @@ uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mi
 
 static inline MS_element *
 setmine_element( MS_element *element, MS_mstr *mine){
-  assert( mine != NULL);
-  assert( element != NULL);
   
   if( !element -> set && element -> count != 14){
     element -> mine = ( ( ( __uint64_t)( mine -> noelements - mine -> set  ) * ( __uint64_t)( mine -> seed = MS_rand( mine -> seed))) <
@@ -172,8 +170,6 @@ setmine_element( MS_element *element, MS_mstr *mine){
     ++mine -> set;
     
     mine -> mines += element -> mine;
-    
-    assert( mine -> mines <= mine -> level);
     
     element -> set = 1;
   }
