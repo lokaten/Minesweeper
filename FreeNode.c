@@ -192,7 +192,7 @@ MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
 	       ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1))){
     size_t slab_size = ( ( ff -> end) & ~( SLAB_SIZE - 1)) -
       ( ( ff -> begining + SLAB_SIZE - 1) & ~( SLAB_SIZE - 1));
-    FreeNode *nf = MS_CreateLocal( FreeNode, 0);
+    FreeNode *nf = MS_CreateEmptyLocal( FreeNode);
     
     nf -> end = ff -> end;
     nf -> begining = ( ff -> end) & ~( SLAB_SIZE - 1);

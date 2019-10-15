@@ -157,6 +157,7 @@ address MS_FreeFromSize( FreeNode *, const address, const size_t);
 #define MS_CreateLocal( type, ...) &( type){ __VA_ARGS__}
 #define MS_CreateLocalFromSize( size) ( void *)char[ size]
 #define MS_CreateLocalFromLocal( type, local) ( type *)&( ( union{ type T;}){ .T = *local})
+#define MS_CreateEmptyLocal( type) ( type *)&( ( union{ type T;}){ .T = ( const type){0}})
 
 
 // divsion is slow, make sure we don't do it more then we have to
