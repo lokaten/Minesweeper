@@ -164,8 +164,8 @@ static inline MS_element *
 setmine_element( MS_element *element, MS_mstr *mine){
   
   if( !element -> set && element -> count != 14){
-    element -> mine = ( ( ( __uint64_t)( mine -> noelements - mine -> set  ) * ( __uint64_t)( mine -> seed = MS_rand( mine -> seed))) <
-			( ( __uint64_t)( mine -> level      - mine -> mines) * ( __uint64_t)MS_RAND_MAX));
+    element -> mine = ( ( ( u64)( mine -> noelements - mine -> set  ) * ( u64)( mine -> seed = MS_rand( mine -> seed))) <
+			( ( u64)( mine -> level      - mine -> mines) * ( u64)MS_RAND_MAX));
     
     ++mine -> set;
     

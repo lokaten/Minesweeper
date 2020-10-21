@@ -7,7 +7,7 @@ extern "C" {
 #endif
 
 
-#include <sys/time.h> // clock_gettime
+// #include <sys/time.h> // clock_gettime
 
 #include <assert.h>
 
@@ -129,8 +129,8 @@ static inline u32 MS_rand( u32);
 
 static inline u32 MS_rand_seed( void);
 static inline int MS_print( FILE *, const char *, ...);
-static inline __uint64_t getmicrosec( void);
-static inline __uint64_t getnanosec( void);
+static inline u64 getmicrosec( void);
+static inline u64 getnanosec( void);
 
 #ifdef DEBUG
 #define DEBUG_PRINT( file, ...) MS_print( file, __VA_ARGS__)
@@ -195,10 +195,7 @@ div_( u32 b, u32 a, u32 divobj){
 //
 static inline u32
 MS_rand( const u32 seed){
-  u32 ret = U32C( 0xaaaaaaaa) ^ seed;
-  ret ^= ( mol_( ( ( seed & U32C( 0x00000fff))      ) * U32C( 1931) + 4687767, 1031, gen_divobj( 1031)));
-  ret ^= ( mol_( ( ( seed & U32C( 0x003ffc00)) >> 10) * U32C( 787 ) + 721190 , 2053, gen_divobj( 2053))) << 10;
-  ret ^= ( mol_( ( ( seed & U32C( 0xfff00000)) >> 20) * U32C( 797 ) + 680240 , 2053, gen_divobj( 2053)) - 5) << 21;
+  u32 ret = (u32)( (u64)seed * U64C( 2654435769)) & U32C( 0xffffffff);
   return ret;
 }
 
@@ -249,16 +246,16 @@ _Pragma("GCC diagnostic ignored \"-Wformat-nonliteral\"")
 //
 // get system time in microsecond...
 //
-static inline  __uint64_t
+static inline  u64
 getmicrosec( void){
 #ifdef CLOCK_REALTIME
   struct timespec tv;
   
   clock_gettime( CLOCK_REALTIME, &tv);
   
-  return ( ( __uint64_t)tv.tv_sec * 1000000 + ( __uint64_t)tv.tv_nsec / 1000);
+  return ( ( u64)tv.tv_sec * 1000000 + ( u64)tv.tv_nsec / 1000);
 #else
-  return ( __uint64_t)time( NULL) * 1000000;
+  return ( u64)time( NULL) * 1000000;
 #endif
 }
 
@@ -266,16 +263,16 @@ getmicrosec( void){
 //
 // get the amount of nanoseconds from a point in the past
 //
-static inline  __uint64_t
+static inline  u64
 getnanosec( void){
 #ifdef CLOCK_REALTIME
   struct timespec tv;
   
   clock_gettime( CLOCK_MONOTONIC, &tv);
   
-  return ( ( __uint64_t)tv.tv_sec * 1000000000 + ( __uint64_t)tv.tv_nsec);
+  return ( ( u64)tv.tv_sec * 1000000000 + ( u64)tv.tv_nsec);
 #else
-  return ( __uint64_t)time( NULL) * 1000000000;
+  return ( u64)time( NULL) * 1000000000;
 #endif
 }
 

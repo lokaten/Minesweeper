@@ -119,7 +119,11 @@ endif
 
 # Dependencies
 main.o:          main.c           MS_util.h userinterface.h minefield.h                OPT.h
+ifeq ($(STUB_FREENODE), yes)
+Freenode.o:      FN_stub.c        MS_util.h
+else
 FreeNode.o:      FreeNode.c       MS_util.h  
+endif
 userinterface.o: userinterface.c  MS_util.h userinterface.h minefield.h
 epoxy.o:         epoxy.c          MS_util.h userinterface.h minefield.h
 minefield.o:     minefield.c      MS_util.h                 minefield.h ComandStream.h
