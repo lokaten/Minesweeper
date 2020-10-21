@@ -79,10 +79,12 @@ STRIP = strip --strip-unneeded
 TARGET = Minesweeper
 
 ifeq ($(EPOXY),yes)
-LIBS += -lrt -lwayland-egl -lwayland-client -lepoxy
+LIBS += -lwayland-egl -lwayland-client -lepoxy
 else
-LIBS += -lrt -lSDL2 -lSDL2_image
+LIBS += -lSDL2 -lSDL2_image
 endif
+
+#LIBS += -lrt
 
 .PHONY: all clean
 .SUFFIXES: .c .o
