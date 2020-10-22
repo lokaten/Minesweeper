@@ -202,7 +202,10 @@ MS_rand( const u32 seed){
   return ret;
 }
 
-
+//
+// for a given seed, and range each valid index will have unique return that will fall betwen 0, and range.
+// iter_loop is a tunebal, incres to improve psude random distrubtion.
+//
 static inline u32
 MS_rand_range( const u32 seed, const u32 index, const u32 range){
   u64 ret = index, loop_iter = 6, lseed = seed;
