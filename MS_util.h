@@ -24,6 +24,8 @@ extern "C" {
 #include <time.h>
 #endif
 
+#include "debug.h"
+
 #define TRUE  1
 #define FALSE 0
 
@@ -126,6 +128,7 @@ static inline u32 gen_divobj( u32);
 static inline u32 mol_( u32, u32, u32);
 static inline u32 div_( u32, u32, u32);
 static inline u32 MS_rand( u32);
+static inline u32 MS_rand_range( u32, u32, u32);
 
 static inline u32 MS_rand_seed( void);
 static inline int MS_print( FILE *, const char *, ...);
@@ -198,6 +201,20 @@ MS_rand( const u32 seed){
   u32 ret = (u32)( (u64)seed * U64C( 2654435769)) & U32C( 0xffffffff);
   return ret;
 }
+
+
+static inline u32
+MS_rand_range( const u32 seed, const u32 index, const u32 range){
+  u64 ret = index, loop_iter = 6, lseed = seed;
+  assert( index < range);
+  while( loop_iter--){
+    ret = ( u32)( ( lseed + loop_iter + ret) * U64C( 2654435769)) & U32C( 0xffffffff);
+    ret = ( ( ret * ( u64)range) >> 32);
+    dassert( ret < range);
+  }
+  return ( u32)ret;
+}
+
 
 //
 // return a seed, for use with MS_rand( __uint32_t seed)

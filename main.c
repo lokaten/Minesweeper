@@ -57,6 +57,7 @@ ROOT_Init( const int argc, const char **argv){
   
   u32 custom = FALSE; // procopt will overflow _Bool
   u32 custom_global = FALSE;
+  u32 custom_reseed;
   u16 custom_width;
   u16 custom_height;
   u16 custom_level;
@@ -89,6 +90,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &custom_width               , NULL},
       { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &custom_height              , NULL},
       { OPTSW_LU , TERM("Number of mines"                        ), "level"          , 0  , &custom_level               , NULL},
+      { OPTSW_LU , TERM("seed"                                   ), "reseed"         , 0  , &custom_reseed              , NULL},
 #ifdef DEBUG
       { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &custom_global              , &opt_true},
 #endif
@@ -140,7 +142,7 @@ ROOT_Init( const int argc, const char **argv){
       MS_print( mss -> err, TERM("\rMore mines then elments!\n"));
     }
     
-    minefield = MF_CreateField( freenode, .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = 0);
+    minefield = MF_CreateField( freenode, .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = custom_reseed);
   }else{
     minefield = MF_CreateFieldFromLocal( freenode, minefield);
   }
@@ -244,7 +246,7 @@ main( const int argc, const char** argv){
     
 #ifdef DEBUG
     if( root -> mss -> deb != NULL){
-      __uint64_t mytime = getnanosec() - tutime;
+      u64 mytime = getnanosec() - tutime;
       
       DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
     }
