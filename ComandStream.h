@@ -80,16 +80,18 @@ CS_Fetch( ComandStream *Stream){
   address ret;
   assert( Stream != NULL);
   
+  // write_lock
+  
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
+    // read_lock
     if unlikely( *( address *)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
       address addr = MS_CreateFromSize( Stream -> freenode, true_blk_size);
-      // lock
       *( address *)( addr + Stream -> blk_size) = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       *( address *)( Stream -> blk_fetch + Stream -> blk_size) = addr;
-      // unlock
     }
     Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
     Stream -> fetch  = Stream -> blk_fetch;
+    // read_unlock
   }
   
   ret = Stream -> fetch;
@@ -113,6 +115,7 @@ CS_Push( ComandStream *Stream, const void *ptr){
   assert( addr == Stream -> push);
   
   Stream -> push = Stream -> push + Stream -> size;
+  // write_unlock
 }
 
 
@@ -124,7 +127,14 @@ CS_Releas( ComandStream *Stream){
   address ret = 0;
   assert( Stream != NULL);
   
-  if unlikely( Stream -> push == Stream -> releas) goto end;
+  // read_lock
+  
+  // write_lock
+  if unlikely( Stream -> push == Stream -> releas){
+    // write_unlock
+    goto end;
+  }
+  // write_unlock
   
   if unlikely( Stream -> releas == Stream -> blk_releas + Stream -> blk_size){
     Stream -> blk_releas = *( address *)( Stream -> blk_releas + Stream -> blk_size);
@@ -146,20 +156,21 @@ CS_Finish( ComandStream *Stream, const void *ptr){
   addr = ( address)ptr;
   
   if unlikely( Stream -> finish == Stream -> blk_finish + Stream -> blk_size){
+    // write_lock
     if unlikely( *( address *)( Stream -> blk_fetch + Stream -> blk_size) != Stream -> blk_finish){
-      // lock
       address blk_free =  *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       *( address *)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( address *)( blk_free + Stream -> blk_size);
-      // unlock
       MS_FreeFromSize( Stream -> freenode, blk_free, true_blk_size);
     }
     Stream -> blk_finish = *( address *)( Stream -> blk_finish + Stream -> blk_size);
     Stream -> finish = Stream -> blk_finish;
+    // write_unlock
   }
   
   dassert( addr == Stream -> finish);
   
   Stream -> finish = Stream -> finish + Stream -> size;
+  // read_unlock
 }
 
 
@@ -169,7 +180,11 @@ CS_Finish( ComandStream *Stream, const void *ptr){
 static inline void
 CS_Free( FreeNode *freenode, ComandStream *Stream){
   if likely( Stream != NULL){
-    address addr = Stream -> blk_fetch;
+    address addr;
+    
+    // read_lock
+    // write_lock
+    addr = Stream -> blk_fetch;
     Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
     *( address *)( addr + Stream -> blk_size) = 0;
     
@@ -178,6 +193,8 @@ CS_Free( FreeNode *freenode, ComandStream *Stream){
       Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       MS_FreeFromSize( Stream -> freenode, addr, true_blk_size);
     }
+    // write_unlock
+    // read_unlock
     
     MS_Free( freenode, Stream);
   }
