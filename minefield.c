@@ -167,7 +167,8 @@ uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mi
 
 static inline u8
 checkmine_element( MS_field minefield, u32 index, MS_mstr *mine){
-  if( ( index - index / minefield.subwidth) >= mine -> noelements) return 0;
+  if( ( index - index / minefield.subwidth) >= mine -> noelements ||
+      index % minefield.width == minefield.subwidth) return 0;
   if( ( ( MS_element *)( uintptr_t)( minefield.data + index)) -> set) return ( ( MS_element *)( uintptr_t)( minefield.data + index)) -> mine;
   return MS_rand_range( mine -> seed, index - index / minefield.subwidth, mine -> noelements) < mine -> level;;
 }
