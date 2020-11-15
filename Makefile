@@ -84,6 +84,8 @@ else
 LIBS += -lSDL2 -lSDL2_image
 endif
 
+LIBS += -pthread
+
 #LIBS += -lrt
 
 .PHONY: all clean
