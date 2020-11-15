@@ -60,7 +60,7 @@ ROOT_Init( const int argc, const char **argv){
   u32 custom_reseed;
   u16 custom_width;
   u16 custom_height;
-  u16 custom_level;
+  u32 custom_level;
   
   MS_field *field_beginner  = MS_CreateLocal( MS_field, .title = "beginner" , .width =    9, .height =    9, .level =  10, .global = 0, .reseed = 0);
   MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level =  40, .global = 0, .reseed = 0);
