@@ -174,6 +174,8 @@ ROOT_Init( const int argc, const char **argv){
 		    .mss = mss,
 		    .no_resize = no_resize);
   
+  root -> drawque = CS_CreateStream( freenode, DrawComand);
+  
   if( strstr( minefield -> title, field_benchmark -> title)){
     setminefield_async( ( void *)root);
     setzero( minefield, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
@@ -184,9 +186,9 @@ ROOT_Init( const int argc, const char **argv){
   
   root -> GW = GW_Init( root -> freenode, root);
   
-  draw( root -> GW);
+  draw( root);
   
-  setminefield_async( ( void *)root);
+  setminefield( ( void *)root);
   
   return root;
 }
@@ -242,7 +244,7 @@ main( const int argc, const char** argv){
       // do nothing
     }
     
-    draw( root -> GW);
+    draw( root);
     
 #ifdef DEBUG
     if( root -> mss -> deb != NULL){

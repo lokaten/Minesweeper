@@ -13,19 +13,25 @@ extern "C" {
 #include "minefield.h"
 
 typedef struct{
+  MS_pos pos;
+  MS_element element;
+}DrawComand;
+
+typedef struct{
   FreeNode *freenode;
   void *GW;
   const MS_video real;
   const MS_field *minefield;
   const MS_stream *mss;
   const bool no_resize;
+  ComandStream *drawque;
 }MS_root;
 
 void *GW_Init( FreeNode *, MS_root *);
 void GW_Free( FreeNode *, void *);
 void event_dispatch( const MS_root *);
-void draw( void *);
-void drawelement( void *, const MS_element *, s16, s16);
+void draw( MS_root *);
+void drawelement( ComandStream *, const MS_element *, s16, s16);
 
 
 /**/

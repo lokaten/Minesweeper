@@ -13,11 +13,6 @@ typedef struct{
 }MS_diff;
 
 typedef struct{
-  MS_pos pos;
-  MS_element element;
-}DrawComand;
-
-typedef struct{
   MS_video mfvid;
   MS_video real;
   MS_video logical;
@@ -38,7 +33,6 @@ typedef struct{
   SDL_Texture *six;
   SDL_Texture *seven;
   SDL_Texture *eight;
-  ComandStream *drawque;
 }GraphicWraper;
 
 static inline SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
@@ -127,8 +121,6 @@ GW_Init( FreeNode *freenode, MS_root *root){
   SDL_EventState( SDL_FINGERUP     , SDL_IGNORE);
   
   // SDL_EventState( SDL_MOUSEMOTION  , SDL_IGNORE);
-  
-  GW -> drawque = CS_CreateStream( freenode, DrawComand);
   
   return GW;
 }
@@ -268,7 +260,7 @@ mousebuttondown( const MS_root * root,
 	++minefield -> mine -> flaged;
       }
       
-      drawelement( GW, element, postion.x, postion.y);
+      drawelement( root -> drawque, element, postion.x, postion.y);
     }
   default:
     break;
@@ -276,11 +268,11 @@ mousebuttondown( const MS_root * root,
 }
 
 void
-draw( void *gw_void){
-  GraphicWraper *GW = (GraphicWraper *)gw_void;
+draw( MS_root *root){
+  GraphicWraper *GW = ( GraphicWraper *)root -> GW;
   DrawComand *dc = NULL;
   
-  while( ( dc = ( DrawComand *)CS_Releas( GW -> drawque)) != NULL){ 
+  while( ( dc = ( DrawComand *)CS_Releas( root -> drawque)) != NULL){ 
     SDL_Texture *tile = NULL;
     MS_element *element = &( dc -> element);
     s16 w = dc -> pos.x;
@@ -318,7 +310,7 @@ draw( void *gw_void){
     
     SDL_SetRenderTarget( GW -> renderer, NULL);
     
-    CS_Finish( GW -> drawque, dc);
+    CS_Finish( root -> drawque, dc);
   }
   
   SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = (int)GW -> logical.realwidth, .h = (int)GW -> logical.realheight},
@@ -330,15 +322,14 @@ draw( void *gw_void){
 }
 
 void
-drawelement( void *VGW, const MS_element *element, s16 w, s16 h){
-  GraphicWraper *GW = ( GraphicWraper *)VGW;
-  DrawComand *dc = ( DrawComand *)CS_Fetch( GW -> drawque);
+drawelement( ComandStream *drawque, const MS_element *element, s16 w, s16 h){
+  DrawComand *dc = ( DrawComand *)CS_Fetch( drawque);
   
   dc -> pos.x = w;
   dc -> pos.y = h;
   dc -> element = *element;
   
-  CS_Push( GW -> drawque, dc);
+  CS_Push( drawque, dc);
 }
 
 static inline SDL_Texture *

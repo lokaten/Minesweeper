@@ -7,7 +7,7 @@
 #include "minefield.h"
 #include "userinterface.h"
 
-static inline MS_element *uncover_element( const MS_field, void *, MS_pos, MS_mstr *);
+static inline MS_element *uncover_element( const MS_field, ComandStream *, MS_pos, MS_mstr *);
 static inline MS_element *setmine_element( MS_field, u32, MS_mstr *);
 static inline void addelement( const MS_field *, s16, s16);
 void uncov_thread_server( void *);
@@ -59,6 +59,8 @@ void
 MF_FreeField(  FreeNode *freenode, const MS_field *pminefield){
   const MS_field *minefield = MS_CreateLocalFromLocal( MS_field, pminefield);
   if( minefield != NULL){
+    pthread_mutex_lock( &minefield -> mutex_field);
+    
     MS_Free( freenode, pminefield);
     
     CS_Free( freenode, minefield -> uncovque);
@@ -79,25 +81,11 @@ setminefield_async( void *root){
 void
 setminefield( void *root){
   const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
-  void *GW = ( ( const MS_root *)root) -> GW;
   u32 i;
   
   i = minefield -> width * minefield -> subheight;
   
   pthread_mutex_lock( &minefield -> mutex_field);
-  
-  while( i--){
-    if( ( i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width)) < minefield -> subwidth){
-      if( ( minefield -> data + i) -> cover == 0 ||
-	  ( minefield -> data + i) -> flag == 1){
-	
-	if( GW  != NULL)
-	  drawelement( GW, &( MS_element){ .cover = 1}, ( s32)mol_( i, minefield -> width, minefield -> width_divobj), ( s32)div_( i, minefield -> width, minefield -> width_divobj));
-      }
-      
-      *( minefield -> data + i) = ( MS_element){ .count = 15, .cover = 1};
-    }
-  }
   
   minefield -> mine -> flaged = 0;
   
@@ -113,6 +101,17 @@ setminefield( void *root){
   
   if( minefield -> reseed){
     minefield -> mine -> seed = minefield -> reseed;
+  }
+  
+  while( i--){
+    if( ( i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width)) < minefield -> subwidth){
+      if( !( MS_element *)( minefield -> data + i) -> cover ||
+	   ( MS_element *)( minefield -> data + i) -> flag){
+	drawelement( ( ( MS_root *)root) -> drawque, &( MS_element){ .cover = 1}, ( s32)mol_( i, minefield -> width, minefield -> width_divobj), ( s32)div_( i, minefield -> width, minefield -> width_divobj));
+      }
+      
+      *( minefield -> data + i) = ( MS_element){ .count = 15, .cover = 1};
+    }
   }
   
   pthread_mutex_unlock( &minefield -> mutex_field);
@@ -135,12 +134,11 @@ addelement( const MS_field *minefield, s16 x, s16 y){
 void
 uncov_unsafe( void *root){
   const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
-  void *GW = ( ( const MS_root *)root) -> GW;
   MS_pos *element;
   assert( minefield != NULL);
   
   while likely( ( element = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
-    if likely( uncover_element( *minefield, GW, *element, minefield -> mine) -> count == 0){
+    if likely( uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *element, minefield -> mine) -> count == 0){
       addelement( minefield, element -> x + 1, element -> y + 1);
       addelement( minefield, element -> x - 1, element -> y + 1);
       addelement( minefield, element -> x    , element -> y + 1);
@@ -202,7 +200,7 @@ uncov( void *root){
 
 
 static inline MS_element *
-uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mine){
+uncover_element( const MS_field minefield, ComandStream *drawque, MS_pos postion, MS_mstr *mine){
   
   if likely( acse( minefield, postion.x, postion.y) -> count == 15){
     mine -> uncoverd += 1;
@@ -223,8 +221,7 @@ uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mi
     acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x - 1, postion.y    ), mine) -> mine;
   }
   
-  if( GW != NULL)
-    drawelement( GW, acse( minefield, postion.x, postion.y), postion.x, postion.y);
+  drawelement( drawque, acse( minefield, postion.x, postion.y), postion.x, postion.y);
   
   return acse( minefield, postion.x, postion.y);
 }
