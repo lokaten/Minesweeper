@@ -5,6 +5,7 @@
 #include "MS_util.h"
 #include "ComandStream.h"
 #include "minefield.h"
+#include "userinterface.h"
 
 static inline MS_element *uncover_element( const MS_field, void *, MS_pos, MS_mstr *);
 static inline MS_element *setmine_element( MS_field, u32, MS_mstr *);
@@ -114,7 +115,9 @@ addelement( const MS_field *minefield, s16 x, s16 y){
 
 
 void
-uncov( const MS_field *minefield, void *GW){
+uncov( const void *root){
+  const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
+  void *GW = ( ( const MS_root *)root) -> GW;
   MS_pos *element;
   assert( minefield != NULL);
   

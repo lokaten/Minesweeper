@@ -170,7 +170,7 @@ event_dispatch( const MS_root *root){
 	  if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
 	    uncov_elements( minefield, GW -> mfvid);
 	  }
-	  uncov( minefield, GW);
+	  uncov( root);
 	  break;
 	case SDLK_LEFT:
 	case 'h':
@@ -254,7 +254,7 @@ mousebuttondown( const MS_root * root,
       
       uncov_elements( minefield, vid);
       
-      uncov( minefield, GW);
+      uncov( root);
       break;
     }
   case SDL_BUTTON_RIGHT:

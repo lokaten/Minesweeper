@@ -171,7 +171,12 @@ ROOT_Init( const int argc, const char **argv){
     setminefield( minefield, NULL);
     setzero( minefield, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
     uncov_elements( minefield, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
-    uncov( minefield, NULL);
+    uncov( MS_Create( freenode, MS_root,
+		      .freenode = freenode,
+		      .real = real,
+		      .minefield = minefield,
+		      .mss = mss,
+		      .no_resize = no_resize));
     quit( MS_Create( freenode, MS_root, .freenode = freenode, .minefield = minefield, .mss = mss));
   }
   
@@ -218,7 +223,7 @@ main( const int argc, const char** argv){
       MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> subwidth, .height = root -> minefield -> subheight};
       uncov_elements( root -> minefield, mfvid);
       
-      uncov( root -> minefield, root -> GW);
+      uncov( root);
     }
     
     dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);

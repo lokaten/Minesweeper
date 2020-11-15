@@ -22,7 +22,7 @@ extern "C" {
     s16 x;
     s16 y;
   }MS_pos;
-
+  
   
   typedef struct{
     u32 uncoverd;
@@ -65,12 +65,9 @@ extern "C" {
 #define MF_CreateField( freenode, ...) MF_CreateFieldFromLocal( freenode, &( MS_field){__VA_ARGS__})
   void setminefield( const MS_field *, void *);
   void MF_FreeField( FreeNode *, const MS_field *);
-  void uncov( const MS_field *, void *);
+  void uncov( const void *);
   void uncov_elements( const MS_field *,  MS_video);
-  
-  /**/
-  void drawelement( void *, const MS_element *, s16, s16);
-  
+  y
 #ifdef __cplusplus
 }
 #endif

@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+#include "MS_util.h"
+
 #include "minefield.h"
 
 typedef struct{
@@ -18,11 +20,13 @@ typedef struct{
   const MS_stream *mss;
   const bool no_resize;
 }MS_root;
-  
+
 void *GW_Init( FreeNode *, MS_root *);
 void GW_Free( FreeNode *, void *);
 void event_dispatch( const MS_root *);
 void draw( void *, MS_field);
+void drawelement( void *, const MS_element *, s16, s16);
+
 
 /**/
 FUNC_DEC( void, FUNC_quit, const MS_root *root;) __attribute__((noreturn));
