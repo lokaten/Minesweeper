@@ -208,14 +208,10 @@ MS_rand( const u32 seed){
 //
 static inline u32
 MS_rand_range( const u32 seed, const u32 index, const u32 range){
-  u64 ret = index, loop_iter = 6, lseed = seed;
-  assert( index < range);
-  while( loop_iter--){
-    ret = ( u32)( ( lseed + loop_iter + ret) * U64C( 2654435769)) & U32C( 0xffffffff);
-    ret = ( ( ret * ( u64)range) >> 32);
-    dassert( ret < range);
-  }
-  return ( u32)ret;
+  //stub for now
+  ( void)seed;
+  ( void)range;
+  return ( u32)index;
 }
 
 
@@ -224,7 +220,7 @@ MS_rand_range( const u32 seed, const u32 index, const u32 range){
 //
 static inline u32
 MS_rand_seed( void){
-  u32 seed;
+  u32 seed, loop_iter = 128;
   
 #ifdef CLOCK_REALTIME
   struct timespec tv;
@@ -235,6 +231,10 @@ MS_rand_seed( void){
 #else
   seed = ( u32)time( NULL);
 #endif
+
+  while( loop_iter--){
+    seed = (u32)( (u64)seed * U64C( 2654435769)) & U32C( 0xffffffff);
+  }
   
   return seed;
 }

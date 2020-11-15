@@ -7,7 +7,6 @@
 #include "minefield.h"
 
 static inline MS_element *uncover_element( const MS_field, void *, MS_pos, MS_mstr *);
-static inline u8 checkmine_element( MS_field, u32, MS_mstr *);
 static inline MS_element *setmine_element( MS_field, u32, MS_mstr *);
 static inline void addelement( const MS_field *, s16, s16);
 
@@ -147,16 +146,16 @@ uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mi
     
     mine -> hit += setmine_element( minefield, acse_u( minefield, postion.x, postion.y), mine) -> mine;
     
-    acse( minefield, postion.x, postion.y) -> count += checkmine_element( minefield, acse_u( minefield, postion.x + 1, postion.y + 1), mine);
-    acse( minefield, postion.x, postion.y) -> count += checkmine_element( minefield, acse_u( minefield, postion.x - 1, postion.y + 1), mine);
-    acse( minefield, postion.x, postion.y) -> count += checkmine_element( minefield, acse_u( minefield, postion.x    , postion.y + 1), mine);
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x + 1, postion.y + 1), mine) -> mine;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x - 1, postion.y + 1), mine) -> mine;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x    , postion.y + 1), mine) -> mine;
     
-    acse( minefield, postion.x, postion.y) -> count += checkmine_element( minefield, acse_u( minefield, postion.x + 1, postion.y - 1), mine);
-    acse( minefield, postion.x, postion.y) -> count += checkmine_element( minefield, acse_u( minefield, postion.x - 1, postion.y - 1), mine);
-    acse( minefield, postion.x, postion.y) -> count += checkmine_element( minefield, acse_u( minefield, postion.x    , postion.y - 1), mine);
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x + 1, postion.y - 1), mine) -> mine;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x - 1, postion.y - 1), mine) -> mine;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x    , postion.y - 1), mine) -> mine;
     
-    acse( minefield, postion.x, postion.y) -> count += checkmine_element( minefield, acse_u( minefield, postion.x + 1, postion.y    ), mine);
-    acse( minefield, postion.x, postion.y) -> count += checkmine_element( minefield, acse_u( minefield, postion.x - 1, postion.y    ), mine);
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x + 1, postion.y    ), mine) -> mine;
+    acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x - 1, postion.y    ), mine) -> mine;
   }
   
   if( GW != NULL)
@@ -165,26 +164,27 @@ uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mi
   return acse( minefield, postion.x, postion.y);
 }
 
-static inline u8
-checkmine_element( MS_field minefield, u32 index, MS_mstr *mine){
-  if( ( index - index / minefield.subwidth) >= mine -> noelements ||
-      index % minefield.width == minefield.subwidth) return 0;
-  if( ( ( MS_element *)( uintptr_t)( minefield.data + index)) -> set) return ( ( MS_element *)( uintptr_t)( minefield.data + index)) -> mine;
-  return MS_rand_range( mine -> seed, index - index / minefield.subwidth, mine -> noelements) < mine -> level;;
-}
-
 
 static inline MS_element *
 setmine_element( MS_field minefield, u32 index, MS_mstr *mine){
   MS_element *element = minefield.data + index;
-  
-  element -> mine = checkmine_element( minefield, index, mine);
-  
-  mine -> set += !element -> set;
-  
-  mine -> mines += element -> mine;
-  
-  element -> set = 1;
+
+  if( !element -> set && index < mine -> noelements + minefield.subheight && index % minefield.width != minefield.subwidth){
+    
+    //if( !minefield.global){
+    //  element -> mine = MS_rand_range( mine -> seed, index - index / minefield.width, mine -> noelements) < mine -> level;
+    //}else{
+    //  element -> mine = MS_rand_range( mine -> seed, index, mine -> noelements) < mine -> level;
+    //}
+    
+    element -> mine = ( ( ( u64)( mine -> seed = MS_rand( mine -> seed)) * ( mine -> noelements - mine -> set)) >> 32) < ( mine -> level - mine -> mines);
+    
+    mine -> set += 1;
+    
+    mine -> mines += element -> mine;
+    
+    element -> set = 1;
+  }
   
   return element;
 }

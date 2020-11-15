@@ -232,9 +232,7 @@ mousebuttondown( const MS_root * root,
       
       if( minefield -> mine -> set == 0){
 	//let's play "Texas Sharpshooter"
-	//actully we can't becaus location of mines are only depandet on width, height, level, and seed,
-	//meaning that if we remove the mines from where the user first click we won't have enogh
-	//setzero( minefield, vid);
+	setzero( minefield, vid);
       }
       
       uncov_elements( minefield, vid);
