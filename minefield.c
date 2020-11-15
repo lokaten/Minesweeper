@@ -10,6 +10,7 @@
 static inline MS_element *uncover_element( const MS_field, void *, MS_pos, MS_mstr *);
 static inline MS_element *setmine_element( MS_field, u32, MS_mstr *);
 static inline void addelement( const MS_field *, s16, s16);
+void uncov_thread_server( void *);
 
 static inline u32
 acse_u( const MS_field field, int x, int y){
@@ -19,6 +20,7 @@ acse_u( const MS_field field, int x, int y){
 
 MS_field *
 MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
+  MS_field *minefield;
   MS_mstr *mine;
   ComandStream *uncovque;
   MS_element *data;
@@ -33,20 +35,24 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
   
   uncovque = CS_CreateStream( freenode, MS_pos);
   
-  return MS_Create( freenode, MS_field,
-		    .data = data,
-		    .title = proto -> title,
-		    .uncovque = uncovque,
-		    .mine = mine,
-		    .width = truewidth,
-		    .width_divobj = gen_divobj( truewidth),
-		    .height = trueheight,
-		    .height_divobj  = gen_divobj( trueheight),
-		    .subwidth  = proto -> width,
-		    .subheight = proto -> height,
-		    .level = proto -> level,
-		    .global = proto -> global,
-		    .reseed = proto -> reseed);
+  minefield = MS_Create( freenode, MS_field,
+			 .data = data,
+			 .title = proto -> title,
+			 .uncovque = uncovque,
+			 .mine = mine,
+			 .width = truewidth,
+			 .width_divobj = gen_divobj( truewidth),
+			 .height = trueheight,
+			 .height_divobj  = gen_divobj( trueheight),
+			 .subwidth  = proto -> width,
+			 .subheight = proto -> height,
+			 .level = proto -> level,
+			 .global = proto -> global,
+			 .reseed = proto -> reseed);
+  
+  pthread_mutex_init( &minefield -> mutex_field, NULL);
+  
+  return minefield;
 }
 
 void
@@ -65,11 +71,20 @@ MF_FreeField(  FreeNode *freenode, const MS_field *pminefield){
 
 
 void
-setminefield( const MS_field  *minefield,
-	      void *GW){
+setminefield_async( void *root){
+  pthread_create( NULL, NULL, setminefield, ( void *)root);
+}
+
+
+void
+setminefield( void *root){
+  const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
+  void *GW = ( ( const MS_root *)root) -> GW;
   u32 i;
   
   i = minefield -> width * minefield -> subheight;
+  
+  pthread_mutex_lock( &minefield -> mutex_field);
   
   while( i--){
     if( ( i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width)) < minefield -> subwidth){
@@ -99,6 +114,8 @@ setminefield( const MS_field  *minefield,
   if( minefield -> reseed){
     minefield -> mine -> seed = minefield -> reseed;
   }
+  
+  pthread_mutex_unlock( &minefield -> mutex_field);
 }
 
 
@@ -114,8 +131,9 @@ addelement( const MS_field *minefield, s16 x, s16 y){
 }
 
 
+
 void
-uncov( const void *root){
+uncov_unsafe( void *root){
   const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
   void *GW = ( ( const MS_root *)root) -> GW;
   MS_pos *element;
@@ -138,6 +156,50 @@ uncov( const void *root){
     CS_Finish( minefield -> uncovque, element);
   }
 }
+
+
+void
+uncov_async( void *root){
+  pthread_create( NULL, NULL, uncov, ( void *)root);
+}
+
+void
+uncov_thread_server( void *root){
+  const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
+  u32 numthreads = 8;
+  u32 iter = numthreads;
+  pthread_t threads[ numthreads];
+  pthread_attr_t attr;
+  
+  pthread_attr_init( &attr);
+  pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE);
+  
+  pthread_mutex_lock( &minefield -> mutex_field);
+  
+  while( iter--){
+    pthread_create( &threads[ iter], &attr, uncov_unsafe, ( void *)root);
+  }
+  
+  pthread_attr_destroy( &attr);
+  
+  iter = numthreads;
+  
+  while( iter--){
+    pthread_join( threads[ iter], NULL);
+  }
+  
+  pthread_mutex_unlock( &minefield -> mutex_field);
+}
+
+
+void
+uncov( void *root){
+  const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
+  pthread_mutex_lock( &minefield -> mutex_field);
+  uncov_unsafe( root);
+  pthread_mutex_unlock( &minefield -> mutex_field);
+}
+
 
 static inline MS_element *
 uncover_element( const MS_field minefield, void *GW, MS_pos postion, MS_mstr *mine){
@@ -201,13 +263,15 @@ uncov_elements( const MS_field *minefield,
   assert( minefield != NULL);
   
   i = vid.width * vid.height;
-  
+
+  pthread_mutex_lock( &minefield -> mutex_field);
   while( i--){
     x = ( s32)( i % vid.width) + vid.xdiff;
     y = ( s32)( i / vid.width) + vid.ydiff;
     
     addelement( minefield, x, y);
   }
+  pthread_mutex_unlock( &minefield -> mutex_field);
 }
 
 
@@ -217,6 +281,8 @@ setzero( const MS_field *minefield,
   unsigned long i;
   int x, y;
   assert( minefield != NULL);
+  
+  pthread_mutex_lock( &minefield -> mutex_field);
   
   i = vid.width * vid.height;
   
@@ -232,4 +298,6 @@ setzero( const MS_field *minefield,
     }
     
   }
+  
+  pthread_mutex_unlock( &minefield -> mutex_field);
 }

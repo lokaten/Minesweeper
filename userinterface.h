@@ -24,7 +24,7 @@ typedef struct{
 void *GW_Init( FreeNode *, MS_root *);
 void GW_Free( FreeNode *, void *);
 void event_dispatch( const MS_root *);
-void draw( void *, MS_field);
+void draw( void *);
 void drawelement( void *, const MS_element *, s16, s16);
 
 

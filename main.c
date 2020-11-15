@@ -167,19 +167,6 @@ ROOT_Init( const int argc, const char **argv){
     MS_print( mss -> out, "\r\t\t\t\tlevel: %lu   \n", minefield -> level);
   }
   
-  if( strstr( minefield -> title, field_benchmark -> title)){
-    setminefield( minefield, NULL);
-    setzero( minefield, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
-    uncov_elements( minefield, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
-    uncov( MS_Create( freenode, MS_root,
-		      .freenode = freenode,
-		      .real = real,
-		      .minefield = minefield,
-		      .mss = mss,
-		      .no_resize = no_resize));
-    quit( MS_Create( freenode, MS_root, .freenode = freenode, .minefield = minefield, .mss = mss));
-  }
-  
   root = MS_Create( freenode, MS_root,
 		    .freenode = freenode,
 		    .real = real,
@@ -187,11 +174,19 @@ ROOT_Init( const int argc, const char **argv){
 		    .mss = mss,
 		    .no_resize = no_resize);
   
+  if( strstr( minefield -> title, field_benchmark -> title)){
+    setminefield_async( ( void *)root);
+    setzero( minefield, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
+    uncov_elements( minefield, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
+    uncov_async( ( void *)root);
+    quit( root);
+  }
+  
   root -> GW = GW_Init( root -> freenode, root);
   
-  draw( root -> GW, *root -> minefield);
+  draw( root -> GW);
   
-  setminefield( root -> minefield, root -> GW);
+  setminefield_async( ( void *)root);
   
   return root;
 }
@@ -223,7 +218,7 @@ main( const int argc, const char** argv){
       MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> subwidth, .height = root -> minefield -> subheight};
       uncov_elements( root -> minefield, mfvid);
       
-      uncov( root);
+      uncov_async( ( void *) root);
     }
     
     dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
@@ -247,7 +242,7 @@ main( const int argc, const char** argv){
       // do nothing
     }
     
-    draw( root -> GW, *root -> minefield);
+    draw( root -> GW);
     
 #ifdef DEBUG
     if( root -> mss -> deb != NULL){

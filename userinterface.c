@@ -162,7 +162,7 @@ event_dispatch( const MS_root *root){
 	case SDLK_F2:
 	case 'r':
 	  if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
-	    setminefield( minefield, GW);
+	    setminefield_async( ( void *)root);
 	  }
 	  break;
 	case SDLK_F3:
@@ -170,7 +170,7 @@ event_dispatch( const MS_root *root){
 	  if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
 	    uncov_elements( minefield, GW -> mfvid);
 	  }
-	  uncov( root);
+	  uncov_async( root);
 	  break;
 	case SDLK_LEFT:
 	case 'h':
@@ -254,7 +254,7 @@ mousebuttondown( const MS_root * root,
       
       uncov_elements( minefield, vid);
       
-      uncov( root);
+      uncov_async( root);
       break;
     }
   case SDL_BUTTON_RIGHT:
@@ -276,10 +276,9 @@ mousebuttondown( const MS_root * root,
 }
 
 void
-draw( void *gw_void, MS_field minefield){
+draw( void *gw_void){
   GraphicWraper *GW = (GraphicWraper *)gw_void;
   DrawComand *dc = NULL;
-  (void)minefield;
   
   while( ( dc = ( DrawComand *)CS_Releas( GW -> drawque)) != NULL){ 
     SDL_Texture *tile = NULL;
