@@ -86,6 +86,14 @@ GW_Init( FreeNode *freenode, MS_root *root){
   
   GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)GW -> mfvid.realwidth, (int)GW -> mfvid.realheight);
   
+  {
+    // confirm size of GW -> target
+    int w, h;
+    SDL_QueryTexture( GW -> target, NULL, NULL, &w, &h);
+    assert( w == ( int)GW -> mfvid.realwidth);
+    assert( h == ( int)GW -> mfvid.realheight);
+  }
+  
   GW -> clear = MS_OpenImage( GW -> renderer, "nola.png");
   GW -> one   = MS_OpenImage( GW -> renderer, "etta.png");
   GW -> two   = MS_OpenImage( GW -> renderer, "tvaa.png");
