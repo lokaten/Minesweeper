@@ -243,8 +243,6 @@ main( const int argc, const char** argv){
     }
     
     draw( root -> GW, *root -> minefield);
-
-    MS_print( root -> mss -> out, TERM( "\r\t\t\t\t\t\t %lu of %lu      "), root -> minefield -> mine -> mines, root -> minefield -> mine -> set);
     
 #ifdef DEBUG
     if( root -> mss -> deb != NULL){
