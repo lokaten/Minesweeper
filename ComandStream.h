@@ -84,7 +84,7 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
   
   return Stream;
 }
-#define CS_CreateStream( freenode, type) CS_CreateStreamFromSize( freenode, sizeof( MS_pos))
+#define CS_CreateStream( freenode, type) CS_CreateStreamFromSize( freenode, sizeof( type))
 
 
 static inline void *

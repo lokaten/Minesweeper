@@ -5,11 +5,17 @@
 #include "MS_util.h"
 #include "minefield.h"
 #include "userinterface.h"
+#include "ComandStream.h"
 
 typedef struct{
   s32 x;
   s32 y;
 }MS_diff;
+
+typedef struct{
+  MS_pos pos;
+  MS_element element;
+}DrawComand;
 
 typedef struct{
   MS_video mfvid;
@@ -32,6 +38,7 @@ typedef struct{
   SDL_Texture *six;
   SDL_Texture *seven;
   SDL_Texture *eight;
+  ComandStream *drawque;
 }GraphicWraper;
 
 static inline SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
@@ -120,6 +127,8 @@ GW_Init( FreeNode *freenode, MS_root *root){
   SDL_EventState( SDL_FINGERUP     , SDL_IGNORE);
   
   // SDL_EventState( SDL_MOUSEMOTION  , SDL_IGNORE);
+  
+  GW -> drawque = CS_CreateStream( freenode, DrawComand);
   
   return GW;
 }
@@ -269,7 +278,49 @@ mousebuttondown( const MS_root * root,
 void
 draw( void *gw_void, MS_field minefield){
   GraphicWraper *GW = (GraphicWraper *)gw_void;
+  DrawComand *dc = NULL;
   (void)minefield;
+  
+  while( ( dc = ( DrawComand *)CS_Releas( GW -> drawque)) != NULL){ 
+    SDL_Texture *tile = NULL;
+    MS_element *element = &( dc -> element);
+    s16 w = dc -> pos.x;
+    s16 h = dc -> pos.y;
+    
+    if( element -> flag){
+      tile =  GW -> flag;
+    }else if( element -> cover){
+      tile =  GW -> cover;
+    }else if( element -> mine){
+      tile =  GW -> mine;
+    }else switch( element -> count){
+      case 0: tile =  GW -> clear; break;
+      case 1: tile =  GW -> one; break;
+      case 2: tile =  GW -> two; break;
+      case 3: tile =  GW -> three; break;
+      case 4: tile =  GW -> four; break;
+      case 5: tile =  GW -> five; break;
+      case 6: tile =  GW -> six; break;
+      case 7: tile =  GW -> seven; break;
+      case 8: tile =  GW -> eight; break;
+      default:
+	break;
+    }
+    
+    assert( tile != NULL);
+    
+    SDL_SetRenderTarget( GW -> renderer, GW -> target);
+    
+    MS_BlitTile( GW -> renderer, tile,
+		 (int)w * ( int)GW -> logical.element_width ,
+		 (int)h * ( int)GW -> logical.element_height,
+		 (int)GW -> logical.element_width,
+		 (int)GW -> logical.element_height);
+    
+    SDL_SetRenderTarget( GW -> renderer, NULL);
+    
+    CS_Finish( GW -> drawque, dc);
+  }
   
   SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = (int)GW -> logical.realwidth, .h = (int)GW -> logical.realheight},
 		    &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_NONE);
@@ -282,39 +333,13 @@ draw( void *gw_void, MS_field minefield){
 void
 drawelement( void *VGW, const MS_element *element, s16 w, s16 h){
   GraphicWraper *GW = ( GraphicWraper *)VGW;
-  SDL_Texture *tile = NULL;
+  DrawComand *dc = ( DrawComand *)CS_Fetch( GW -> drawque);
   
-  if( element -> flag){
-    tile =  GW -> flag;
-  }else if( element -> cover){
-    tile =  GW -> cover;
-  }else if( element -> mine){
-    tile =  GW -> mine;
-  }else switch( element -> count){
-    case 0: tile =  GW -> clear; break;
-    case 1: tile =  GW -> one; break;
-    case 2: tile =  GW -> two; break;
-    case 3: tile =  GW -> three; break;
-    case 4: tile =  GW -> four; break;
-    case 5: tile =  GW -> five; break;
-    case 6: tile =  GW -> six; break;
-    case 7: tile =  GW -> seven; break;
-    case 8: tile =  GW -> eight; break;
-    default:
-      break;
-    }
+  dc -> pos.x = w;
+  dc -> pos.y = h;
+  dc -> element = *element;
   
-  assert( tile != NULL);
-  
-  SDL_SetRenderTarget( GW -> renderer, GW -> target);
-  
-  MS_BlitTile( GW -> renderer, tile,
-	       (int)w * ( int)GW -> logical.element_width ,
-	       (int)h * ( int)GW -> logical.element_height,
-	       (int)GW -> logical.element_width,
-	       (int)GW -> logical.element_height);
-  
-  SDL_SetRenderTarget( GW -> renderer, NULL);
+  CS_Push( GW -> drawque, dc);
 }
 
 static inline SDL_Texture *
