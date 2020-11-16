@@ -25,14 +25,14 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
   MS_mstr *mine;
   ComandStream *uncovque;
   MS_element *data;
-  u32 truewidth  = proto -> width  + !proto -> global;
-  u32 trueheight = proto -> height + !proto -> global;
+  u32 truewidth  = proto -> width  + !proto -> global * 2;
+  u32 trueheight = proto -> height + !proto -> global * 2;
   
   mine = MS_Create( freenode, MS_mstr,
 		    .level = proto -> level,
 		    .noelements = proto -> width * proto -> height);
   
-  data = MS_CreateArray( freenode, truewidth * trueheight, MS_element, .count = 14);
+  data = MS_CreateArray( freenode, truewidth * trueheight, MS_element, .set = 1);
   
   uncovque = CS_CreateStream( freenode, MS_pos);
   
@@ -84,7 +84,7 @@ setminefield( void *root){
   MS_field *minefield = ( ( MS_root *)root) -> minefield;
   u32 i;
   
-  i = minefield -> width * minefield -> subheight;
+  i = minefield -> width * ( minefield -> subheight + 1);
   
   pthread_mutex_lock( &minefield -> mutex_field);
   
@@ -104,9 +104,9 @@ setminefield( void *root){
     minefield -> mine -> seed = minefield -> reseed;
   }
   
-  while( i--){
+  while( i-- > minefield -> width){
     u32 w = i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width);
-    if( w < minefield -> subwidth){
+    if( w > 0 && w < minefield -> subwidth + 1){
       if( !( MS_element *)( uintptr_t)( minefield -> data + i) -> cover ||
 	   ( MS_element *)( uintptr_t)( minefield -> data + i) -> flag){
 	drawelement( ( ( MS_root *)root) -> drawque, &( MS_element){ .cover = 1}, ( s32)w, ( s32)div_( i, minefield -> width, minefield -> width_divobj));
@@ -115,6 +115,29 @@ setminefield( void *root){
       *( minefield -> data + i) = ( MS_element){ .count = 15, .cover = 1};
     }
   }
+
+  i = minefield -> width * minefield -> height;
+  
+  while( i--){
+    u32 w = i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width);
+    u32 h = div_( i, minefield -> width, minefield -> width_divobj);
+    
+    if( !w || !h || w == minefield -> width - 1 || h == minefield -> height - 1){
+      *( minefield -> data + i) = ( MS_element){ .count = 15, .set = 1};
+      
+      uncover_element( *minefield, ( ( MS_root *)root) -> drawque, ( MS_pos){ .x = w, .y = h}, minefield -> mine);
+    }
+  }
+  
+  minefield -> mine -> flaged = 0;
+  
+  minefield -> mine -> uncoverd = 0;
+  
+  minefield -> mine -> set = 0;
+  
+  minefield -> mine -> mines = 0;
+  
+  minefield -> mine -> hit = 0;
   
   pthread_mutex_unlock( &minefield -> mutex_field);
   
@@ -241,14 +264,7 @@ static inline MS_element *
 setmine_element( MS_field minefield, u32 index, MS_mstr *mine){
   MS_element *element = minefield.data + index;
 
-  if( !element -> set && index < mine -> noelements + minefield.subheight && index % minefield.width != minefield.subwidth){
-    
-    //if( !minefield.global){
-    //  element -> mine = MS_rand_range( mine -> seed, index - index / minefield.width, mine -> noelements) < mine -> level;
-    //}else{
-    //  element -> mine = MS_rand_range( mine -> seed, index, mine -> noelements) < mine -> level;
-    //}
-    
+  if( !element -> set){
     element -> mine = ( ( ( u64)( mine -> seed = MS_rand( mine -> seed)) * ( mine -> noelements - mine -> set)) >> 32) < ( mine -> level - mine -> mines);
     
     mine -> set += 1;

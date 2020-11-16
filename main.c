@@ -148,8 +148,8 @@ ROOT_Init( const int argc, const char **argv){
   }
   
   {
-    real.realwidth  = real.realwidth ? real.realwidth : minefield -> subwidth  * real.element_width;
-    real.realheight = real.realheight? real.realheight: minefield -> subheight * real.element_height;
+    real.realwidth  = real.realwidth ? real.realwidth : minefield -> width  * real.element_width;
+    real.realheight = real.realheight? real.realheight: minefield -> height * real.element_height;
     
     real.width  = real.realwidth  / real.element_width ;
     real.height = real.realheight / real.element_height;
@@ -217,7 +217,7 @@ main( const int argc, const char** argv){
     event_dispatch( root);
     
     if unlikely( root -> minefield -> mine -> hit){
-      MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> subwidth, .height = root -> minefield -> subheight};
+      MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> width, .height = root -> minefield -> height};
       uncov_elements( root -> minefield, mfvid);
       
       uncov_async( ( void *) root);

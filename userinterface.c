@@ -47,8 +47,8 @@ GW_Init( FreeNode *freenode, MS_root *root){
   
   GW -> real = root -> real;
   
-  GW -> mfvid.width  = root -> minefield -> subwidth;
-  GW -> mfvid.height = root -> minefield -> subheight;
+  GW -> mfvid.width  = root -> minefield -> width;
+  GW -> mfvid.height = root -> minefield -> height;
   
   GW -> real.realwidth  = root -> real.realwidth ? root -> real.realwidth : GW -> mfvid.width  * GW -> real.element_width;
   GW -> real.realheight = root -> real.realheight? root -> real.realheight: GW -> mfvid.height * GW -> real.element_height;
