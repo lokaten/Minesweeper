@@ -21,7 +21,7 @@ typedef struct{
   FreeNode *freenode;
   void *GW;
   const MS_video real;
-  const MS_field *minefield;
+  MS_field *minefield;
   const MS_stream *mss;
   const bool no_resize;
   ComandStream *drawque;

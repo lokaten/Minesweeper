@@ -58,7 +58,7 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
 
 void
 MF_FreeField(  FreeNode *freenode, const MS_field *pminefield){
-  const MS_field *minefield = MS_CreateLocalFromLocal( MS_field, pminefield);
+  MS_field *minefield = MS_CreateLocalFromLocal( MS_field, pminefield);
   if( minefield != NULL){
     pthread_mutex_lock( &minefield -> mutex_field);
     
@@ -81,7 +81,7 @@ setminefield_async( void *root){
 
 void *
 setminefield( void *root){
-  const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
+  MS_field *minefield = ( ( MS_root *)root) -> minefield;
   u32 i;
   
   i = minefield -> width * minefield -> subheight;
@@ -105,10 +105,11 @@ setminefield( void *root){
   }
   
   while( i--){
-    if( ( i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width)) < minefield -> subwidth){
+    u32 w = i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width);
+    if( w < minefield -> subwidth){
       if( !( MS_element *)( uintptr_t)( minefield -> data + i) -> cover ||
 	   ( MS_element *)( uintptr_t)( minefield -> data + i) -> flag){
-	drawelement( ( ( MS_root *)root) -> drawque, &( MS_element){ .cover = 1}, ( s32)mol_( i, minefield -> width, minefield -> width_divobj), ( s32)div_( i, minefield -> width, minefield -> width_divobj));
+	drawelement( ( ( MS_root *)root) -> drawque, &( MS_element){ .cover = 1}, ( s32)w, ( s32)div_( i, minefield -> width, minefield -> width_divobj));
       }
       
       *( minefield -> data + i) = ( MS_element){ .count = 15, .cover = 1};
@@ -136,7 +137,7 @@ addelement( const MS_field *minefield, s16 x, s16 y){
 
 void *
 uncov_unsafe( void *root){
-  const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
+  const MS_field *minefield = ( ( MS_root *)root) -> minefield;
   MS_pos *element;
   assert( minefield != NULL);
   
@@ -168,7 +169,7 @@ uncov_async( void *root){
 
 void *
 uncov_thread_server( void *root){
-  const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
+  MS_field *minefield = ( ( MS_root *)root) -> minefield;
   u32 numthreads = 8;
   u32 iter = numthreads;
   pthread_t threads[ numthreads];
@@ -199,7 +200,7 @@ uncov_thread_server( void *root){
 
 void *
 uncov( void *root){
-  const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
+  MS_field *minefield = ( ( MS_root *)root) -> minefield;
   pthread_mutex_lock( &minefield -> mutex_field);
   uncov_unsafe( root);
   pthread_mutex_unlock( &minefield -> mutex_field);
@@ -262,7 +263,7 @@ setmine_element( MS_field minefield, u32 index, MS_mstr *mine){
 
 
 void
-uncov_elements( const MS_field *minefield,
+uncov_elements( MS_field *minefield,
 		MS_video  vid){
   unsigned long i;
   int x, y;
@@ -282,7 +283,7 @@ uncov_elements( const MS_field *minefield,
 
 
 void
-setzero( const MS_field *minefield,
+setzero( MS_field *minefield,
 	 MS_video  vid){
   unsigned long i;
   int x, y;

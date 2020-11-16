@@ -61,7 +61,7 @@ extern "C" {
 			  mol_( (u32)( y + (int)field.height), field.height, field.height_divobj) * field.width);
   }
   
-  void setzero( const MS_field *, MS_video);
+  void setzero( MS_field *, MS_video);
   MS_field *MF_CreateFieldFromLocal( FreeNode *, const MS_field *);
 #define MF_CreateField( freenode, ...) MF_CreateFieldFromLocal( freenode, &( MS_field){__VA_ARGS__})
   void *setminefield( void *);
@@ -69,7 +69,7 @@ extern "C" {
   void MF_FreeField( FreeNode *, const MS_field *);
   void *uncov( void *);
   void uncov_async( void *);
-  void uncov_elements( const MS_field *,  MS_video);
+  void uncov_elements( MS_field *,  MS_video);
   
 #ifdef __cplusplus
 }
