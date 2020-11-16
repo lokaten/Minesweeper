@@ -37,7 +37,7 @@ typedef struct{
 
 static inline SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
 static inline int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
-static inline void mousebuttondown( const MS_root *, SDL_Event);
+static inline void mousebuttondown( MS_root *, SDL_Event);
 
 void *
 GW_Init( FreeNode *freenode, MS_root *root){
@@ -135,9 +135,9 @@ GW_Free( FreeNode *freenode, void *GW){
 }
 
 void
-event_dispatch( const MS_root *root){
-  const MS_field *minefield = root -> minefield;
-  GraphicWraper *GW         = ( GraphicWraper *)root -> GW;
+event_dispatch( MS_root *root){
+  MS_field *minefield = root -> minefield;
+  GraphicWraper *GW   = ( GraphicWraper *)root -> GW;
   SDL_Event event;
   
   assert( GW);
@@ -206,11 +206,11 @@ event_dispatch( const MS_root *root){
 
 
 static inline void
-mousebuttondown( const MS_root * root,
+mousebuttondown( MS_root * root,
 		 SDL_Event event){
   
-  const MS_field *minefield = root -> minefield;
-  GraphicWraper *GW         = ( GraphicWraper *)root -> GW;
+  MS_field *minefield = root -> minefield;
+  GraphicWraper *GW   = ( GraphicWraper *)root -> GW;
   
   MS_pos postion;
   
