@@ -10,7 +10,8 @@
 static inline MS_element *uncover_element( const MS_field, ComandStream *, MS_pos, MS_mstr *);
 static inline MS_element *setmine_element( MS_field, u32, MS_mstr *);
 static inline void addelement( const MS_field *, s16, s16);
-void uncov_thread_server( void *);
+void *uncov_thread_server( void *);
+void *uncov_unsafe( void *);
 
 static inline u32
 acse_u( const MS_field field, int x, int y){
@@ -78,7 +79,7 @@ setminefield_async( void *root){
 }
 
 
-void
+void *
 setminefield( void *root){
   const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
   u32 i;
@@ -105,8 +106,8 @@ setminefield( void *root){
   
   while( i--){
     if( ( i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width)) < minefield -> subwidth){
-      if( !( MS_element *)( minefield -> data + i) -> cover ||
-	   ( MS_element *)( minefield -> data + i) -> flag){
+      if( !( MS_element *)( uintptr_t)( minefield -> data + i) -> cover ||
+	   ( MS_element *)( uintptr_t)( minefield -> data + i) -> flag){
 	drawelement( ( ( MS_root *)root) -> drawque, &( MS_element){ .cover = 1}, ( s32)mol_( i, minefield -> width, minefield -> width_divobj), ( s32)div_( i, minefield -> width, minefield -> width_divobj));
       }
       
@@ -115,6 +116,8 @@ setminefield( void *root){
   }
   
   pthread_mutex_unlock( &minefield -> mutex_field);
+  
+  return NULL;
 }
 
 
@@ -131,7 +134,7 @@ addelement( const MS_field *minefield, s16 x, s16 y){
 
 
 
-void
+void *
 uncov_unsafe( void *root){
   const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
   MS_pos *element;
@@ -153,6 +156,8 @@ uncov_unsafe( void *root){
     
     CS_Finish( minefield -> uncovque, element);
   }
+  
+  return NULL;
 }
 
 
@@ -161,7 +166,7 @@ uncov_async( void *root){
   pthread_create( NULL, NULL, uncov, ( void *)root);
 }
 
-void
+void *
 uncov_thread_server( void *root){
   const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
   u32 numthreads = 8;
@@ -187,15 +192,19 @@ uncov_thread_server( void *root){
   }
   
   pthread_mutex_unlock( &minefield -> mutex_field);
+  
+  return NULL;
 }
 
 
-void
+void *
 uncov( void *root){
   const MS_field *minefield = ( ( const MS_root *)root) -> minefield;
   pthread_mutex_lock( &minefield -> mutex_field);
   uncov_unsafe( root);
   pthread_mutex_unlock( &minefield -> mutex_field);
+  
+  return NULL;
 }
 
 

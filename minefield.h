@@ -64,10 +64,10 @@ extern "C" {
   void setzero( const MS_field *, MS_video);
   MS_field *MF_CreateFieldFromLocal( FreeNode *, const MS_field *);
 #define MF_CreateField( freenode, ...) MF_CreateFieldFromLocal( freenode, &( MS_field){__VA_ARGS__})
-  void setminefield( void *);
+  void *setminefield( void *);
   void setminefield_async( void *);
   void MF_FreeField( FreeNode *, const MS_field *);
-  void uncov( void *);
+  void *uncov( void *);
   void uncov_async( void *);
   void uncov_elements( const MS_field *,  MS_video);
   
