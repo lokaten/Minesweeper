@@ -5,7 +5,7 @@
 
 #include <stdio.h> // FILE
 
-FILE *debug_out;
+extern FILE *debug_out;
 
 #endif
 #endif

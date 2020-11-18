@@ -224,6 +224,8 @@ main( const int argc, const char** argv){
       uncov_async( ( void *) root);
     }
     
+    pthread_mutex_lock( &root -> minefield -> mutex_field);
+    
     assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
     assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
     
@@ -239,11 +241,13 @@ main( const int argc, const char** argv){
 	printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
 	MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
       }
-    }else if( !root -> minefield -> mine -> set){
+    }else if( !root -> minefield -> mine -> uncoverd){
       gameover = FALSE;
     }else{
       // do nothing
     }
+    
+    pthread_mutex_unlock( &root -> minefield -> mutex_field);
     
     draw( root);
     
