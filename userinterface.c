@@ -142,7 +142,7 @@ event_dispatch( MS_root *root){
   
   assert( GW);
     
-  if( SDL_WaitEventTimeout( &event, 1000)){ // ( ( u64)MS_rand( MS_rand_seed()) * U64C( 1000)) / MS_RAND_MAX)){
+  if( SDL_WaitEventTimeout( &event, U64C( 75) + ( ( ( u64)MS_rand( MS_rand_seed()) * U64C( 100)) >> 32))){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
       quit( root);
@@ -239,7 +239,7 @@ mousebuttondown( MS_root * root,
 	vid = ( MS_video){ .xdiff = postion.x - 1, .ydiff = postion.y - 1, .width  = 3, .height = 3};
       }
       
-      if( minefield -> mine -> set == 0){
+      if( minefield -> mine -> uncoverd == 0){
 	//let's play "Texas Sharpshooter"
 	setzero( minefield, vid);
       }

@@ -20,7 +20,7 @@ endif
 ifeq ($(GCC), yes)
 CC = gcc -std=gnu99
 CXX = g++ -std=gnu++2a
-CFLAGS += -Wlogical-op -faggressive-loop-optimizations
+CFLAGS += -Wlogical-op -faggressive-loop-optimizations -Wno-error=discarded-qualifiers
 CFLAGS += -pedantic -Wold-style-definition -Wmissing-prototypes -Wstrict-prototypes -Wdeclaration-after-statement
 CFLAGS += -Wstrict-aliasing -Wunreachable-code -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wstrict-overflow=5 -Wswitch-default -Wundef -fdiagnostics-show-option
 endif
@@ -28,7 +28,7 @@ endif
 ifeq ($(CLANGPP), yes)
 CC = clang++ -std=gnu++11
 CXX = clang++ -std=gnu++11
-CFLAGS += -Wevrything -Wno-address-of-temporary -Wno-missing-field-initializers
+CFLAGS += -Wevrything -Wno-address-of-temporary -Wno-missing-field-initializers -wno-error=ignored-qualifiers
 CFLAGS += -Wno-old-style-cast -Wno-c++98-compat-pedantic -Wno-c++98-compat -Wno-error=deprecated -Wno-error=writable-strings -Wno-error=c++11-narrowing -Wno-error=address-of-temporary
 endif
 
@@ -53,7 +53,7 @@ ifeq ($(NATIVE), yes)
 CC += -march=native
 endif
 
-CFLAGS += -fstrict-aliasing -Wall -Wextra -Wformat-security -Werror=format-security -Wno-error=discarded-qualifiers
+CFLAGS += -fstrict-aliasing -Wall -Wextra -Wformat-security -Werror=format-security
 
 CXXFLAGS = $(CFLAGS) -Wctor-dtor-privacy -Woverloaded-virtual -Wsign-promo
 

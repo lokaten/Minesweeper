@@ -115,7 +115,7 @@ setminefield( void *root){
       *( minefield -> data + i) = ( MS_element){ .count = 15, .cover = 1};
     }
   }
-
+  
   i = minefield -> width * minefield -> height;
   
   while( i--){
@@ -132,10 +132,6 @@ setminefield( void *root){
   minefield -> mine -> flaged = 0;
   
   minefield -> mine -> uncoverd = 0;
-  
-  minefield -> mine -> set = 0;
-  
-  minefield -> mine -> mines = 0;
   
   minefield -> mine -> hit = 0;
   

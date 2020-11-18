@@ -17,6 +17,7 @@ static inline const MS_root * ROOT_FreeRoot( const MS_root *);
 MS_root *ROOT_Init( const int, const char **);
 static inline void printtime( FILE *, u64);
 
+FILE *debug_out;
 
 FUNC_DEF( void, FUNC_quit){
   int ret = 0;
@@ -66,7 +67,7 @@ ROOT_Init( const int argc, const char **argv){
   MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level =  40, .global = 0, .reseed = 0);
   MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "expert"   , .width =   30, .height =   16, .level =  99, .global = 0, .reseed = 0);
   MS_field *field_extrem    = MS_CreateLocal( MS_field, .title = "extrem"   , .width =   32, .height =   18, .level = 127, .global = 0, .reseed = 0);
-  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "benchmark", .width = 3200, .height = 1800, .level = 127, .global = 1, .reseed = 0);
+  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "benchmark", .width = 32000, .height = 18000, .level = 127, .global = 1, .reseed = 0);
   
 #ifndef NO_TERM
   MS_stream *very_quiet = MS_CreateLocal( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
@@ -137,7 +138,7 @@ ROOT_Init( const int argc, const char **argv){
   freenode = MS_CreateFreeList();
   
   if( custom){
-    if( custom_level >= ( custom_width * custom_height)){
+    if( custom_level >= ( u32)( custom_width * custom_height)){
       custom_level = ( custom_width * custom_height + 1) / 3;
       MS_print( mss -> err, TERM("\rMore mines then elments!\n"));
     }
@@ -223,8 +224,8 @@ main( const int argc, const char** argv){
       uncov_async( ( void *) root);
     }
     
-    dassert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
-    dassert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
+    assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
+    assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
     
     if( !gameover){
       if unlikely( root -> minefield -> mine -> hit){

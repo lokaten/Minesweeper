@@ -7,7 +7,7 @@ extern "C" {
 #endif
 
 
-// #include <sys/time.h> // clock_gettime
+#include <sys/time.h> // clock_gettime
 
 #include <assert.h>
 
@@ -208,10 +208,11 @@ MS_rand( const u32 seed){
 //
 static inline u32
 MS_rand_range( const u32 seed, const u32 index, const u32 range){
-  //stub for now
-  ( void)seed;
-  ( void)range;
-  return ( u32)index;
+  u64 ret = index, iter = 8, p = ( ( U64C( 2654435769) * ( u64)range) >> 32), divr = ( U64C( 0xffffffff) / ( u64)range);
+  while( --iter){
+    ret = ( ( ( ( u64)seed + ( ret * p * divr)) & U64C( 0xffffffff)) * ( u64)range) >> 32;
+  }
+  return ( u32)ret;
 }
 
 
