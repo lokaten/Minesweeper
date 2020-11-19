@@ -64,11 +64,11 @@ ROOT_Init( const int argc, const char **argv){
   u16 custom_height = 0;
   u32 custom_level = 0;
   
-  MS_field *field_beginner  = MS_CreateLocal( MS_field, .title = "beginner" , .width =    9, .height =    9, .level =  10, .global = 0, .reseed = 0);
-  MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level =  40, .global = 0, .reseed = 0);
-  MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "expert"   , .width =   30, .height =   16, .level =  99, .global = 0, .reseed = 0);
-  MS_field *field_extrem    = MS_CreateLocal( MS_field, .title = "extrem"   , .width =   32, .height =   18, .level = 127, .global = 0, .reseed = 0);
-  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "benchmark", .width = 32000, .height = 18000, .level = 127, .global = 1, .reseed = 0);
+  MS_field *field_beginner  = MS_CreateLocal( MS_field, .title = "Beginner" , .width =     9, .height =     9, .level =  10, .global = 0, .reseed = 0);
+  MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "Advanced" , .width =    16, .height =    16, .level =  40, .global = 0, .reseed = 0);
+  MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "Expert"   , .width =    30, .height =    16, .level =  99, .global = 0, .reseed = 0);
+  MS_field *field_extrem    = MS_CreateLocal( MS_field, .title = "Extrem"   , .width =    32, .height =    18, .level = 127, .global = 0, .reseed = 0);
+  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "Benchmark", .width = 32000, .height = 18000, .level = 127, .global = 1, .reseed = 0);
   
 #ifndef NO_TERM
   MS_stream *very_quiet = MS_CreateLocal( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
@@ -89,7 +89,6 @@ ROOT_Init( const int argc, const char **argv){
     MS_options opt[] = {
       { OPTSW_GRP, TERM("Options"                                ), ""               , 0  , NULL                        , NULL},
       { OPTSW_GRP, TERM("Custom"                                 ), ""               , 0  , NULL                        , NULL},
-      { OPTSW_GRP, TERM("Custom"                                 ), ""               , 0  , NULL                        , NULL},
       { OPTSW_STR, TERM("Window Title"                           ), "title"          , 0  , &custom_title               , NULL},
       { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &custom_height              , NULL},
       { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &custom_width               , NULL},
@@ -105,7 +104,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_LU , TERM(""                                       ), "element-height" , 0  , &real.element_height        , NULL},
       { OPTSW_CPY, TERM("Resize don't work well with all system" ), "no-resize"      , 'R', &no_resize                  , &opt_true},
       { OPTSW_GRP, TERM("Mode"                                   ), ""               , 0  , NULL                        , NULL},
-      { OPTSW_CPY, TERM("customaise your own"                    ), "custom"         , 0  , &custom                     , &opt_true},
+      { OPTSW_CPY, TERM("customaise your own"                    ), "custom"         , 'c', &custom                     , &opt_true},
       { OPTSW_CPY, TERM("Mimic windows minesweeper beginner mode"), "beginner"       , 'b', &minefield                  , field_beginner },
       { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &minefield                  , field_advanced },
       { OPTSW_CPY, TERM("Mimic windows minesweeper expert mode"  ), "expert"         , 'e', &minefield                  , field_expert   },
@@ -170,9 +169,9 @@ ROOT_Init( const int argc, const char **argv){
   MS_print( mss -> out, "\rMode: %s\n", minefield -> title);
   
   if( custom || mss -> deb != NULL){
-    MS_print( mss -> out, "\rwidth: %lu   ", minefield -> subwidth);
-    MS_print( mss -> out, "\r\t\theight: %lu   ", minefield -> subheight);
-    MS_print( mss -> out, "\r\t\t\t\tlevel: %lu   \n", minefield -> level);
+    MS_print( mss -> out, "\rWidth: %lu   ", minefield -> subwidth);
+    MS_print( mss -> out, "\r\t\tHeight: %lu   ", minefield -> subheight);
+    MS_print( mss -> out, "\r\t\t\t\tLevel: %lu   \n", minefield -> level);
   }
   
   root = MS_Create( freenode, MS_root,
