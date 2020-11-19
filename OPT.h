@@ -26,12 +26,14 @@ typedef struct{
 
 int arg_too_ul( char **, void *);
 int arg_too_x( char **, void *);
+int arg_too_str( char **, void *);
 int arg_too_cpy( char **, void *);
 
 
 #define OPTSW_NUL 0
 #define OPTSW_LU  ( uintptr_t)&arg_too_ul
 #define OPTSW_X   ( uintptr_t)&arg_too_x
+#define OPTSW_STR ( uintptr_t)&arg_too_str
 #define OPTSW_GRP 4
 #define OPTSW_CPY ( uintptr_t)&arg_too_cpy
 #define OPTSW_RAW 6
@@ -45,7 +47,7 @@ int
 arg_too_ul( char **arg, void *popt){
   int ret = 1;
   char *lr = NULL;
-  MS_options opt = *(MS_options *)popt;
+  MS_options opt = *( MS_options *)popt;
   assert( arg[ret] != NULL);
   *( unsigned long *)( opt.data) = strtoul( arg[ ret], &lr, 10);
   if( *lr != 0 || ( errno != 0)){
@@ -58,9 +60,9 @@ int
 arg_too_x( char **arg, void *popt){
   int ret = 1;
   char *lr = NULL;
-  MS_options opt = *(MS_options *)popt;
+  MS_options opt = *( MS_options *)popt;
   assert( arg[ret] != NULL);
-  *( unsigned long *)( opt.data) = strtoul( arg[ ret], &lr, 10);
+  *( unsigned long *)( opt.data) = strtoul( arg[ ret], &lr, 16);
   if( *lr != 0 || ( errno != 0)){
     ret = -1;
   }
@@ -68,9 +70,18 @@ arg_too_x( char **arg, void *popt){
 }
 
 int
+arg_too_str( char **arg, void *popt){
+  int ret = 1;
+  MS_options opt = *( MS_options *)popt;
+  assert( arg[ret] != NULL);
+  *( char **)( opt.data) = arg[ ret];
+  return ret;
+}
+
+int
 arg_too_cpy( char **arg, void *popt){
   int ret = 0;
-  MS_options opt = *(MS_options *)popt;
+  MS_options opt = *( MS_options *)popt;
   ( void)arg;
   *( const void **)( opt.data) = ( const void *)( opt.value);
   return ret;
@@ -158,11 +169,11 @@ help( FILE *stream, const MS_options *opt){
       MS_print( stream, "\r%s: \n", opt[ j].discript);
     }else if( ( uintptr_t)opt[ j].func == OPTSW_X){
       MS_print( stream, "\r\t --%s ", opt[ j].name);
-      MS_print( stream, "\r\t\t\t\t\t <int> ");
+      MS_print( stream, "\r\t\t\t\t\t <hex> ");
       MS_print( stream, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
     }else if( ( uintptr_t)opt[ j].func == OPTSW_LU){
       MS_print( stream, "\r\t --%s ", opt[ j].name);
-      MS_print( stream, "\r\t\t\t\t\t <hex> ");
+      MS_print( stream, "\r\t\t\t\t\t <int> ");
       MS_print( stream, "\r\t\t\t\t\t\t %s \n", opt[ j].discript);
     }else if( ( uintptr_t)opt[ j].func == OPTSW_CPY){
       MS_print( stream, "\r\t --%s ", opt[ j].name);

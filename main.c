@@ -54,14 +54,15 @@ ROOT_Init( const int argc, const char **argv){
   MS_video real;
   MS_field *minefield;
   MS_stream *mss;
-  bool no_resize;
+  bool no_resize = 0;
   
   u32 custom = FALSE; // procopt will overflow _Bool
   u32 custom_global = FALSE;
-  u32 custom_reseed;
-  u16 custom_width;
-  u16 custom_height;
-  u32 custom_level;
+  char *custom_title = "Custom";
+  u32 custom_reseed = 0;
+  u16 custom_width = 0;
+  u16 custom_height = 0;
+  u32 custom_level = 0;
   
   MS_field *field_beginner  = MS_CreateLocal( MS_field, .title = "beginner" , .width =    9, .height =    9, .level =  10, .global = 0, .reseed = 0);
   MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "advanced" , .width =   16, .height =   16, .level =  40, .global = 0, .reseed = 0);
@@ -88,8 +89,10 @@ ROOT_Init( const int argc, const char **argv){
     MS_options opt[] = {
       { OPTSW_GRP, TERM("Options"                                ), ""               , 0  , NULL                        , NULL},
       { OPTSW_GRP, TERM("Custom"                                 ), ""               , 0  , NULL                        , NULL},
-      { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &custom_width               , NULL},
+      { OPTSW_GRP, TERM("Custom"                                 ), ""               , 0  , NULL                        , NULL},
+      { OPTSW_STR, TERM("Window Title"                           ), "title"          , 0  , &custom_title               , NULL},
       { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &custom_height              , NULL},
+      { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &custom_width               , NULL},
       { OPTSW_LU , TERM("Number of mines"                        ), "level"          , 0  , &custom_level               , NULL},
       { OPTSW_LU , TERM("seed"                                   ), "reseed"         , 0  , &custom_reseed              , NULL},
 #ifdef DEBUG
@@ -138,12 +141,16 @@ ROOT_Init( const int argc, const char **argv){
   freenode = MS_CreateFreeList();
   
   if( custom){
+    custom_width  = custom_width  ? custom_width : minefield -> width;
+    custom_height = custom_height ? custom_height: minefield -> height;
+    custom_level  = custom_level  ? custom_level : minefield -> level;
+    
     if( custom_level >= ( u32)( custom_width * custom_height)){
       custom_level = ( custom_width * custom_height + 1) / 3;
       MS_print( mss -> err, TERM("\rMore mines then elments!\n"));
     }
     
-    minefield = MF_CreateField( freenode, .title = "custom" , .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = custom_reseed);
+    minefield = MF_CreateField( freenode, .title = custom_title, .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = custom_reseed);
   }else{
     minefield = MF_CreateFieldFromLocal( freenode, minefield);
   }
