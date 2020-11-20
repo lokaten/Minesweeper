@@ -168,8 +168,7 @@ address MS_FreeFromSize( FreeNode *, const address, const size_t);
 // genrate a divobj from the divaider
 static inline u32
 gen_divobj( u32 a){
-  dassert( a > 0);
-  dassert( a < U32C( 0xffff));
+  assert( a < U32C( 0xfff0));
   return (u32)( ( U64C( 0xffffffff) + (u64)a) / (u64)a);
 }
 

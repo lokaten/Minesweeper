@@ -24,7 +24,6 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
   MS_field *minefield;
   MS_mstr *mine;
   ComandStream *uncovque;
-  MS_element *data;
   u32 truewidth  = proto -> width  + !proto -> global * 2;
   u32 trueheight = proto -> height + !proto -> global * 2;
   
@@ -32,12 +31,9 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
 		    .level = proto -> level,
 		    .noelements = proto -> width * proto -> height);
   
-  data = MS_CreateArray( freenode, truewidth * trueheight, MS_element, .set = 1);
-  
   uncovque = CS_CreateStream( freenode, MS_pos);
   
   minefield = MS_Create( freenode, MS_field,
-			 .data = data,
 			 .title = proto -> title,
 			 .uncovque = uncovque,
 			 .mine = mine,
@@ -50,6 +46,8 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
 			 .level = proto -> level,
 			 .global = proto -> global,
 			 .reseed = proto -> reseed);
+  
+  minefield -> data = MS_CreateArray( freenode, truewidth * trueheight, MS_element, .set = 1);
   
   pthread_mutex_init( &minefield -> mutex_field, NULL);
   
