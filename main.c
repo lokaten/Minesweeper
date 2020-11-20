@@ -117,12 +117,12 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_CPY, TERM("Supres all output"                      ), "very-quiet"     , 'Q', &(mss                     ), very_quiet},
       { OPTSW_CPY, TERM("Debug data"                             ), "debug"          , 'd', &( def_out -> deb         ), stdout},
 #endif
-      { OPTSW_NUL, TERM(""/* Last elemnt is a NULL termination */), ""               , 0  , NULL                       , NULL}};
+      { OPTSW_NUL, TERM(""/* Last elemnt is a NULL termination */), NULL             , 0  , NULL                       , NULL}};
     
     real = ( MS_video){ .element_width = 15, .element_height = 15};
     
-    if( procopt( mss, opt, argc, argv)){
-      MS_print( mss -> err, TERM("\rWRong or broken input, pleas refer to --help\n"));
+    if( procopt( mss, opt, argc, argv) < 0){
+      MS_print( mss -> err, TERM("\rWrong or broken input, pleas refer to --help\n"));
     }
 #ifndef NO_TERM
     if( mss -> hlp){

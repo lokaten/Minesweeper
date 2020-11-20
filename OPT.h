@@ -27,6 +27,7 @@ typedef struct{
 int arg_too_ul( char **, void *);
 int arg_too_x( char **, void *);
 int arg_too_str( char **, void *);
+int arg_opt_null( char **, void *);
 int arg_too_cpy( char **, void *);
 
 
@@ -34,9 +35,8 @@ int arg_too_cpy( char **, void *);
 #define OPTSW_LU  ( uintptr_t)&arg_too_ul
 #define OPTSW_X   ( uintptr_t)&arg_too_x
 #define OPTSW_STR ( uintptr_t)&arg_too_str
-#define OPTSW_GRP 4
+#define OPTSW_GRP ( uintptr_t)&arg_opt_null
 #define OPTSW_CPY ( uintptr_t)&arg_too_cpy
-#define OPTSW_RAW 6
 
 #define OPT_MAX 200
 
@@ -79,6 +79,13 @@ arg_too_str( char **arg, void *popt){
 }
 
 int
+arg_opt_null( char **arg, void *popt){
+  ( void) arg;
+  ( void) popt;
+  return -1;
+}
+
+int
 arg_too_cpy( char **arg, void *popt){
   int ret = 0;
   MS_options opt = *( MS_options *)popt;
@@ -93,63 +100,67 @@ procopt( const MS_stream *mss, const MS_options *opt, const int argc, const char
   int i = 0;
   
   while( ++i < argc){
-    if( strstr( argv[ i], "--") == argv[ i]){
-      signed long j = -1;
-      while( ++j < OPT_MAX){
-        if( ( uintptr_t)opt[ j].func){
-          if( strcmp( argv[ i] + 2, opt[ j].name) == 0){
-            errno = 0;
-	    {
+    
+    if( !( strstr( argv[ i], "-") == argv[ i])){
+      ret = -1;
+      goto out;
+    }else{  
+      if( strstr( argv[ i], "--") == argv[ i]){
+	signed long j = -1;
+	while( ++j < OPT_MAX){
+	  if( ( uintptr_t)opt[ j].func){
+	    if( strcmp( argv[ i] + 2, opt[ j].name) == 0){
 	      int ( *func)( const char **, const void *) = ( int( *)( const char **, const void *))opt[j].func;
 	      ret = func( &argv[ i], ( const void *)&opt[ j]);
-	      if( ret > 0){
+	      if( ret >= 0){
 		i += ret;
 		ret = 0;
-	      }
-	    }
-            break;
-          }
-        }else{
-          MS_print( mss -> err, "\rOption \'%s\' dosen't exist\n", argv[ i]);
-          ret = -1;
-          break;
-        }
-      }
-      continue;
-    }
-    
-    if( strstr( argv[ i], "-") == argv[ i]){
-      unsigned long k = 0;
-      while( ++k < strlen( argv[ i])){
-        signed long j = -1;
-        while( ++j < OPT_MAX){
-          if( ( uintptr_t)opt[ j].func){
-            if( *( argv[ i] + k) &&
-                ( *( argv[ i] + k) == opt[ j].chr)){
-              errno = 0;
-	      {
-		int ( *func)( const char **, const void *) = ( int( *)( const char **, const void *))opt[j].func;
-		ret = func( &argv[ i], ( const void *)&opt[ j]);
-		if( ret > 0){
-		  i += ret;
-		  ret = 0;
-		}
+	      }else{
+		ret = -1;
+		goto out;
 	      }
 	      break;
 	    }
-          }else{
-            MS_print( mss -> err, "\rShort option \'%c\' dosen't exist\n", *( argv[ i] + k));
-            ret = -1;
-            break;
-          }
-        }
+	  }else{
+	    MS_print( mss -> err, "\rOption \'%s\' dosen't exist\n", argv[ i]);
+	    ret = -1;
+	    goto out;
+	  }
+	}
+      }else{
+	unsigned long k = 0;
+	while( ++k < strlen( argv[ i])){
+	  signed long j = -1;
+	  while( ++j < OPT_MAX){
+	    if( ( uintptr_t)opt[ j].func){
+	      if( *( argv[ i] + k) == opt[ j].chr){
+		int ( *func)( const char **, const void *) = ( int( *)( const char **, const void *))opt[j].func;
+		ret = func( &argv[ i], ( const void *)&opt[ j]);
+		if( ret >= 0){
+		  i += ret;
+		  ret = 0;
+		}else{
+		  ret = -1;
+		  goto out;
+		}
+		break;
+	      }
+	    }else{
+	      MS_print( mss -> err, "\rShort option \'%c\' dosen't exist\n", *( argv[ i] + k));
+	      ret = -1;
+	      goto out;
+	    }
+	  }
+	}
       }
-      continue;
     }
-    
-    ret = -1;
   }
 
+ out:
+  if( ret < 0){
+    MS_print( mss -> err, "\rUnexpected Comandline\n", argv[ i]);
+  }
+  
   return ret;
 }
 
