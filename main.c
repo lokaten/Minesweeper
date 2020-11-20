@@ -64,6 +64,8 @@ ROOT_Init( const int argc, const char **argv){
   u16 custom_height = 0;
   u32 custom_level = 0;
   
+  u32 benchmark = FALSE;
+  
   MS_field *field_beginner  = MS_CreateLocal( MS_field, .title = "Beginner" , .width =     9, .height =     9, .level =  10, .global = 0, .reseed = 0);
   MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "Advanced" , .width =    16, .height =    16, .level =  40, .global = 0, .reseed = 0);
   MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "Expert"   , .width =    30, .height =    16, .level =  99, .global = 0, .reseed = 0);
@@ -109,7 +111,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &minefield                  , field_advanced },
       { OPTSW_CPY, TERM("Mimic windows minesweeper expert mode"  ), "expert"         , 'e', &minefield                  , field_expert   },
       { OPTSW_CPY, TERM(""                                       ), "extrem"         , 'x', &minefield                  , field_extrem   },
-      { OPTSW_CPY, TERM(""                                       ), "benchmark"      , 'B', &minefield                  , field_benchmark},
+      { OPTSW_CPY, TERM(""                                       ), "benchmark"      , 'B', &benchmark                  , &opt_true      },
 #ifndef NO_TERM
       { OPTSW_GRP, TERM("Output"                                 ), ""               , 0  , NULL                       , NULL},
       { OPTSW_CPY, TERM("Print generic help mesage"              ), "help"           , 'h', &( def_out -> hlp         ), stdout},
@@ -150,6 +152,8 @@ ROOT_Init( const int argc, const char **argv){
     }
     
     minefield = MF_CreateField( freenode, .title = custom_title, .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = custom_reseed);
+  }else if( benchmark){
+    minefield = MF_CreateFieldFromLocal( freenode, field_benchmark);
   }else{
     minefield = MF_CreateFieldFromLocal( freenode, minefield);
   }
@@ -183,7 +187,7 @@ ROOT_Init( const int argc, const char **argv){
   
   root -> drawque = CS_CreateStream( freenode, DrawComand);
   
-  if( strstr( minefield -> title, field_benchmark -> title)){
+  if( benchmark){
     setminefield_async( ( void *)root);
     setzero( minefield, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
     uncov_elements( minefield, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
