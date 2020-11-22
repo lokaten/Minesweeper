@@ -101,55 +101,47 @@ procopt( const MS_stream *mss, const MS_options *opt, const int argc, const char
   
   while( ++i < argc){
     
-    if( !( strstr( argv[ i], "-") == argv[ i])){
+    if( ( strstr( argv[ i], "-") != argv[ i])){
       ret = -1;
       goto out;
-    }else{  
-      if( strstr( argv[ i], "--") == argv[ i]){
-	signed long j = -1;
+    }
+    
+    if( strstr( argv[ i], "--") == argv[ i]){
+      unsigned long j = 0;
+      while( ++j < OPT_MAX){
+	if( opt[ j].func == 0){
+	  MS_print( mss -> err, "\rOption \'%s\' dosen't exist\n", argv[ i]);
+	  ret = -1;
+	  goto out;
+	}
+	if( strcmp( argv[ i] + 2, opt[ j].name) == 0){
+	  int ( *func)( const char **, const void *) = ( int( *)( const char **, const void *))opt[j].func;
+	  ret = func( &argv[ i], ( const void *)&opt[ j]);
+	  if( ret < 0){
+	    goto out;
+	  }
+	  i += ret;
+	  break;
+	}
+      }
+    }else{
+      unsigned long k = 0;
+      while( ++k < strlen( argv[ i])){
+	unsigned long j = 0;
 	while( ++j < OPT_MAX){
-	  if( ( uintptr_t)opt[ j].func){
-	    if( strcmp( argv[ i] + 2, opt[ j].name) == 0){
-	      int ( *func)( const char **, const void *) = ( int( *)( const char **, const void *))opt[j].func;
-	      ret = func( &argv[ i], ( const void *)&opt[ j]);
-	      if( ret >= 0){
-		i += ret;
-		ret = 0;
-	      }else{
-		ret = -1;
-		goto out;
-	      }
-	      break;
-	    }
-	  }else{
-	    MS_print( mss -> err, "\rOption \'%s\' dosen't exist\n", argv[ i]);
+	  if( opt[ j].func == 0){
+	    MS_print( mss -> err, "\rShort option \'%c\' dosen't exist\n", *( argv[ i] + k));
 	    ret = -1;
 	    goto out;
 	  }
-	}
-      }else{
-	unsigned long k = 0;
-	while( ++k < strlen( argv[ i])){
-	  signed long j = -1;
-	  while( ++j < OPT_MAX){
-	    if( ( uintptr_t)opt[ j].func){
-	      if( *( argv[ i] + k) == opt[ j].chr){
-		int ( *func)( const char **, const void *) = ( int( *)( const char **, const void *))opt[j].func;
-		ret = func( &argv[ i], ( const void *)&opt[ j]);
-		if( ret >= 0){
-		  i += ret;
-		  ret = 0;
-		}else{
-		  ret = -1;
-		  goto out;
-		}
-		break;
-	      }
-	    }else{
-	      MS_print( mss -> err, "\rShort option \'%c\' dosen't exist\n", *( argv[ i] + k));
-	      ret = -1;
+	  if( *( argv[ i] + k) == opt[ j].chr){
+	    int ( *func)( const char **, const void *) = ( int( *)( const char **, const void *))opt[j].func;
+	    ret = func( &argv[ i], ( const void *)&opt[ j]);
+	    if( ret < 0){
 	      goto out;
 	    }
+	    i += ret;
+	    break;
 	  }
 	}
       }

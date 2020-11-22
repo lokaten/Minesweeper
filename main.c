@@ -25,9 +25,7 @@ FUNC_DEF( void, FUNC_quit){
   assert( parm -> root != NULL);
   assert( parm -> root -> mss != NULL);
   f = parm -> root -> mss -> out;
-  if( parm -> root -> freenode != NULL){
-    ROOT_FreeRoot( parm -> root);
-  }
+  ROOT_FreeRoot( parm -> root);
   MS_print( f, TERM("\rBye!                                \n"));
   exit( ret);
 }
@@ -36,7 +34,6 @@ static inline const MS_root *
 ROOT_FreeRoot( const MS_root *proot){
   const MS_root *root;
   assert( proot != NULL);
-  assert( proot -> freenode != NULL);
   root = MS_CreateLocalFromLocal( MS_root, proot);
   GW_Free( root -> freenode, root -> GW);
   MS_Free( root -> freenode, proot);
@@ -95,7 +92,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &custom_height              , NULL},
       { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &custom_width               , NULL},
       { OPTSW_LU , TERM("Number of mines"                        ), "level"          , 0  , &custom_level               , NULL},
-      { OPTSW_LU , TERM("seed"                                   ), "reseed"         , 0  , &custom_reseed              , NULL},
+      { OPTSW_X  , TERM("seed"                                   ), "reseed"         , 0  , &custom_reseed              , NULL},
 #ifdef DEBUG
       { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &custom_global              , &opt_true},
 #endif
@@ -138,7 +135,7 @@ ROOT_Init( const int argc, const char **argv){
 #ifdef DEBUG
   debug_out = mss -> deb;
 #endif
-
+  
   freenode = MS_CreateFreeList();
   
   if( custom){
