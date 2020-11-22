@@ -122,6 +122,8 @@ GW_Init( FreeNode *freenode, MS_root *root){
   
   SDL_EventState( SDL_MOUSEMOTION  , SDL_IGNORE);
   
+  root -> idle = 0;
+  
   return GW;
 }
 
@@ -142,7 +144,7 @@ event_dispatch( MS_root *root){
   
   assert( GW);
     
-  if( SDL_WaitEventTimeout( &event, U64C( 1000))){ // U64C( 75) + ( ( ( u64)MS_rand( MS_rand_seed()) * U64C( 100)) >> 32))){
+  if( SDL_WaitEventTimeout( &event, root -> idle? U64C( 1000): 0)){ // U64C( 75) + ( ( ( u64)MS_rand( MS_rand_seed()) * U64C( 100)) >> 32))){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
       quit( root);
@@ -271,6 +273,7 @@ void
 draw( MS_root *root){
   GraphicWraper *GW = ( GraphicWraper *)root -> GW;
   DrawComand *dc = NULL;
+  u64 tutime = getnanosec();
   
   while( ( dc = ( DrawComand *)CS_Releas( root -> drawque)) != NULL){ 
     SDL_Texture *tile = NULL;
@@ -311,7 +314,13 @@ draw( MS_root *root){
     SDL_SetRenderTarget( GW -> renderer, NULL);
     
     CS_Finish( root -> drawque, dc);
+    
+    if( getnanosec() > tutime + 33000000){
+      break;
+    }
   }
+  
+  root -> idle = dc == NULL;
   
   SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = (int)GW -> logical.realwidth, .h = (int)GW -> logical.realheight},
 		    &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_NONE);
