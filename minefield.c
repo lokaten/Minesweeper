@@ -160,9 +160,14 @@ uncov_workthread( void *root){
     
     pos = ( MS_pos *)CS_WaitReleas( minefield -> uncovque);
     
-    assert( element != NULL);
+    assert( pos != NULL);
     
     pthread_mutex_lock( &minefield -> mutex_field);
+    
+    if( acse( *minefield, pos -> x, pos -> y) -> cover == 1){
+      pthread_mutex_unlock( &minefield -> mutex_field);
+      continue;
+    }
     
     element = uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *pos, minefield -> mine);
     
@@ -200,6 +205,11 @@ uncov( void *root){
   while likely( ( pos = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
     
     pthread_mutex_lock( &minefield -> mutex_field);
+    
+    if( acse( *minefield, pos -> x, pos -> y) -> cover == 1){
+      pthread_mutex_unlock( &minefield -> mutex_field);
+      continue;
+    }
     
     element = uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *pos, minefield -> mine);
     
