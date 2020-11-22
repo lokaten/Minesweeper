@@ -120,7 +120,7 @@ GW_Init( FreeNode *freenode, MS_root *root){
   SDL_EventState( SDL_FINGERDOWN   , SDL_IGNORE);
   SDL_EventState( SDL_FINGERUP     , SDL_IGNORE);
   
-  // SDL_EventState( SDL_MOUSEMOTION  , SDL_IGNORE);
+  SDL_EventState( SDL_MOUSEMOTION  , SDL_IGNORE);
   
   return GW;
 }
@@ -142,7 +142,7 @@ event_dispatch( MS_root *root){
   
   assert( GW);
     
-  if( SDL_WaitEventTimeout( &event, U64C( 75) + ( ( ( u64)MS_rand( MS_rand_seed()) * U64C( 100)) >> 32))){
+  if( SDL_WaitEventTimeout( &event, U64C( 1000))){ // U64C( 75) + ( ( ( u64)MS_rand( MS_rand_seed()) * U64C( 100)) >> 32))){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
       quit( root);
