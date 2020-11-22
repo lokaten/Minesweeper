@@ -163,8 +163,9 @@ event_dispatch( MS_root *root){
 	case 'e':
 	  if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
 	    uncov_elements( minefield, GW -> mfvid);
+	    
+	    uncov( root);
 	  }
-	  uncov( root);
 	  break;
 	case SDLK_LEFT:
 	case 'h':
@@ -224,16 +225,6 @@ mousebuttondown( MS_root * root,
   case SDL_BUTTON_MIDDLE:
     {
       MS_video vid;
-      MS_pos *el;
-      
-      while( ( el = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
-	acse( *minefield, el -> x, el -> y) -> cover = 1;
-	CS_Finish( minefield -> uncovque, el);
-      }
-      
-      if( ( minefield -> mine -> uncoverd == ( minefield -> mine -> noelements - minefield -> mine -> level)) || ( minefield -> mine -> hit)){
-	break;
-      }
       
       vid = ( MS_video){ .xdiff = postion.x, .ydiff = postion.y, .width  = 1, .height = 1};
       
@@ -254,6 +245,9 @@ mousebuttondown( MS_root * root,
   case SDL_BUTTON_RIGHT:
     {
       MS_element *element = acse( *minefield, postion.x, postion.y);
+      
+      pthread_mutex_lock( &root -> minefield -> mutex_field);
+      
       if( element -> flag){
 	element -> flag = 0;
 	--minefield -> mine -> flaged;
@@ -263,6 +257,8 @@ mousebuttondown( MS_root * root,
       }
       
       drawelement( root -> drawque, element, postion.x, postion.y);
+      
+      pthread_mutex_unlock( &root -> minefield -> mutex_field);
     }
   default:
     break;

@@ -183,8 +183,6 @@ ROOT_Init( const int argc, const char **argv){
 		    .no_resize = no_resize);
   
   root -> drawque = CS_CreateStream( freenode, DrawComand);
-    
-  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   
   if( benchmark){
     setminefield_async( ( void *)root);
@@ -193,6 +191,8 @@ ROOT_Init( const int argc, const char **argv){
     uncov( ( void *)root);
     quit( root);
   }
+  
+  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   
   root -> GW = GW_Init( root -> freenode, root);
   
@@ -219,21 +219,27 @@ main( const int argc, const char** argv){
   gamestart = tutime;
   
   while( TRUE){
+    
+    event_dispatch( root);
+    
+    pthread_mutex_lock( &root -> minefield -> mutex_field);
+    
     tutime = getnanosec();
     if( !root -> minefield -> mine -> uncoverd || gameover){
       gamestart = tutime;
     }
     
-    event_dispatch( root);
-    
     if unlikely( root -> minefield -> mine -> hit){
       MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> width, .height = root -> minefield -> height};
+      
+      pthread_mutex_unlock( &root -> minefield -> mutex_field);
+      
       uncov_elements( root -> minefield, mfvid);
       
       uncov( ( void *) root);
+      
+      pthread_mutex_lock( &root -> minefield -> mutex_field);
     }
-    
-    pthread_mutex_lock( &root -> minefield -> mutex_field);
     
     assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
     assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
