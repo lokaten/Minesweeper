@@ -171,6 +171,7 @@ uncov_workthread( void *root){
     CS_Finish( minefield -> uncovque, pos);
     
     if likely( element -> count == 0){
+      pthread_mutex_lock( &minefield -> mutex_field);
       addelement( minefield, pos -> x + 1, pos -> y + 1);
       addelement( minefield, pos -> x - 1, pos -> y + 1);
       addelement( minefield, pos -> x    , pos -> y + 1);
@@ -181,6 +182,7 @@ uncov_workthread( void *root){
       
       addelement( minefield, pos -> x + 1, pos -> y    );
       addelement( minefield, pos -> x - 1, pos -> y    );
+      pthread_mutex_unlock( &minefield -> mutex_field);
     }
   }
   
@@ -206,6 +208,7 @@ uncov( void *root){
     CS_Finish( minefield -> uncovque, pos);
     
     if likely( element -> count == 0){
+      pthread_mutex_lock( &minefield -> mutex_field);
       addelement( minefield, pos -> x + 1, pos -> y + 1);
       addelement( minefield, pos -> x - 1, pos -> y + 1);
       addelement( minefield, pos -> x    , pos -> y + 1);
@@ -216,6 +219,7 @@ uncov( void *root){
       
       addelement( minefield, pos -> x + 1, pos -> y    );
       addelement( minefield, pos -> x - 1, pos -> y    );
+      pthread_mutex_unlock( &minefield -> mutex_field);
     }
   }
     
