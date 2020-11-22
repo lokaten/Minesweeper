@@ -67,8 +67,8 @@ extern "C" {
   void *setminefield( void *);
   void setminefield_async( void *);
   void MF_FreeField( FreeNode *, const MS_field *);
+  void *uncov_workthread( void *);
   void *uncov( void *);
-  void uncov_async( void *);
   void uncov_elements( MS_field *,  MS_video);
   
 #ifdef __cplusplus

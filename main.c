@@ -183,12 +183,14 @@ ROOT_Init( const int argc, const char **argv){
 		    .no_resize = no_resize);
   
   root -> drawque = CS_CreateStream( freenode, DrawComand);
+    
+  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   
   if( benchmark){
     setminefield_async( ( void *)root);
     setzero( minefield, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
     uncov_elements( minefield, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
-    uncov_async( ( void *)root);
+    //uncov( ( void *)root);
     quit( root);
   }
   
@@ -228,7 +230,7 @@ main( const int argc, const char** argv){
       MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> width, .height = root -> minefield -> height};
       uncov_elements( root -> minefield, mfvid);
       
-      uncov_async( ( void *) root);
+      //uncov( ( void *) root);
     }
     
     pthread_mutex_lock( &root -> minefield -> mutex_field);

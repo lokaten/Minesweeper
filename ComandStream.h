@@ -29,6 +29,8 @@ typedef struct{
   pthread_mutex_t mutex_finish;
   pthread_mutex_t mutex_write;
   pthread_mutex_t mutex_read;
+  pthread_cond_t  cond_releas;
+  _Bool waiting;
 }ComandStream;
 
 static const size_t true_blk_size = 512;
@@ -36,6 +38,7 @@ static const size_t true_blk_size = 512;
 static inline ComandStream *CS_CreateStreamFromSize( FreeNode *, const size_t);
 static inline void *CS_Fetch( ComandStream *);
 static inline void CS_Push( ComandStream *, const void *);
+static inline void *CS_WaitReleas( ComandStream *);
 static inline void *CS_Releas( ComandStream *);
 static inline void CS_Finish( ComandStream *, const void *);
 static inline void CS_Free( FreeNode *, ComandStream *);
@@ -81,6 +84,9 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
   pthread_mutex_init( &Stream -> mutex_finish, NULL);
   pthread_mutex_init( &Stream -> mutex_write , NULL);
   pthread_mutex_init( &Stream -> mutex_read  , NULL);
+  pthread_cond_init(  &Stream -> cond_releas , NULL);
+  
+  Stream -> waiting = 0;
   
   return Stream;
 }
@@ -134,9 +140,36 @@ CS_Push( ComandStream *Stream, const void *ptr){
   Stream -> push = Stream -> push + Stream -> size;
   
   pthread_mutex_unlock( &Stream -> mutex_push);
+  
+  if unlikely( //Stream -> push == Stream -> blk_push &&
+	       Stream -> waiting){
+    
+    pthread_cond_signal( &Stream -> cond_releas);
+  }
+  
   pthread_mutex_unlock( &Stream -> mutex_write);
 }
 
+static inline void *
+CS_WaitReleas( ComandStream *Stream){
+  address ret = 0;
+  assert( Stream != NULL);
+  
+  while( ( ret = ( address)CS_Releas( Stream)) == 0){
+    
+    pthread_mutex_lock( &Stream -> mutex_push);
+    
+    Stream -> waiting = 1;
+    
+    pthread_cond_wait( &Stream -> cond_releas, &Stream -> mutex_push);
+    
+    pthread_mutex_unlock( &Stream -> mutex_push);
+  }
+  
+  Stream -> waiting = 0;
+  
+  return ( void *)ret;
+}
 
 //
 // return a pointer to the next element in the stream
