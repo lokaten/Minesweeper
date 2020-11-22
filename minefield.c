@@ -130,7 +130,7 @@ setminefield( void *root){
   minefield -> mine -> uncoverd = 0;
   
   minefield -> mine -> hit = 0;
-  
+    
   pthread_mutex_unlock( &minefield -> mutex_field);
   
   return NULL;
@@ -152,33 +152,36 @@ addelement( const MS_field *minefield, s16 x, s16 y){
 void *
 uncov_workthread( void *root){
   MS_field *minefield = ( ( MS_root *)root) -> minefield;
-  MS_pos *element;
+  MS_pos *pos;
+  MS_element *element;
   assert( minefield != NULL);
   
   while( TRUE){
     
-    element = ( MS_pos *)CS_WaitReleas( minefield -> uncovque);
+    pos = ( MS_pos *)CS_WaitReleas( minefield -> uncovque);
     
     assert( element != NULL);
     
     pthread_mutex_lock( &minefield -> mutex_field);
     
-    if likely( uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *element, minefield -> mine) -> count == 0){
-      addelement( minefield, element -> x + 1, element -> y + 1);
-      addelement( minefield, element -> x - 1, element -> y + 1);
-      addelement( minefield, element -> x    , element -> y + 1);
-      
-      addelement( minefield, element -> x + 1, element -> y - 1);
-      addelement( minefield, element -> x - 1, element -> y - 1);
-      addelement( minefield, element -> x    , element -> y - 1);
-      
-      addelement( minefield, element -> x + 1, element -> y    );
-      addelement( minefield, element -> x - 1, element -> y    );
-    }
+    element = uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *pos, minefield -> mine);
     
     pthread_mutex_unlock( &minefield -> mutex_field);
     
-    CS_Finish( minefield -> uncovque, element);
+    CS_Finish( minefield -> uncovque, pos);
+    
+    if likely( element -> count == 0){
+      addelement( minefield, pos -> x + 1, pos -> y + 1);
+      addelement( minefield, pos -> x - 1, pos -> y + 1);
+      addelement( minefield, pos -> x    , pos -> y + 1);
+      
+      addelement( minefield, pos -> x + 1, pos -> y - 1);
+      addelement( minefield, pos -> x - 1, pos -> y - 1);
+      addelement( minefield, pos -> x    , pos -> y - 1);
+      
+      addelement( minefield, pos -> x + 1, pos -> y    );
+      addelement( minefield, pos -> x - 1, pos -> y    );
+    }
   }
   
   return NULL;
@@ -188,29 +191,32 @@ uncov_workthread( void *root){
 void *
 uncov( void *root){
   MS_field *minefield = ( ( MS_root *)root) -> minefield;
-  MS_pos *element;
+  MS_pos *pos;
+  MS_element *element;
   assert( minefield != NULL);
   
-  while likely( ( element = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
+  while likely( ( pos = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
     
     pthread_mutex_lock( &minefield -> mutex_field);
     
-    if likely( uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *element, minefield -> mine) -> count == 0){
-      addelement( minefield, element -> x + 1, element -> y + 1);
-      addelement( minefield, element -> x - 1, element -> y + 1);
-      addelement( minefield, element -> x    , element -> y + 1);
-      
-      addelement( minefield, element -> x + 1, element -> y - 1);
-      addelement( minefield, element -> x - 1, element -> y - 1);
-      addelement( minefield, element -> x    , element -> y - 1);
-      
-      addelement( minefield, element -> x + 1, element -> y    );
-      addelement( minefield, element -> x - 1, element -> y    );
-    }
+    element = uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *pos, minefield -> mine);
     
     pthread_mutex_unlock( &minefield -> mutex_field);
     
-    CS_Finish( minefield -> uncovque, element);
+    CS_Finish( minefield -> uncovque, pos);
+    
+    if likely( element -> count == 0){
+      addelement( minefield, pos -> x + 1, pos -> y + 1);
+      addelement( minefield, pos -> x - 1, pos -> y + 1);
+      addelement( minefield, pos -> x    , pos -> y + 1);
+      
+      addelement( minefield, pos -> x + 1, pos -> y - 1);
+      addelement( minefield, pos -> x - 1, pos -> y - 1);
+      addelement( minefield, pos -> x    , pos -> y - 1);
+      
+      addelement( minefield, pos -> x + 1, pos -> y    );
+      addelement( minefield, pos -> x - 1, pos -> y    );
+    }
   }
     
   return NULL;
