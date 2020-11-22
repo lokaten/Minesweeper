@@ -141,7 +141,7 @@ CS_Push( ComandStream *Stream, const void *ptr){
   
   pthread_mutex_unlock( &Stream -> mutex_push);
   
-  if unlikely( //Stream -> push == Stream -> blk_push &&
+  if unlikely( Stream -> push == Stream -> blk_push + Stream -> size &&
 	       Stream -> waiting){
     
     pthread_cond_signal( &Stream -> cond_releas);
