@@ -50,7 +50,6 @@ extern "C" {
     const u32 level;
     const u32 global;
     const u32 reseed;
-    pthread_mutex_t mutex_field;
   }MS_field;
   
   static inline MS_element *acse( const MS_field, int, int);
@@ -65,7 +64,6 @@ extern "C" {
   MS_field *MF_CreateFieldFromLocal( FreeNode *, const MS_field *);
 #define MF_CreateField( freenode, ...) MF_CreateFieldFromLocal( freenode, &( MS_field){__VA_ARGS__})
   void *setminefield( void *);
-  void setminefield_async( void *);
   void MF_FreeField( FreeNode *, const MS_field *);
   void *uncov_workthread( void *);
   void *uncov( void *);

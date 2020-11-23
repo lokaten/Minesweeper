@@ -155,17 +155,13 @@ event_dispatch( MS_root *root){
 	  quit( root);
 	case SDLK_F2:
 	case 'r':
-	  if( minefield -> mine -> uncoverd || minefield -> mine -> flaged){
-	    setminefield_async( ( void *)root);
-	  }
+	  setminefield( ( void *)root);
+	  
 	  break;
 	case SDLK_F3:
 	case 'e':
-	  if( minefield -> mine -> uncoverd < ( minefield -> mine -> noelements - minefield -> mine -> flaged)){
-	    uncov_elements( minefield, GW -> mfvid);
-	    
-	    uncov( root);
-	  }
+	  uncov_elements( minefield, GW -> mfvid);
+	  
 	  break;
 	case SDLK_LEFT:
 	case 'h':
@@ -246,8 +242,6 @@ mousebuttondown( MS_root * root,
     {
       MS_element *element = acse( *minefield, postion.x, postion.y);
       
-      pthread_mutex_lock( &root -> minefield -> mutex_field);
-      
       if( element -> flag){
 	element -> flag = 0;
 	--minefield -> mine -> flaged;
@@ -257,8 +251,6 @@ mousebuttondown( MS_root * root,
       }
       
       drawelement( root -> drawque, element, postion.x, postion.y);
-      
-      pthread_mutex_unlock( &root -> minefield -> mutex_field);
     }
   default:
     break;

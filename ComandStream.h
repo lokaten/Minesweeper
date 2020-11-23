@@ -30,6 +30,7 @@ typedef struct{
   pthread_mutex_t mutex_write;
   pthread_mutex_t mutex_read;
   pthread_cond_t  cond_releas;
+  pthread_mutexattr_t attr_mutex;
   _Bool waiting;
 }ComandStream;
 
@@ -38,6 +39,7 @@ static const size_t true_blk_size = 512;
 static inline ComandStream *CS_CreateStreamFromSize( FreeNode *, const size_t);
 static inline void *CS_Fetch( ComandStream *);
 static inline void CS_Push( ComandStream *, const void *);
+static inline void CS_Signal( ComandStream *);
 static inline void *CS_WaitReleas( ComandStream *);
 static inline void *CS_Releas( ComandStream *);
 static inline void CS_Finish( ComandStream *, const void *);
@@ -78,12 +80,14 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
   Stream -> push   = addr;
   Stream -> releas = addr;
   Stream -> finish = addr;
-  
+
+  pthread_mutexattr_init( &Stream -> attr_mutex);
+  pthread_mutexattr_settype( &Stream -> attr_mutex, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init( &Stream -> mutex_fetch , NULL);
   pthread_mutex_init( &Stream -> mutex_push  , NULL);
   pthread_mutex_init( &Stream -> mutex_finish, NULL);
-  pthread_mutex_init( &Stream -> mutex_write , NULL);
-  pthread_mutex_init( &Stream -> mutex_read  , NULL);
+  pthread_mutex_init( &Stream -> mutex_write , &Stream -> attr_mutex);
+  pthread_mutex_init( &Stream -> mutex_read  , &Stream -> attr_mutex);
   pthread_cond_init(  &Stream -> cond_releas , NULL);
   
   Stream -> waiting = 0;
@@ -95,7 +99,7 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
 
 static inline void *
 CS_Fetch( ComandStream *Stream){
-  address ret;
+  address ret = 0;
   assert( Stream != NULL);
   
   pthread_mutex_lock( &Stream -> mutex_write);
@@ -148,6 +152,14 @@ CS_Push( ComandStream *Stream, const void *ptr){
   }
   
   pthread_mutex_unlock( &Stream -> mutex_write);
+}
+
+static inline void
+CS_Signal( ComandStream *Stream){
+  if( Stream -> waiting){
+    
+    pthread_cond_signal( &Stream -> cond_releas);
+  }
 }
 
 static inline void *
