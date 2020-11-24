@@ -138,7 +138,6 @@ GW_Free( FreeNode *freenode, void *GW){
 
 void
 event_dispatch( MS_root *root){
-  MS_field *minefield = root -> minefield;
   GraphicWraper *GW   = ( GraphicWraper *)root -> GW;
   SDL_Event event;
   
@@ -160,7 +159,9 @@ event_dispatch( MS_root *root){
 	  break;
 	case SDLK_F3:
 	case 'e':
-	  uncov_elements( minefield, GW -> mfvid);
+	  uncov_elements( root, GW -> mfvid);
+	  
+	  uncov( root);
 	  
 	  break;
 	case SDLK_LEFT:
@@ -233,7 +234,7 @@ mousebuttondown( MS_root * root,
 	setzero( minefield, vid);
       }
       
-      uncov_elements( minefield, vid);
+      uncov_elements( root, vid);
       
       uncov( root);
       break;

@@ -193,7 +193,7 @@ ROOT_Init( const int argc, const char **argv){
   }
   
   pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
-  
+    
   root -> GW = GW_Init( root -> freenode, root);
   
   draw( root);
@@ -226,18 +226,18 @@ main( const int argc, const char** argv){
     if( !root -> minefield -> mine -> uncoverd || gameover){
       gamestart = tutime;
     }
-    
-    if unlikely( root -> minefield -> mine -> hit){
-      MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> width, .height = root -> minefield -> height};
-      
-      uncov_elements( root -> minefield, mfvid);
-    }
-    
+        
     assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
     assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
     
     if( !gameover){
       if unlikely( root -> minefield -> mine -> hit){
+	MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> width, .height = root -> minefield -> height};
+	
+	uncov_elements( root, mfvid);
+	
+	uncov( root);
+	
 	MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!               "));
 	gameover = TRUE;
       }else if unlikely( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){

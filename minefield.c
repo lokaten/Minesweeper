@@ -7,10 +7,9 @@
 #include "minefield.h"
 #include "userinterface.h"
 
-static inline void *uncov_inline( void *);
-static inline MS_element *uncover_element( const MS_field, ComandStream *, MS_pos, MS_mstr *);
+static inline MS_element *uncover_element( MS_field, ComandStream *, MS_pos, MS_mstr *);
 static inline MS_element *setmine_element( MS_field, u32, MS_mstr *);
-static inline void addelement( const MS_field *, s16, s16);
+static inline void addelement( MS_field *, s16, s16);
 
 static inline u32
 acse_u( const MS_field field, int x, int y){
@@ -48,6 +47,11 @@ MF_CreateFieldFromLocal( FreeNode *freenode, const MS_field *proto){
   
   minefield -> data = NULL;
   
+  pthread_mutexattr_init( &minefield -> attr_mutex);
+  pthread_mutexattr_settype( &minefield -> attr_mutex, PTHREAD_MUTEX_RECURSIVE);
+  
+  pthread_mutex_init( &minefield -> mutex_field, &minefield -> attr_mutex);
+  
   return minefield;
 }
 
@@ -74,11 +78,11 @@ setminefield( void *root){
   
   i = minefield -> width * ( minefield -> subheight + 1);
   
-  uncov_inline( root);
-  
   if( minefield -> data == NULL){
     minefield -> data = MS_CreateArray( ( ( MS_root *) root) -> freenode, minefield -> width * minefield -> height, MS_element, .set = 1);
   }
+  
+  pthread_mutex_lock( &minefield -> mutex_field);
   
   minefield -> mine -> flaged = 0;
   
@@ -127,18 +131,25 @@ setminefield( void *root){
   
   minefield -> mine -> hit = 0;
   
+  pthread_mutex_unlock( &minefield -> mutex_field);
+  
   return NULL;
 }
 
 
 static inline void
-addelement( const MS_field *minefield, s16 x, s16 y){
-  if( acse( *minefield, x, y) -> cover && !acse( *minefield, x, y) -> flag){
+addelement( MS_field *minefield, s16 x, s16 y){
+  
+  if( acse( *minefield, x, y) -> cover       &&
+      acse( *minefield, x, y) -> count == 15 &&
+      !acse( *minefield, x, y) -> flag){
     MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
-    pos -> x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
-    pos -> y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
-    acse( *minefield, x, y) -> cover = 0;
-    CS_Push( minefield -> uncovque, pos);
+    if( pos != NULL){
+      pos -> x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
+      pos -> y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
+      acse( *minefield, pos -> x, pos -> y) -> cover = 0;
+      CS_Push( minefield -> uncovque, pos);
+    }
   }
 }
 
@@ -156,7 +167,7 @@ uncov_workthread( void *root){
     
     assert( pos != NULL);
     
-    if( acse( *minefield, pos -> x, pos -> y) -> cover == 1){
+    if( acse( *minefield, pos -> x, pos -> y) -> count != 15){
       continue;
     }
     
@@ -188,45 +199,14 @@ uncov( void *root){
   return NULL;
 }
 
-static inline void *
-uncov_inline( void *root){
-  MS_field *minefield = ( ( MS_root *)root) -> minefield;
-  MS_pos *pos;
-  MS_element *element;
-  assert( minefield != NULL);
-  
-  while likely( ( pos = ( MS_pos *)CS_Releas( minefield -> uncovque)) != NULL){
-    
-    if( acse( *minefield, pos -> x, pos -> y) -> cover == 1){
-      continue;
-    }
-    
-    element = uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *pos, minefield -> mine);
-    
-    CS_Finish( minefield -> uncovque, pos);
-    
-    if likely( element -> count == 0){
-      addelement( minefield, pos -> x + 1, pos -> y + 1);
-      addelement( minefield, pos -> x - 1, pos -> y + 1);
-      addelement( minefield, pos -> x    , pos -> y + 1);
-      
-      addelement( minefield, pos -> x + 1, pos -> y - 1);
-      addelement( minefield, pos -> x - 1, pos -> y - 1);
-      addelement( minefield, pos -> x    , pos -> y - 1);
-      
-      addelement( minefield, pos -> x + 1, pos -> y    );
-      addelement( minefield, pos -> x - 1, pos -> y    );
-    }
-  }
-  
-  return NULL;
-}
-
 
 static inline MS_element *
-uncover_element( const MS_field minefield, ComandStream *drawque, MS_pos postion, MS_mstr *mine){
+uncover_element( MS_field minefield, ComandStream *drawque, MS_pos postion, MS_mstr *mine){
   
   if likely( acse( minefield, postion.x, postion.y) -> count == 15){
+
+    pthread_mutex_lock( &minefield.mutex_field);
+    
     mine -> uncoverd += 1;
     
     acse( minefield, postion.x, postion.y) -> count = 0;
@@ -243,9 +223,11 @@ uncover_element( const MS_field minefield, ComandStream *drawque, MS_pos postion
     
     acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x + 1, postion.y    ), mine) -> mine;
     acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x - 1, postion.y    ), mine) -> mine;
+    
+    drawelement( drawque, acse( minefield, postion.x, postion.y), postion.x, postion.y);
+    
+    pthread_mutex_unlock( &minefield.mutex_field);
   }
-  
-  drawelement( drawque, acse( minefield, postion.x, postion.y), postion.x, postion.y);
   
   return acse( minefield, postion.x, postion.y);
 }
@@ -269,20 +251,21 @@ setmine_element( MS_field minefield, u32 index, MS_mstr *mine){
 }
 
 
+
 void
-uncov_elements( MS_field *minefield,
+uncov_elements( void *root,
 		MS_video  vid){
   unsigned long i;
-  int x, y;
-  assert( minefield != NULL);
+  MS_pos postion;
+  assert( root != NULL);
   
   i = vid.width * vid.height;
-  
-  while( i--){
-    x = ( s32)( i % vid.width) + vid.xdiff;
-    y = ( s32)( i / vid.width) + vid.ydiff;
     
-    addelement( minefield, x, y);
+  while( i--){
+    postion.x = ( s32)( i % vid.width) + vid.xdiff;
+    postion.y = ( s32)( i / vid.width) + vid.ydiff;
+
+    addelement( ( ( MS_root *) root) -> minefield, postion.x, postion.y);
   }
 }
 
@@ -296,6 +279,8 @@ setzero( MS_field *minefield,
   
   i = vid.width * vid.height;
   
+  pthread_mutex_lock( &minefield -> mutex_field);
+  
   while( i--){
     x = ( s32)( i % vid.width) + vid.xdiff;
     y = ( s32)( i / vid.width) + vid.ydiff;
@@ -307,4 +292,6 @@ setzero( MS_field *minefield,
       ++minefield -> mine ->  set;
     }
   }
+
+  pthread_mutex_unlock( &minefield -> mutex_field);
 }

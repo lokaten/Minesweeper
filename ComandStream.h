@@ -58,7 +58,7 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
     blk_size -= blk_size % size;
     blk_size -= blk_size % sizeof( address);
   }
-
+  
   assert( blk_size >= size);
   
   Stream = MS_Create( freenode, ComandStream,
@@ -80,7 +80,7 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
   Stream -> push   = addr;
   Stream -> releas = addr;
   Stream -> finish = addr;
-
+  
   pthread_mutexattr_init( &Stream -> attr_mutex);
   pthread_mutexattr_settype( &Stream -> attr_mutex, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init( &Stream -> mutex_fetch , NULL);
@@ -102,7 +102,10 @@ CS_Fetch( ComandStream *Stream){
   address ret = 0;
   assert( Stream != NULL);
   
-  pthread_mutex_lock( &Stream -> mutex_write);
+  if( pthread_mutex_trylock( &Stream -> mutex_write)){
+    return NULL;
+  }
+  
   pthread_mutex_lock( &Stream -> mutex_fetch);
   
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
@@ -190,8 +193,10 @@ static inline void *
 CS_Releas( ComandStream *Stream){
   address ret = 0;
   assert( Stream != NULL);
-
-  pthread_mutex_lock( &Stream -> mutex_read);
+  
+  if( pthread_mutex_trylock( &Stream -> mutex_read)){
+    goto end;
+  }
   
   pthread_mutex_lock( &Stream -> mutex_push);
   if unlikely( Stream -> push == Stream -> releas){
@@ -237,7 +242,7 @@ CS_Finish( ComandStream *Stream, const void *ptr){
   dassert( addr == Stream -> finish);
   
   Stream -> finish = Stream -> finish + Stream -> size;
-
+  
   pthread_mutex_unlock( &Stream -> mutex_finish);
   pthread_mutex_unlock( &Stream -> mutex_read);
 }
@@ -250,12 +255,9 @@ static inline void
 CS_Free( FreeNode *freenode, ComandStream *Stream){
   if likely( Stream != NULL){
     address addr;
-
+    
     pthread_mutex_lock( &Stream -> mutex_read);
     pthread_mutex_lock( &Stream -> mutex_write);
-    pthread_mutex_lock( &Stream -> mutex_fetch);
-    pthread_mutex_lock( &Stream -> mutex_push);
-    pthread_mutex_lock( &Stream -> mutex_finish);
     addr = Stream -> blk_fetch;
     Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
     *( address *)( addr + Stream -> blk_size) = 0;
@@ -265,11 +267,6 @@ CS_Free( FreeNode *freenode, ComandStream *Stream){
       Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       MS_FreeFromSize( Stream -> freenode, addr, true_blk_size);
     }
-    pthread_mutex_unlock( &Stream -> mutex_finish);
-    pthread_mutex_unlock( &Stream -> mutex_push);
-    pthread_mutex_unlock( &Stream -> mutex_fetch);
-    pthread_mutex_unlock( &Stream -> mutex_write);
-    pthread_mutex_unlock( &Stream -> mutex_read);
     
     MS_Free( freenode, Stream);
   }
