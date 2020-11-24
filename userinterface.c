@@ -75,7 +75,7 @@ GW_Init( FreeNode *freenode, MS_root *root){
   
   assert( GW -> window != NULL);
   
-  GW -> renderer = SDL_CreateRenderer( GW -> window, -1, 0);
+  GW -> renderer = SDL_CreateRenderer( GW -> window, -1, SDL_RENDERER_TARGETTEXTURE);
   
   assert( GW -> renderer != NULL);
   
@@ -264,6 +264,8 @@ draw( MS_root *root){
   DrawComand *dc = NULL;
   u64 tutime = getnanosec();
   
+  SDL_SetRenderTarget( GW -> renderer, GW -> target);
+  
   while( ( dc = ( DrawComand *)CS_Releas( root -> drawque)) != NULL){ 
     SDL_Texture *tile = NULL;
     MS_element *element = &( dc -> element);
@@ -292,22 +294,20 @@ draw( MS_root *root){
     
     assert( tile != NULL);
     
-    SDL_SetRenderTarget( GW -> renderer, GW -> target);
-    
     MS_BlitTile( GW -> renderer, tile,
 		 (int)w * ( int)GW -> logical.element_width ,
 		 (int)h * ( int)GW -> logical.element_height,
 		 (int)GW -> logical.element_width,
 		 (int)GW -> logical.element_height);
     
-    SDL_SetRenderTarget( GW -> renderer, NULL);
-    
     CS_Finish( root -> drawque, dc);
     
-    if( getnanosec() > tutime + 33000000){
+    if( getnanosec() > tutime + 8000000){
       break;
     }
   }
+  
+  SDL_SetRenderTarget( GW -> renderer, NULL);
   
   root -> idle = dc == NULL;
   
