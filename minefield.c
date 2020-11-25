@@ -167,10 +167,6 @@ uncov_workthread( void *root){
     
     assert( pos != NULL);
     
-    if( acse( *minefield, pos -> x, pos -> y) -> count != 15){
-      continue;
-    }
-    
     element = uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *pos, minefield -> mine);
     
     CS_Finish( minefield -> uncovque, pos);
@@ -195,7 +191,7 @@ uncov_workthread( void *root){
 void *
 uncov( void *root){
   CS_Signal( ( ( MS_root *)root) -> minefield -> uncovque);
-
+  
   return NULL;
 }
 

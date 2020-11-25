@@ -266,11 +266,15 @@ draw( MS_root *root){
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
   
+  root -> idle = 1;
+  
   while( ( dc = ( DrawComand *)CS_Releas( root -> drawque)) != NULL){ 
     SDL_Texture *tile = NULL;
     MS_element *element = &( dc -> element);
     s16 w = dc -> pos.x;
     s16 h = dc -> pos.y;
+    
+    root -> idle = 0;
     
     if( element -> flag){
       tile =  GW -> flag;
@@ -302,15 +306,13 @@ draw( MS_root *root){
     
     CS_Finish( root -> drawque, dc);
     
-    if( getnanosec() > tutime + 8000000){
+    if( getnanosec() > tutime + 5000000){
       break;
     }
   }
   
   SDL_SetRenderTarget( GW -> renderer, NULL);
-  
-  root -> idle = dc == NULL;
-  
+    
   SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = (int)GW -> logical.realwidth, .h = (int)GW -> logical.realheight},
 		    &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_NONE);
   
@@ -322,6 +324,8 @@ draw( MS_root *root){
 void
 drawelement( ComandStream *drawque, const MS_element *element, s16 w, s16 h){
   DrawComand *dc = ( DrawComand *)CS_Fetch( drawque);
+  
+  assert( dc != NULL);
   
   dc -> pos.x = w;
   dc -> pos.y = h;

@@ -26,11 +26,15 @@ typedef struct{
   address finish;
   pthread_mutex_t mutex_fetch;
   pthread_mutex_t mutex_push;
+  pthread_mutex_t mutex_signal;
+  pthread_mutex_t mutex_releas;
   pthread_mutex_t mutex_finish;
+  pthread_mutex_t mutex_blk;
   pthread_mutex_t mutex_write;
   pthread_mutex_t mutex_read;
   pthread_cond_t  cond_releas;
   pthread_mutexattr_t attr_mutex;
+  pthread_mutexattr_t attr_mutex_debug;
   _Bool waiting;
 }ComandStream;
 
@@ -82,10 +86,19 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
   Stream -> finish = addr;
   
   pthread_mutexattr_init( &Stream -> attr_mutex);
+  pthread_mutexattr_init( &Stream -> attr_mutex_debug);
   pthread_mutexattr_settype( &Stream -> attr_mutex, PTHREAD_MUTEX_RECURSIVE);
-  pthread_mutex_init( &Stream -> mutex_fetch , NULL);
-  pthread_mutex_init( &Stream -> mutex_push  , NULL);
-  pthread_mutex_init( &Stream -> mutex_finish, NULL);
+#ifdef DEBUG
+  pthread_mutexattr_settype( &Stream -> attr_mutex_debug, PTHREAD_MUTEX_ERRORCHECK);
+#else
+  pthread_mutexattr_settype( &Stream -> attr_mutex_debug, PTHREAD_MUTEX_DEFAULT);
+#endif
+  pthread_mutex_init( &Stream -> mutex_fetch , &Stream -> attr_mutex_debug);
+  pthread_mutex_init( &Stream -> mutex_push  , &Stream -> attr_mutex_debug);
+  pthread_mutex_init( &Stream -> mutex_signal, &Stream -> attr_mutex_debug);
+  pthread_mutex_init( &Stream -> mutex_releas, &Stream -> attr_mutex_debug);
+  pthread_mutex_init( &Stream -> mutex_finish, &Stream -> attr_mutex_debug);
+  pthread_mutex_init( &Stream -> mutex_blk   , &Stream -> attr_mutex_debug);
   pthread_mutex_init( &Stream -> mutex_write , &Stream -> attr_mutex);
   pthread_mutex_init( &Stream -> mutex_read  , &Stream -> attr_mutex);
   pthread_cond_init(  &Stream -> cond_releas , NULL);
@@ -106,24 +119,24 @@ CS_Fetch( ComandStream *Stream){
     return NULL;
   }
   
-  pthread_mutex_lock( &Stream -> mutex_fetch);
-  
+  dassert( pthread_mutex_lock( &Stream -> mutex_fetch) == 0);
+
+  dassert( pthread_mutex_lock( &Stream -> mutex_blk) == 0);
   if unlikely( Stream -> fetch == Stream -> blk_fetch + Stream -> blk_size){
-    pthread_mutex_lock( &Stream -> mutex_finish);
     if unlikely( *( address *)( Stream -> blk_fetch + Stream -> blk_size) == Stream -> blk_finish){
       address addr = MS_CreateFromSize( Stream -> freenode, true_blk_size);
       *( address *)( addr + Stream -> blk_size) = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       *( address *)( Stream -> blk_fetch + Stream -> blk_size) = addr;
     }
-    pthread_mutex_unlock( &Stream -> mutex_finish);
     Stream -> blk_fetch = *( address *)( Stream -> blk_fetch + Stream -> blk_size);
     Stream -> fetch  = Stream -> blk_fetch;
   }
+  dassert( pthread_mutex_unlock( &Stream -> mutex_blk) == 0);
   
   ret = Stream -> fetch;
   Stream -> fetch = Stream -> fetch + Stream -> size;
   
-  pthread_mutex_unlock( &Stream -> mutex_fetch);
+  dassert( pthread_mutex_unlock( &Stream -> mutex_fetch) == 0);
   
   return ( void *)ret;
 }
@@ -135,7 +148,7 @@ CS_Push( ComandStream *Stream, const void *ptr){
   assert( Stream != NULL);
   addr = ( address)ptr;
   
-  pthread_mutex_lock( &Stream -> mutex_push);
+  dassert( pthread_mutex_lock( &Stream -> mutex_push) == 0);
   
   if unlikely( Stream -> push == Stream -> blk_push + Stream -> blk_size){
     Stream -> blk_push = *( address *)( Stream -> blk_push + Stream -> blk_size);
@@ -146,22 +159,22 @@ CS_Push( ComandStream *Stream, const void *ptr){
   
   Stream -> push = Stream -> push + Stream -> size;
   
-  pthread_mutex_unlock( &Stream -> mutex_push);
-  
-  if unlikely( Stream -> push == Stream -> blk_push + Stream -> size &&
-	       Stream -> waiting){
-    
-    pthread_cond_signal( &Stream -> cond_releas);
-  }
-  
+  dassert( pthread_mutex_unlock( &Stream -> mutex_push) == 0);
   pthread_mutex_unlock( &Stream -> mutex_write);
 }
 
 static inline void
 CS_Signal( ComandStream *Stream){
-  if( Stream -> waiting){
+  assert( Stream != NULL);
     
-    pthread_cond_signal( &Stream -> cond_releas);
+  if( pthread_mutex_trylock( &Stream -> mutex_signal) == 0){
+    if( Stream -> waiting){
+      dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
+      
+      pthread_cond_signal( &Stream -> cond_releas);
+    }else{
+      dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
+    }
   }
 }
 
@@ -172,17 +185,19 @@ CS_WaitReleas( ComandStream *Stream){
   
   while( ( ret = ( address)CS_Releas( Stream)) == 0){
     
-    pthread_mutex_lock( &Stream -> mutex_push);
-    
-    Stream -> waiting = 1;
-    
-    pthread_cond_wait( &Stream -> cond_releas, &Stream -> mutex_push);
-    
-    pthread_mutex_unlock( &Stream -> mutex_push);
+    if( pthread_mutex_trylock( &Stream -> mutex_signal) == 0){
+      
+      Stream -> waiting += 1;
+      
+      pthread_cond_wait( &Stream -> cond_releas, &Stream -> mutex_signal);
+      
+      Stream -> waiting -= 1;
+      
+      dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
+    }
   }
   
-  Stream -> waiting = 0;
-  
+  assert( ret != 0);
   return ( void *)ret;
 }
 
@@ -194,17 +209,19 @@ CS_Releas( ComandStream *Stream){
   address ret = 0;
   assert( Stream != NULL);
   
+  dassert( pthread_mutex_lock( &Stream -> mutex_releas) == 0);
+  
   if( pthread_mutex_trylock( &Stream -> mutex_read)){
     goto end;
   }
   
-  pthread_mutex_lock( &Stream -> mutex_push);
+  dassert( pthread_mutex_lock( &Stream -> mutex_push) == 0);
   if unlikely( Stream -> push == Stream -> releas){
-    pthread_mutex_unlock( &Stream -> mutex_push);
+    dassert( pthread_mutex_unlock( &Stream -> mutex_push) == 0);
     pthread_mutex_unlock( &Stream -> mutex_read);
     goto end;
   }
-  pthread_mutex_unlock( &Stream -> mutex_push);
+  dassert( pthread_mutex_unlock( &Stream -> mutex_push) == 0);
   
   if unlikely( Stream -> releas == Stream -> blk_releas + Stream -> blk_size){
     Stream -> blk_releas = *( address *)( Stream -> blk_releas + Stream -> blk_size);
@@ -215,6 +232,7 @@ CS_Releas( ComandStream *Stream){
   Stream -> releas = Stream -> releas + Stream -> size;
   
  end:
+  dassert( pthread_mutex_unlock( &Stream -> mutex_releas) == 0);
   return ( void *)ret;
 }
 
@@ -225,25 +243,27 @@ CS_Finish( ComandStream *Stream, const void *ptr){
   assert( Stream != NULL);
   addr = ( address)ptr;
   
-  pthread_mutex_lock( &Stream -> mutex_finish);
+  assert( ptr != NULL);
   
+  dassert( pthread_mutex_lock( &Stream -> mutex_finish) == 0);
+  
+  dassert( pthread_mutex_lock( &Stream -> mutex_blk) == 0);
   if unlikely( Stream -> finish == Stream -> blk_finish + Stream -> blk_size){
-    pthread_mutex_lock( &Stream -> mutex_fetch);
     if unlikely( *( address *)( Stream -> blk_fetch + Stream -> blk_size) != Stream -> blk_finish){
       address blk_free =  *( address *)( Stream -> blk_fetch + Stream -> blk_size);
       *( address *)( Stream -> blk_fetch + ( Stream -> blk_size)) = *( address *)( blk_free + Stream -> blk_size);
       MS_FreeFromSize( Stream -> freenode, blk_free, true_blk_size);
     }
-    pthread_mutex_unlock( &Stream -> mutex_fetch);
     Stream -> blk_finish = *( address *)( Stream -> blk_finish + Stream -> blk_size);
     Stream -> finish = Stream -> blk_finish;
-    }
+  }
+  dassert( pthread_mutex_unlock( &Stream -> mutex_blk) == 0);
   
   dassert( addr == Stream -> finish);
   
   Stream -> finish = Stream -> finish + Stream -> size;
   
-  pthread_mutex_unlock( &Stream -> mutex_finish);
+  dassert( pthread_mutex_unlock( &Stream -> mutex_finish) == 0);
   pthread_mutex_unlock( &Stream -> mutex_read);
 }
 
