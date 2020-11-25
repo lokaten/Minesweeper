@@ -21,6 +21,7 @@ typedef struct{
   SDL_Window *window;
   SDL_Texture *target;
   SDL_Renderer *renderer;
+  SDL_RendererInfo *renderer_info;
   SDL_Texture *cover;
   SDL_Texture *clear;
   SDL_Texture *flag;
@@ -59,15 +60,6 @@ GW_Init( FreeNode *freenode, MS_root *root){
   GW -> logical.width  = GW -> real.width;
   GW -> logical.height = GW -> real.height;
   
-  GW -> logical.element_width  = 15;
-  GW -> logical.element_height = 15;
-  
-  GW -> logical.realwidth  = GW -> logical.width  * GW -> logical.element_width;
-  GW -> logical.realheight = GW -> logical.height * GW -> logical.element_height;
-  
-  GW -> mfvid.realwidth  = GW -> mfvid.width  * GW -> logical.element_width;
-  GW -> mfvid.realheight = GW -> mfvid.height * GW -> logical.element_height;
-  
   assert( !SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER));
   
   GW -> window = SDL_CreateWindow( root -> minefield -> title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -83,7 +75,20 @@ GW_Init( FreeNode *freenode, MS_root *root){
   SDL_RenderSetLogicalSize( GW -> renderer, (int)GW -> real.realwidth, (int)GW -> real.realheight);
   SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
   
-  SDL_SetWindowResizable( GW ->  window, (SDL_bool)!root -> no_resize);
+  SDL_SetWindowResizable( GW ->  window, ( SDL_bool)!root -> no_resize);
+  
+  GW -> renderer_info = MS_CreateEmptyLocal( SDL_RendererInfo);
+  
+  assert( SDL_GetRendererInfo( GW -> renderer, GW -> renderer_info) == 0);
+  
+  GW -> mfvid.realwidth  = GW -> renderer_info -> max_texture_width;
+  GW -> mfvid.realheight = GW -> renderer_info -> max_texture_height;
+  
+  GW -> logical.element_width  = GW -> mfvid.realwidth  / GW -> mfvid.width;
+  GW -> logical.element_height = GW -> mfvid.realheight / GW -> mfvid.height;
+  
+  GW -> logical.realwidth  = GW -> logical.width  * GW -> logical.element_width;
+  GW -> logical.realheight = GW -> logical.height * GW -> logical.element_height;
   
   GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)GW -> mfvid.realwidth, (int)GW -> mfvid.realheight);
   
