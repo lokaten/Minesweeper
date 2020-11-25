@@ -306,7 +306,7 @@ draw( MS_root *root){
     
     CS_Finish( root -> drawque, dc);
     
-    if( getnanosec() > tutime + 5000000){
+    if( getnanosec() > tutime + 1000000){
       break;
     }
   }
@@ -324,8 +324,6 @@ draw( MS_root *root){
 void
 drawelement( ComandStream *drawque, const MS_element *element, s16 w, s16 h){
   DrawComand *dc = ( DrawComand *)CS_Fetch( drawque);
-  
-  assert( dc != NULL);
   
   dc -> pos.x = w;
   dc -> pos.y = h;

@@ -144,12 +144,10 @@ addelement( MS_field *minefield, s16 x, s16 y){
       acse( *minefield, x, y) -> count == 15 &&
       !acse( *minefield, x, y) -> flag){
     MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
-    if( pos != NULL){
-      pos -> x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
-      pos -> y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
-      acse( *minefield, pos -> x, pos -> y) -> cover = 0;
-      CS_Push( minefield -> uncovque, pos);
-    }
+    pos -> x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
+    pos -> y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
+    acse( *minefield, pos -> x, pos -> y) -> cover = 0;
+    CS_Push( minefield -> uncovque, pos);
   }
 }
 
