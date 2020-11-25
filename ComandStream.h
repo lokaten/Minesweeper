@@ -47,18 +47,18 @@ static inline void CS_Finish( ComandStream *, const void *);
 static inline void CS_Free( FreeNode *, ComandStream *);
 
 static inline ComandStream *
-CS_CreateStreamFromSize( FreeNode *freenode, const size_t size){
+CS_CreateStreamFromSize( FreeNode *freenode, const size_t true_size){
   ComandStream *Stream;
   size_t blk_size;
+  size_t size;
   address addr;
-  assert( size);
+  assert( true_size);
+  
+  size = true_size + sizeof( address) - 1;
+  size -= size % sizeof( address);
   
   blk_size = true_blk_size - sizeof( address);
-  
-  while( blk_size % size || blk_size % sizeof( address)){
-    blk_size -= blk_size % size;
-    blk_size -= blk_size % sizeof( address);
-  }
+  blk_size -= blk_size % sizeof( address);
   
   assert( blk_size >= size);
   
