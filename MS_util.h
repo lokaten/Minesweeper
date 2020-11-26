@@ -169,7 +169,7 @@ address MS_FreeFromSize( FreeNode *, const address, const size_t);
 static inline u32
 gen_divobj( u32 a){
   assert( a < U32C( 0xfff0));
-  return (u32)( ( U64C( 0xffffffff) + (u64)a) / (u64)a);
+  return ( u32)( ( U64C( 0xffffffff) + ( u64)a) / ( u64)a);
 }
 
 // divobj = gen_divobj( a)
@@ -177,8 +177,8 @@ gen_divobj( u32 a){
 //
 static inline u32
 mol_( u32 b, u32 a, u32 divobj){
-  u32 ret = ( (u64)( ( b * divobj) & U32C( 0xffffffff)) * (u64)a) >> 32;
-  dassert( div_( b, a, divobj) * a + ret == b);
+  u32 ret = ( ( u64)( ( u32)( ( u64)b * ( u64)divobj) & U32C( 0xffffffff)) * (u64)a) >> 32;
+  dassert( ( ( ( u64)b * ( u64)divobj) >> 32) * a + ret == b);
   return ret;
 }
 
@@ -187,7 +187,7 @@ mol_( u32 b, u32 a, u32 divobj){
 //
 static inline u32
 div_( u32 b, u32 a, u32 divobj){
-  u32 ret = ( (u64)b * (u64)divobj) >> 32;
+  u32 ret = ( ( u64)b * ( u64)divobj) >> 32;
   dassert( ret * a <= b && ret * a + a > b);
   return ret;
 }

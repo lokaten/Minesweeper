@@ -101,11 +101,13 @@ setminefield( void *root){
   }
   
   while( i-- > minefield -> width){
-    u32 w = i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width);
+    u32 w = i < 65520 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width);
+    u32 h = i < 65520 ? div_( i, minefield -> width, minefield -> width_divobj) : ( i / minefield -> width);
+    
     if( w > 0 && w < minefield -> subwidth + 1){
       if( !( MS_element *)( uintptr_t)( minefield -> data + i) -> cover ||
 	   ( MS_element *)( uintptr_t)( minefield -> data + i) -> flag){
-	drawelement( ( ( MS_root *)root) -> drawque, &( MS_element){ .cover = 1}, ( s32)w, ( s32)div_( i, minefield -> width, minefield -> width_divobj));
+	drawelement( ( ( MS_root *)root) -> drawque, &( MS_element){ .cover = 1}, ( s32)w, ( s32)h);
       }
       
       *( minefield -> data + i) = ( MS_element){ .count = 15, .cover = 1};
@@ -115,8 +117,8 @@ setminefield( void *root){
   i = minefield -> width * minefield -> height;
   
   while( i--){
-    u32 w = i < 1864136 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width);
-    u32 h = div_( i, minefield -> width, minefield -> width_divobj);
+    u32 w = i < 65520 ? mol_( i, minefield -> width, minefield -> width_divobj) : ( i % minefield -> width);
+    u32 h = i < 65520 ? div_( i, minefield -> width, minefield -> width_divobj) : ( i / minefield -> width);
     
     if( !w || !h || w == minefield -> width - 1 || h == minefield -> height - 1){
       *( minefield -> data + i) = ( MS_element){ .count = 15, .set = 1};
