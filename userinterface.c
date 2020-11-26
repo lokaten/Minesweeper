@@ -81,11 +81,14 @@ GW_Init( FreeNode *freenode, MS_root *root){
   
   assert( SDL_GetRendererInfo( GW -> renderer, GW -> renderer_info) == 0);
   
-  GW -> mfvid.realwidth  = GW -> renderer_info -> max_texture_width;
-  GW -> mfvid.realheight = GW -> renderer_info -> max_texture_height;
+  GW -> logical.element_width  = GW -> renderer_info -> max_texture_width  / GW -> mfvid.width;
+  GW -> logical.element_height = GW -> renderer_info -> max_texture_height / GW -> mfvid.height;
   
-  GW -> logical.element_width  = GW -> mfvid.realwidth  / GW -> mfvid.width;
-  GW -> logical.element_height = GW -> mfvid.realheight / GW -> mfvid.height;
+  GW -> logical.element_width  = GW -> logical.element_width  < 120? GW -> logical.element_width : 120;
+  GW -> logical.element_height = GW -> logical.element_height < 120? GW -> logical.element_height: 120;
+  
+  GW -> mfvid.realwidth  = GW -> logical.element_width  * GW -> mfvid.width;
+  GW -> mfvid.realheight = GW -> logical.element_height * GW -> mfvid.height;
   
   GW -> logical.realwidth  = GW -> logical.width  * GW -> logical.element_width;
   GW -> logical.realheight = GW -> logical.height * GW -> logical.element_height;
@@ -128,6 +131,8 @@ GW_Init( FreeNode *freenode, MS_root *root){
   SDL_EventState( SDL_MOUSEMOTION  , SDL_IGNORE);
   
   root -> idle = 0;
+  
+  SDL_ShowWindow( GW -> window);
   
   return GW;
 }
@@ -317,13 +322,11 @@ draw( MS_root *root){
   }
   
   SDL_SetRenderTarget( GW -> renderer, NULL);
-    
+  
   SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = (int)GW -> logical.realwidth, .h = (int)GW -> logical.realheight},
 		    &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_NONE);
   
   SDL_RenderPresent( GW -> renderer);
-  
-  SDL_ShowWindow( GW -> window);
 }
 
 void

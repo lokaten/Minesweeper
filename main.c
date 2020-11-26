@@ -199,11 +199,11 @@ ROOT_Init( const int argc, const char **argv){
   pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   
+  setminefield( ( void *)root);
+  
   root -> GW = GW_Init( root -> freenode, root);
   
   draw( root);
-  
-  setminefield( ( void *)root);
   
   return root;
 }
