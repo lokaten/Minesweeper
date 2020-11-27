@@ -25,7 +25,7 @@ typedef struct{
   const MS_stream *mss;
   const bool no_resize;
   ComandStream *drawque;
-  _Bool idle;
+  u32 idle;
 }MS_root;
 
 void *GW_Init( FreeNode *, MS_root *);

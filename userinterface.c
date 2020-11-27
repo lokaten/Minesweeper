@@ -273,18 +273,42 @@ draw( MS_root *root){
   GraphicWraper *GW = ( GraphicWraper *)root -> GW;
   DrawComand *dc = NULL;
   u64 tutime = getnanosec();
+  u32 i;
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
   
-  root -> idle = 1;
+  i = ( GW -> real.width > GW -> real.height? GW -> real.width: GW -> real.height) + 1;
+  
+  root -> idle = i * 4 + 1;
+  
+  while( i--){
+    s32 w = GW -> logical.xdiff + i - 1;
+    s32 h = GW -> logical.ydiff + i - 1;
+    
+    drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff - 1                ), w, GW -> logical.ydiff - 1                );
+    drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff + GW -> real.height), w, GW -> logical.ydiff + GW -> real.height);
+    
+    drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff - 1                , h), GW -> logical.xdiff - 1                , h);
+    drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff + GW -> real.width , h), GW -> logical.xdiff + GW -> real.width , h);
+  }
+  
+  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
+  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
   
   while( ( dc = ( DrawComand *)CS_Releas( root -> drawque)) != NULL){ 
     SDL_Texture *tile = NULL;
     MS_element *element = &( dc -> element);
-    s16 w = dc -> pos.x;
-    s16 h = dc -> pos.y;
+    s16 w = mol_( ( dc -> pos.x + root -> minefield -> width ), root -> minefield -> width , root -> minefield -> width_divobj);
+    s16 h = mol_( ( dc -> pos.y + root -> minefield -> height), root -> minefield -> height, root -> minefield -> height_divobj);
     
-    root -> idle = 0;
+    root -> idle -= root -> idle ? 1: 0;
+    
+    if( w < GW -> logical.xdiff ||
+	w >= GW -> logical.xdiff + ( int)GW -> real.width ||
+	h < GW -> logical.ydiff ||
+	h >= GW -> logical.ydiff + ( int)GW -> real.height){
+      goto finish;
+    }
     
     if( element -> flag){
       tile =  GW -> flag;
@@ -293,17 +317,18 @@ draw( MS_root *root){
     }else if( element -> mine){
       tile =  GW -> mine;
     }else switch( element -> count){
-      case 0: tile =  GW -> clear; break;
-      case 1: tile =  GW -> one; break;
-      case 2: tile =  GW -> two; break;
-      case 3: tile =  GW -> three; break;
-      case 4: tile =  GW -> four; break;
-      case 5: tile =  GW -> five; break;
-      case 6: tile =  GW -> six; break;
-      case 7: tile =  GW -> seven; break;
-      case 8: tile =  GW -> eight; break;
-      default:
-	break;
+    case 0: tile =  GW -> clear; break;
+    case 1: tile =  GW -> one; break;
+    case 2: tile =  GW -> two; break;
+    case 3: tile =  GW -> three; break;
+    case 4: tile =  GW -> four; break;
+    case 5: tile =  GW -> five; break;
+    case 6: tile =  GW -> six; break;
+    case 7: tile =  GW -> seven; break;
+    case 8: tile =  GW -> eight; break;
+    default:
+      goto finish;
+      break;
     }
     
     assert( tile != NULL);
@@ -314,9 +339,10 @@ draw( MS_root *root){
 		 (int)GW -> logical.element_width,
 		 (int)GW -> logical.element_height);
     
+  finish:
     CS_Finish( root -> drawque, dc);
     
-    if( getnanosec() > tutime + 1000000){
+    if( getnanosec() > tutime + 10000000){
       break;
     }
   }
