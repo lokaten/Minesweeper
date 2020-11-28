@@ -26,6 +26,7 @@ typedef struct{
   const bool no_resize;
   ComandStream *drawque;
   u32 idle;
+  u64 tutime;
 }MS_root;
 
 void *GW_Init( FreeNode *, MS_root *);
