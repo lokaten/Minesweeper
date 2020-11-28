@@ -200,8 +200,6 @@ static inline MS_element *
 uncover_element( MS_field minefield, ComandStream *drawque, MS_pos postion, MS_mstr *mine){
   
   if likely( acse( minefield, postion.x, postion.y) -> count == 15){
-
-    pthread_mutex_lock( &minefield.mutex_field);
     
     mine -> uncoverd += 1;
     
@@ -221,8 +219,6 @@ uncover_element( MS_field minefield, ComandStream *drawque, MS_pos postion, MS_m
     acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x - 1, postion.y    ), mine) -> mine;
     
     drawelement( drawque, acse( minefield, postion.x, postion.y), postion.x, postion.y);
-    
-    pthread_mutex_unlock( &minefield.mutex_field);
   }
   
   return acse( minefield, postion.x, postion.y);
@@ -233,6 +229,7 @@ static inline MS_element *
 setmine_element( MS_field minefield, u32 index, MS_mstr *mine){
   MS_element *element = minefield.data + index;
   
+  pthread_mutex_lock( &minefield.mutex_field);
   if( !element -> set){
     element -> mine = ( ( ( u64)( mine -> seed = MS_rand( mine -> seed)) * ( mine -> noelements - mine -> set)) >> 32) < ( mine -> level - mine -> mines);
     
@@ -242,6 +239,7 @@ setmine_element( MS_field minefield, u32 index, MS_mstr *mine){
     
     element -> set = 1;
   }
+  pthread_mutex_unlock( &minefield.mutex_field);
   
   return element;
 }
@@ -256,13 +254,30 @@ uncov_elements( void *root,
   assert( root != NULL);
   
   i = vid.width * vid.height;
-    
+  
   while( i--){
     postion.x = ( s32)( i % vid.width) + vid.xdiff;
     postion.y = ( s32)( i / vid.width) + vid.ydiff;
 
     addelement( ( ( MS_root *) root) -> minefield, postion.x, postion.y);
   }
+}
+
+
+void *
+uncov_field( void *root){
+  MS_video vid; 
+  assert( root != NULL);
+
+  vid  = ( MS_video){ .xdiff = 0, .ydiff = 0,
+		      .width  = ( ( MS_root *) root) -> minefield -> width,
+		      .height = ( ( MS_root *) root) -> minefield -> height};
+  
+  uncov_elements( root, vid);
+  
+  uncov( root);
+  
+  return NULL;
 }
 
 

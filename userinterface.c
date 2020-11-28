@@ -169,14 +169,12 @@ event_dispatch( MS_root *root){
 	  quit( root);
 	case SDLK_F2:
 	case 'r':
-	  setminefield( ( void *)root);
+	  pthread_create( NULL, NULL, setminefield, ( void *)root);
 	  
 	  break;
 	case SDLK_F3:
 	case 'e':
-	  uncov_elements( root, GW -> mfvid);
-	  
-	  uncov( root);
+	  pthread_create( NULL, NULL, uncov_field, ( void *)root);
 	  
 	  break;
 	case SDLK_LEFT:

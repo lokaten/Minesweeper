@@ -196,10 +196,8 @@ ROOT_Init( const int argc, const char **argv){
   pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
-  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
-  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   
-  setminefield( ( void *)root);
+  pthread_create( NULL, NULL, setminefield, ( void *)root);
   
   root -> GW = GW_Init( root -> freenode, root);
   
@@ -237,11 +235,7 @@ main( const int argc, const char** argv){
     
     if( !gameover){
       if unlikely( root -> minefield -> mine -> hit){
-	MS_video mfvid = { .xdiff = 0, .ydiff = 0, .width  = root -> minefield -> width, .height = root -> minefield -> height};
-	
-	uncov_elements( root, mfvid);
-	
-	uncov( root);
+	pthread_create( NULL, NULL, uncov_field, ( void *)root);
 	
 	MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!               "));
 	gameover = TRUE;

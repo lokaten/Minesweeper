@@ -70,6 +70,7 @@ extern "C" {
   void *uncov_workthread( void *);
   void *uncov( void *);
   void uncov_elements( void *,  MS_video);
+  void *uncov_field( void *);
   
 #ifdef __cplusplus
 }
