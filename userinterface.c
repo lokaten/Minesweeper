@@ -136,6 +136,9 @@ GW_Init( FreeNode *freenode, MS_root *root){
   
   SDL_ShowWindow( GW -> window);
   
+  GW -> logical.realydiff = ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
+  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.realheight) / ( s32)GW -> logical.realheight;
+  
   return GW;
 }
 
@@ -185,17 +188,17 @@ event_dispatch( MS_root *root){
 	  break;
 	case SDLK_DOWN:
 	case 'j':
-	  GW -> logical.realydiff = GW -> logical.realydiff + ( s32)GW -> logical.element_height;
+	  GW -> logical.realydiff = GW -> logical.realydiff - ( s32)GW -> logical.element_height;
 	  if( !GW -> global)
-	    GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight - GW -> logical.realheight)?
-	      GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
+	    GW -> logical.realydiff = GW -> logical.realydiff >= 0? GW -> logical.realydiff: 0;
 	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.realheight) / ( s32)GW -> logical.realheight;
 	  break;
 	case SDLK_UP:
 	case 'k':
-	  GW -> logical.realydiff = GW -> logical.realydiff - ( s32)GW -> logical.element_height;
+	  GW -> logical.realydiff = GW -> logical.realydiff + ( s32)GW -> logical.element_height;
 	  if( !GW -> global)
-	    GW -> logical.realydiff = GW -> logical.realydiff >= 0? GW -> logical.realydiff: 0;
+	    GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight - GW -> logical.realheight)?
+	      GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
 	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.realheight) / ( s32)GW -> logical.realheight;
 	  break;
 	case SDLK_RIGHT:
@@ -230,8 +233,8 @@ mousebuttondown( MS_root * root,
   
   MS_pos postion;
   
-  postion.x = ( s16)( ( ( u16)( ( event.button.x + GW -> real.realxdiff) / (int)GW -> real.element_width ) + GW -> mfvid.width ) % GW -> mfvid.width );
-  postion.y = ( s16)( ( ( u16)( ( event.button.y + GW -> real.realydiff) / (int)GW -> real.element_height) + GW -> mfvid.height) % GW -> mfvid.height);
+  postion.x = ( s16)( ( ( u16)( (                         event.button.x + GW -> real.realxdiff) / (int)GW -> real.element_width ) + GW -> mfvid.width ) % GW -> mfvid.width );
+  postion.y = ( s16)( ( ( u16)( ( GW -> real.realheight - event.button.y + GW -> real.realydiff) / (int)GW -> real.element_height) + GW -> mfvid.height) % GW -> mfvid.height);
   
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
@@ -365,7 +368,7 @@ draw( MS_root *root){
   SDL_SetRenderTarget( GW -> renderer, NULL);
   
   SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = (int)GW -> logical.realwidth, .h = (int)GW -> logical.realheight},
-		    &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_NONE);
+		    &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_VERTICAL);
   
   SDL_RenderPresent( GW -> renderer);
 }
@@ -399,7 +402,7 @@ static inline int
 MS_BlitTile( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, int h){
   assert( renderer != NULL);
   assert(     tile != NULL);
-  return SDL_RenderCopyEx( renderer, tile, NULL, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_NONE);
+  return SDL_RenderCopyEx( renderer, tile, NULL, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_VERTICAL);
 }
 
 
