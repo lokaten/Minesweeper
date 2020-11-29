@@ -160,7 +160,7 @@ event_dispatch( MS_root *root){
   
   assert( GW);
   
-  if( SDL_WaitEventTimeout( &event, root -> idle? U64C( 1000): 0)){ // U64C( 75) + ( ( ( u64)MS_rand( MS_rand_seed()) * U64C( 100)) >> 32))){
+  if( SDL_WaitEventTimeout( &event, root -> idle? U64C( 50): 0)){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
       quit( root);
