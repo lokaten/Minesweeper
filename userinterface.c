@@ -139,6 +139,8 @@ GW_Init( FreeNode *freenode, MS_root *root){
   GW -> logical.realydiff = ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
   GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.realheight) / ( s32)GW -> logical.realheight;
   
+  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
+  
   return GW;
 }
 
@@ -183,6 +185,17 @@ event_dispatch( MS_root *root){
 	  if( !GW -> global)
 	    GW -> logical.realxdiff = GW -> logical.realxdiff >= 0? GW -> logical.realxdiff: 0;
 	  GW -> real.realxdiff = ( GW -> logical.realxdiff * ( s32)GW -> real.realwidth ) / ( s32)GW -> logical.realwidth;
+	  
+	  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
+	  {
+	    u32 i = GW -> real.height;
+	    
+	    while( i--){
+	      s32 h = GW -> logical.ydiff + i;
+	      
+	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff                    , h), GW -> logical.xdiff                    , h);
+	    }
+	  }
 	  break;
 	case SDLK_DOWN:
 	case 'j':
@@ -190,6 +203,17 @@ event_dispatch( MS_root *root){
 	  if( !GW -> global)
 	    GW -> logical.realydiff = GW -> logical.realydiff >= 0? GW -> logical.realydiff: 0;
 	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.realheight) / ( s32)GW -> logical.realheight;
+	  
+	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
+	  {
+	    u32 i = GW -> real.width;
+	    
+	    while( i--){
+	      s32 w = GW -> logical.xdiff + i;
+	      
+	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff                    ), w, GW -> logical.ydiff                    );
+	    }
+	  }
 	  break;
 	case SDLK_UP:
 	case 'k':
@@ -198,6 +222,17 @@ event_dispatch( MS_root *root){
 	    GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight - GW -> logical.realheight)?
 	      GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
 	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.realheight) / ( s32)GW -> logical.realheight;
+	  
+	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
+	  { 
+	    u32 i = GW -> real.width;
+	    
+	    while( i--){
+	      s32 w = GW -> logical.xdiff + i;
+	      
+	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff + GW -> real.height), w, GW -> logical.ydiff + GW -> real.height);
+	    }
+	  }
 	  break;
 	case SDLK_RIGHT:
 	case 'l':
@@ -206,6 +241,17 @@ event_dispatch( MS_root *root){
 	    GW -> logical.realxdiff = GW -> logical.realxdiff <= ( s32)( GW -> mfvid.realwidth - GW -> logical.realwidth)?
 	      GW -> logical.realxdiff: ( s32)( GW -> mfvid.realwidth - GW -> logical.realwidth);
 	  GW -> real.realxdiff = ( GW -> logical.realxdiff * ( s32)GW -> real.realwidth ) / ( s32)GW -> logical.realwidth;
+	  
+	  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
+	  { 
+	    u32 i = GW -> real.height;
+	    
+	    while( i--){
+	      s32 h = GW -> logical.ydiff + i;
+	      
+	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff + GW -> real.width , h), GW -> logical.xdiff + GW -> real.width , h);
+	    }
+	  }
 	  break;
 	default:
 	  break;
@@ -279,32 +325,15 @@ void
 draw( MS_root *root){
   GraphicWraper *GW = ( GraphicWraper *)root -> GW;
   DrawComand *dc = NULL;
-  u32 i;
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
   
-  i = ( GW -> real.width > GW -> real.height? GW -> real.width: GW -> real.height) + 1;
-
   if( root -> tutime + 20000000 > getnanosec()){
     root -> tutime = getnanosec();
   }
   
-  root -> idle = i * 4 + 1;
-  
-  while( i--){
-    s32 w = GW -> logical.xdiff + i - 1;
-    s32 h = GW -> logical.ydiff + i - 1;
+  root -> idle = 1;
     
-    drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff - 1                ), w, GW -> logical.ydiff - 1                );
-    drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff + GW -> real.height), w, GW -> logical.ydiff + GW -> real.height);
-    
-    drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff - 1                , h), GW -> logical.xdiff - 1                , h);
-    drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff + GW -> real.width , h), GW -> logical.xdiff + GW -> real.width , h);
-  }
-  
-  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
-  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
-  
   while( ( dc = ( DrawComand *)CS_Releas( root -> drawque)) != NULL){ 
     SDL_Texture *tile = NULL;
     MS_element *element = &( dc -> element);
