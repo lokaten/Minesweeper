@@ -340,7 +340,7 @@ draw( MS_root *root){
     s16 w = mol_( ( dc -> pos.x + root -> minefield -> width ), root -> minefield -> width , root -> minefield -> width_divobj);
     s16 h = mol_( ( dc -> pos.y + root -> minefield -> height), root -> minefield -> height, root -> minefield -> height_divobj);
     
-    root -> idle -= !!root -> idle;
+    root -> idle = 0;
     
     if( w < GW -> logical.xdiff - 1 ||
 	w > GW -> logical.xdiff + ( int)GW -> real.width ||
@@ -386,18 +386,16 @@ draw( MS_root *root){
     }
   }
   
-  if( dc != NULL){
-    root -> idle = 0;
+  if( !root -> idle){
+    root -> tutime = getnanosec();
+    
+    SDL_SetRenderTarget( GW -> renderer, NULL);
+    
+    SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = (int)GW -> logical.realwidth, .h = (int)GW -> logical.realheight},
+		      &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_VERTICAL);
+    
+    SDL_RenderPresent( GW -> renderer);
   }
-  
-  root -> tutime = getnanosec();
-  
-  SDL_SetRenderTarget( GW -> renderer, NULL);
-  
-  SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = (int)GW -> logical.realwidth, .h = (int)GW -> logical.realheight},
-		    &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_VERTICAL);
-  
-  SDL_RenderPresent( GW -> renderer);
 }
 
 void

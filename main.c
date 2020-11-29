@@ -213,6 +213,9 @@ main( const int argc, const char** argv){
   
   bool gameover;
   u64 tutime;
+#ifdef DEBUG
+  u64 wtime = 0, wtutime = 0;
+#endif
   u64 gamestart;
   
   root = ROOT_Init( argc, argv);
@@ -258,8 +261,14 @@ main( const int argc, const char** argv){
 #ifdef DEBUG
     if( root -> mss -> deb != NULL){
       u64 mytime = getnanosec() - tutime;
+
+      if( mytime > wtime ||
+	  getnanosec() - wtutime > 1000000000){
+	wtime = mytime;
+	wtutime = getnanosec();
+      }
       
-      DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( mytime) / 1000000000), ( unsigned long)( ( mytime) % 1000000000));
+      DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( wtime) / 1000000000), ( unsigned long)( ( wtime) % 1000000000));
     }
 #endif
   }

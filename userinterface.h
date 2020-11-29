@@ -25,7 +25,7 @@ typedef struct{
   const MS_stream *mss;
   const bool no_resize;
   ComandStream *drawque;
-  u32 idle;
+  _Bool idle;
   u64 tutime;
 }MS_root;
 
