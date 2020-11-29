@@ -188,12 +188,12 @@ event_dispatch( MS_root *root){
 	  
 	  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
 	  {
-	    u32 i = GW -> real.height;
+	    u32 i = GW -> real.height + 2;
 	    
 	    while( i--){
-	      s32 h = GW -> logical.ydiff + i;
+	      s32 h = GW -> logical.ydiff + i - 1;
 	      
-	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff                    , h), GW -> logical.xdiff                    , h);
+	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff - 1, h), GW -> logical.xdiff - 1, h);
 	    }
 	  }
 	  break;
@@ -206,12 +206,12 @@ event_dispatch( MS_root *root){
 	  
 	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
 	  {
-	    u32 i = GW -> real.width;
+	    u32 i = GW -> real.width + 2;
 	    
 	    while( i--){
-	      s32 w = GW -> logical.xdiff + i;
+	      s32 w = GW -> logical.xdiff + i - 1;
 	      
-	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff                    ), w, GW -> logical.ydiff                    );
+	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff - 1), w, GW -> logical.ydiff - 1);
 	    }
 	  }
 	  break;
@@ -225,10 +225,10 @@ event_dispatch( MS_root *root){
 	  
 	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
 	  { 
-	    u32 i = GW -> real.width;
+	    u32 i = GW -> real.width + 2;
 	    
 	    while( i--){
-	      s32 w = GW -> logical.xdiff + i;
+	      s32 w = GW -> logical.xdiff + i - 1;
 	      
 	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff + GW -> real.height), w, GW -> logical.ydiff + GW -> real.height);
 	    }
@@ -244,10 +244,10 @@ event_dispatch( MS_root *root){
 	  
 	  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
 	  { 
-	    u32 i = GW -> real.height;
+	    u32 i = GW -> real.height + 2;
 	    
 	    while( i--){
-	      s32 h = GW -> logical.ydiff + i;
+	      s32 h = GW -> logical.ydiff + i - 1;
 	      
 	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff + GW -> real.width , h), GW -> logical.xdiff + GW -> real.width , h);
 	    }
@@ -342,9 +342,9 @@ draw( MS_root *root){
     
     root -> idle -= !!root -> idle;
     
-    if( w < GW -> logical.xdiff ||
+    if( w < GW -> logical.xdiff - 1 ||
 	w > GW -> logical.xdiff + ( int)GW -> real.width ||
-	h < GW -> logical.ydiff ||
+	h < GW -> logical.ydiff - 1 ||
 	h > GW -> logical.ydiff + ( int)GW -> real.height){
       goto finish;
     }
