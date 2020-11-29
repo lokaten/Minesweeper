@@ -224,39 +224,45 @@ main( const int argc, const char** argv){
   tutime    = getnanosec();
   gamestart = tutime;
   
+  root -> idle = 0;
+  
   while( TRUE){
     
     event_dispatch( root);
     
     tutime = getnanosec();
-    if( !root -> minefield -> mine -> uncoverd || gameover){
-      gamestart = tutime;
-    }
-        
-    assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
-    assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
     
-    if( !gameover){
-      if unlikely( root -> minefield -> mine -> hit){
-	pthread_create( NULL, NULL, uncov_field, ( void *)root);
-	
-	MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!               "));
-	gameover = TRUE;
-      }else if unlikely( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
-	printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
-	MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
-	gameover = TRUE;
-      }else{
-	printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
-	MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
+    if( !root -> idle){
+      
+      if( !root -> minefield -> mine -> uncoverd || gameover){
+	gamestart = tutime;
       }
-    }else if( !root -> minefield -> mine -> uncoverd){
-      gameover = FALSE;
-    }else{
-      // do nothing
+      
+      assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
+      assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
+      
+      if( !gameover){
+	if( root -> minefield -> mine -> hit){
+	  pthread_create( NULL, NULL, uncov_field, ( void *)root);
+	  
+	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!               "));
+	  gameover = TRUE;
+	}else if( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
+	  printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
+	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
+	  gameover = TRUE;
+	}else{
+	  MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
+	}
+      }else if( !root -> minefield -> mine -> uncoverd){
+	gameover = FALSE;
+      }else{
+	// do nothing
+      }
+      
+      draw( root);
     }
     
-    draw( root);
     
 #ifdef DEBUG
     if( root -> mss -> deb != NULL){
@@ -271,6 +277,8 @@ main( const int argc, const char** argv){
       DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( wtime) / 1000000000), ( unsigned long)( ( wtime) % 1000000000));
     }
 #endif
+    
+    printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
   }
 }
 

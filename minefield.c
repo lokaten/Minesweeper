@@ -135,6 +135,8 @@ setminefield( void *root){
   
   pthread_mutex_unlock( &minefield -> mutex_field);
   
+  ( ( MS_root *) root) -> idle = 0;
+  
   return NULL;
 }
 
@@ -183,6 +185,8 @@ uncov_workthread( void *root){
       addelement( minefield, pos -> x + 1, pos -> y    );
       addelement( minefield, pos -> x - 1, pos -> y    );
     }
+    
+    ( ( MS_root *) root) -> idle = 0;
   }
   
   return NULL;

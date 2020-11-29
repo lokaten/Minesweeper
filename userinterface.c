@@ -159,7 +159,7 @@ event_dispatch( MS_root *root){
   SDL_Event event;
   
   assert( GW);
-    
+  
   if( SDL_WaitEventTimeout( &event, root -> idle? U64C( 1000): 0)){ // U64C( 75) + ( ( ( u64)MS_rand( MS_rand_seed()) * U64C( 100)) >> 32))){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
@@ -196,6 +196,7 @@ event_dispatch( MS_root *root){
 	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff - 1, h), GW -> logical.xdiff - 1, h);
 	    }
 	  }
+	  root -> idle = 0;
 	  break;
 	case SDLK_DOWN:
 	case 'j':
@@ -214,6 +215,7 @@ event_dispatch( MS_root *root){
 	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff - 1), w, GW -> logical.ydiff - 1);
 	    }
 	  }
+	  root -> idle = 0;
 	  break;
 	case SDLK_UP:
 	case 'k':
@@ -233,6 +235,7 @@ event_dispatch( MS_root *root){
 	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff + GW -> real.height), w, GW -> logical.ydiff + GW -> real.height);
 	    }
 	  }
+	  root -> idle = 0;
 	  break;
 	case SDLK_RIGHT:
 	case 'l':
@@ -252,6 +255,7 @@ event_dispatch( MS_root *root){
 	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff + GW -> real.width , h), GW -> logical.xdiff + GW -> real.width , h);
 	    }
 	  }
+	  root -> idle = 0;
 	  break;
 	default:
 	  break;
@@ -313,6 +317,8 @@ mousebuttondown( MS_root * root,
 	element -> flag = 1;
 	++minefield -> mine -> flaged;
       }
+      
+      root -> idle = 0;
       
       drawelement( root -> drawque, element, postion.x, postion.y);
     }
@@ -405,7 +411,7 @@ drawelement( ComandStream *drawque, const MS_element *element, s16 w, s16 h){
   dc -> pos.x = w;
   dc -> pos.y = h;
   dc -> element = *element;
-  
+    
   CS_Push( drawque, dc);
 }
 
