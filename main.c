@@ -232,11 +232,12 @@ main( const int argc, const char** argv){
     
     tutime = getnanosec();
     
+    if( !root -> minefield -> mine -> uncoverd || gameover){
+      gamestart = tutime;
+    }
+    
     if( !root -> idle){
       
-      if( !root -> minefield -> mine -> uncoverd || gameover){
-	gamestart = tutime;
-      }
       
       assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
       assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
