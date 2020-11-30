@@ -263,7 +263,9 @@ event_dispatch( MS_root *root){
 	break;
       }
     case SDL_MOUSEBUTTONDOWN:
-      mousebuttondown( root, event);
+      if( getnanosec() > root -> tutime + 10000000){
+	mousebuttondown( root, event);
+      }
       break;
     default:
       break;
@@ -333,8 +335,8 @@ draw( MS_root *root){
   DrawComand *dc = NULL;
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
-  
-  if( root -> tutime + 20000000 > getnanosec()){
+
+  if( getnanosec() > root -> tutime + 20000000){
     root -> tutime = getnanosec();
   }
   
@@ -401,6 +403,8 @@ draw( MS_root *root){
 		      &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_VERTICAL);
     
     SDL_RenderPresent( GW -> renderer);
+    
+    root -> tutime = getnanosec();
   }
 }
 

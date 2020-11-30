@@ -275,7 +275,7 @@ main( const int argc, const char** argv){
 	wtutime = getnanosec();
       }
       
-      DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      ", ( unsigned long)( ( wtime) / 1000000000), ( unsigned long)( ( wtime) % 1000000000));
+      DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      %lu.%09lu      ", ( u64)( ( mytime) / 1000000000), ( u64)( ( mytime) % 1000000000), ( u64)( ( wtime) / 1000000000), ( u64)( ( wtime) % 1000000000));
     }
 #endif
     
