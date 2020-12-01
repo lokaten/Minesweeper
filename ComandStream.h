@@ -136,6 +136,7 @@ CS_Push( ComandStream *Stream, const void *ptr){
   assert( Stream != NULL);
   addr = ( address)ptr;
   
+  dassert( pthread_mutex_lock( &Stream -> mutex_blk) == 0);
   if unlikely( Stream -> push == Stream -> blk_push + Stream -> blk_size){
     Stream -> blk_push = *( address *)( Stream -> blk_push + Stream -> blk_size);
     dassert( pthread_mutex_lock( &Stream -> mutex_push) == 0);
@@ -148,6 +149,7 @@ CS_Push( ComandStream *Stream, const void *ptr){
   if( Stream -> push == Stream -> blk_push){
     CS_Signal( Stream);
   }
+  dassert( pthread_mutex_unlock( &Stream -> mutex_blk) == 0);
   
   Stream -> push = Stream -> push + Stream -> size;
   
@@ -210,10 +212,12 @@ CS_Releas( ComandStream *Stream){
   }
   dassert( pthread_mutex_unlock( &Stream -> mutex_push) == 0);
   
+  dassert( pthread_mutex_lock( &Stream -> mutex_blk) == 0);
   if unlikely( Stream -> releas == Stream -> blk_releas + Stream -> blk_size){
     Stream -> blk_releas = *( address *)( Stream -> blk_releas + Stream -> blk_size);
     Stream -> releas = Stream -> blk_releas;
   }
+  dassert( pthread_mutex_unlock( &Stream -> mutex_blk) == 0);
   
   ret = Stream -> releas;
   Stream -> releas = Stream -> releas + Stream -> size;
