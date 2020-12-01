@@ -37,6 +37,7 @@ typedef struct{
 }GraphicWraper;
 
 static inline SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
+static inline int MS_BlitTarget( SDL_Renderer *, SDL_Texture *, s32, s32, s32, s32, int, int, int, int);
 static inline int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
 static inline void mousebuttondown( MS_root *, SDL_Event);
 
@@ -54,11 +55,8 @@ GW_Init( FreeNode *freenode, MS_root *root){
   GW -> real.realwidth  = root -> real.realwidth ? root -> real.realwidth : GW -> mfvid.width  * GW -> real.element_width;
   GW -> real.realheight = root -> real.realheight? root -> real.realheight: GW -> mfvid.height * GW -> real.element_height;
   
-  GW -> real.width  = ( GW -> real.realwidth ) / GW -> real.element_width ;
-  GW -> real.height = ( GW -> real.realheight) / GW -> real.element_height;
-  
-  GW -> logical.width  = GW -> real.width;
-  GW -> logical.height = GW -> real.height;
+  GW -> real.width  = GW -> real.realwidth  / GW -> real.element_width ;
+  GW -> real.height = GW -> real.realheight / GW -> real.element_height;
   
   assert( !SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER));
   
@@ -72,7 +70,9 @@ GW_Init( FreeNode *freenode, MS_root *root){
   assert( GW -> renderer != NULL);
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#ifndef DEBUG
   SDL_RenderSetLogicalSize( GW -> renderer, (int)GW -> real.realwidth, (int)GW -> real.realheight);
+#endif
   SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
   
   SDL_SetWindowResizable( GW ->  window, ( SDL_bool)!root -> no_resize);
@@ -90,10 +90,13 @@ GW_Init( FreeNode *freenode, MS_root *root){
   GW -> mfvid.realwidth  = GW -> logical.element_width  * GW -> mfvid.width;
   GW -> mfvid.realheight = GW -> logical.element_height * GW -> mfvid.height;
   
-  GW -> logical.realwidth  = GW -> logical.width  * GW -> logical.element_width;
-  GW -> logical.realheight = GW -> logical.height * GW -> logical.element_height;
+  GW -> logical.realwidth  = GW -> real.realwidth  * GW -> logical.element_width  / GW -> real.element_width;
+  GW -> logical.realheight = GW -> real.realheight * GW -> logical.element_height / GW -> real.element_height;
   
-  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)GW -> mfvid.realwidth, (int)GW -> mfvid.realheight);
+  GW -> logical.width  = GW -> logical.realwidth  / GW -> logical.element_width  + 1;
+  GW -> logical.height = GW -> logical.realheight / GW -> logical.element_height + 1;
+  
+  GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> mfvid.realwidth, GW -> mfvid.realheight);
   
   {
     // confirm size of GW -> target
@@ -164,6 +167,46 @@ event_dispatch( MS_root *root){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
       quit( root);
+    case SDL_WINDOWEVENT:
+      switch( event.window.event){
+      case SDL_WINDOWEVENT_RESIZED:
+      case SDL_WINDOWEVENT_SIZE_CHANGED:
+#ifdef DEBUG
+	GW -> real.realydiff  -= event.window.data2 - GW -> real.realheight;
+	
+	GW -> real.realwidth  = event.window.data1;
+	GW -> real.realheight = event.window.data2;
+	
+	GW -> real.width  = GW -> real.realwidth  / GW -> real.element_width ;
+	GW -> real.height = GW -> real.realheight / GW -> real.element_height;
+	
+	GW -> logical.realwidth  = GW -> real.realwidth  * GW -> logical.element_width  / GW -> real.element_width;
+	GW -> logical.realheight = GW -> real.realheight * GW -> logical.element_height / GW -> real.element_height;
+	
+	GW -> logical.width  = GW -> logical.realwidth  / GW -> logical.element_width  + 1;
+	GW -> logical.height = GW -> logical.realheight / GW -> logical.element_height + 1;
+	
+	GW -> logical.realydiff = ( GW -> real.realydiff * ( s32)GW -> logical.element_height) / ( s32)GW -> real.element_height;
+	GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
+	GW -> real.ydiff = GW -> real.realydiff / GW -> real.element_height;
+#endif
+	//fallthrough
+      case SDL_WINDOWEVENT_TAKE_FOCUS:
+      case SDL_WINDOWEVENT_RESTORED:
+	{
+	  u32 i = GW -> real.width * GW -> real.height + GW -> real.width + GW -> real.height + 1;
+	  
+	  while( i--){
+	    s32 w = i % GW -> logical.width;
+	    s32 h = i / GW -> logical.width - 1;
+	    
+	    drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
+	  }
+	}
+	root -> idle = 0;
+	break;
+      }
+      break;
     case SDL_KEYDOWN:
       {
 	switch( event.key.keysym.sym){
@@ -184,7 +227,7 @@ event_dispatch( MS_root *root){
 	  GW -> logical.realxdiff = GW -> logical.realxdiff - ( s32)GW -> logical.element_width;
 	  if( !GW -> global)
 	    GW -> logical.realxdiff = GW -> logical.realxdiff >= 0? GW -> logical.realxdiff: 0;
-	  GW -> real.realxdiff = ( GW -> logical.realxdiff * ( s32)GW -> real.realwidth ) / ( s32)GW -> logical.realwidth;
+	  GW -> real.realxdiff = ( GW -> logical.realxdiff * ( s32)GW -> real.element_width ) / ( s32)GW -> logical.element_width;
 	  
 	  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
 	  {
@@ -203,7 +246,7 @@ event_dispatch( MS_root *root){
 	  GW -> logical.realydiff = GW -> logical.realydiff - ( s32)GW -> logical.element_height;
 	  if( !GW -> global)
 	    GW -> logical.realydiff = GW -> logical.realydiff >= 0? GW -> logical.realydiff: 0;
-	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.realheight) / ( s32)GW -> logical.realheight;
+	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.element_height) / ( s32)GW -> logical.element_height;
 	  
 	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
 	  {
@@ -223,7 +266,7 @@ event_dispatch( MS_root *root){
 	  if( !GW -> global)
 	    GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight - GW -> logical.realheight)?
 	      GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
-	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.realheight) / ( s32)GW -> logical.realheight;
+	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.element_height) / ( s32)GW -> logical.element_height;
 	  
 	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
 	  { 
@@ -243,7 +286,7 @@ event_dispatch( MS_root *root){
 	  if( !GW -> global)
 	    GW -> logical.realxdiff = GW -> logical.realxdiff <= ( s32)( GW -> mfvid.realwidth - GW -> logical.realwidth)?
 	      GW -> logical.realxdiff: ( s32)( GW -> mfvid.realwidth - GW -> logical.realwidth);
-	  GW -> real.realxdiff = ( GW -> logical.realxdiff * ( s32)GW -> real.realwidth ) / ( s32)GW -> logical.realwidth;
+	  GW -> real.realxdiff = ( GW -> logical.realxdiff * ( s32)GW -> real.element_width ) / ( s32)GW -> logical.element_width;
 	  
 	  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
 	  { 
@@ -283,8 +326,8 @@ mousebuttondown( MS_root * root,
   
   MS_pos postion;
   
-  postion.x = ( s16)( ( ( u16)( (                         event.button.x + GW -> real.realxdiff) / (int)GW -> real.element_width ) + GW -> mfvid.width ) % GW -> mfvid.width );
-  postion.y = ( s16)( ( ( u16)( ( GW -> real.realheight - event.button.y + GW -> real.realydiff) / (int)GW -> real.element_height) + GW -> mfvid.height) % GW -> mfvid.height);
+  postion.x = (                         event.button.x + GW -> real.realxdiff) / GW -> real.element_width;
+  postion.y = ( GW -> real.realheight - event.button.y + GW -> real.realydiff) / GW -> real.element_height;
   
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
@@ -351,9 +394,9 @@ draw( MS_root *root){
     root -> idle = 0;
     
     if( w < GW -> logical.xdiff - 1 ||
-	w > GW -> logical.xdiff + ( int)GW -> real.width ||
+	w > GW -> logical.xdiff + ( int)GW -> logical.width ||
 	h < GW -> logical.ydiff - 1 ||
-	h > GW -> logical.ydiff + ( int)GW -> real.height){
+	h > GW -> logical.ydiff + ( int)GW -> logical.height){
       goto finish;
     }
     
@@ -399,8 +442,15 @@ draw( MS_root *root){
     
     SDL_SetRenderTarget( GW -> renderer, NULL);
     
-    SDL_RenderCopyEx( GW -> renderer, GW -> target, &( SDL_Rect){ .x = GW -> logical.realxdiff, .y = GW -> logical.realydiff, .w = (int)GW -> logical.realwidth, .h = (int)GW -> logical.realheight},
-		      &( SDL_Rect){ .x = 0, .y = 0, .w = (int)GW -> real.realwidth, .h = (int)GW -> real.realheight}, 0, NULL, SDL_FLIP_VERTICAL);
+    MS_BlitTarget( GW -> renderer, GW -> target,
+		   GW -> logical.realxdiff,
+		   GW -> logical.realydiff,
+		   GW -> logical.realwidth  + GW -> logical.realxdiff < GW -> mfvid.realwidth ? GW -> logical.realwidth : GW -> mfvid.realwidth  - GW -> logical.realxdiff,
+		   GW -> logical.realheight + GW -> logical.realydiff < GW -> mfvid.realheight? GW -> logical.realheight: GW -> mfvid.realheight - GW -> logical.realydiff,
+		   0,
+		   GW -> real.realheight + GW -> real.realydiff < GW -> real.element_height * GW -> mfvid.height? 0 : GW -> real.realheight - GW -> real.element_height * GW -> mfvid.height - GW -> real.realydiff,
+		   GW -> real.realwidth  + GW -> real.realxdiff < GW -> real.element_width  * GW -> mfvid.width ? GW -> real.realwidth : GW -> real.element_width  * GW -> mfvid.width  - GW -> real.realxdiff,
+		   GW -> real.realheight + GW -> real.realydiff < GW -> real.element_height * GW -> mfvid.height? GW -> real.realheight: GW -> real.element_height * GW -> mfvid.height - GW -> real.realydiff);
     
     SDL_RenderPresent( GW -> renderer);
     
@@ -431,6 +481,23 @@ MS_OpenImage( SDL_Renderer *render, const char *str){
   assert( tex != NULL);
   SDL_free( img);
   return tex;
+}
+
+static inline int
+MS_BlitTarget( SDL_Renderer *renderer, SDL_Texture *target, s32 sx, s32 sy, s32 sw, s32 sh, int dx, int dy, int dw, int dh){
+  assert( renderer != NULL);
+  assert(   target != NULL);
+  
+  return SDL_RenderCopyEx( renderer, target,
+			   &( SDL_Rect){  .x = sx,
+					  .y = sy,
+					  .w = sw,
+					  .h = sh},
+			   &( SDL_Rect){  .x = dx,
+					  .y = dy,
+					  .w = dw,
+					  .h = dh},
+			   0, NULL, SDL_FLIP_VERTICAL);
 }
 
 static inline int
