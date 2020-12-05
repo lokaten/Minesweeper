@@ -132,11 +132,9 @@ CS_Push( ComandStream *Stream, const void *ptr){
   Stream -> push = Stream -> push + Stream -> size;
   dassert( pthread_mutex_unlock( &Stream -> mutex_push) == 0);
   
-  dassert( pthread_mutex_lock( &Stream -> mutex_blk) == 0);
   if( Stream -> push == Stream -> blk_push + Stream -> blk_size){
     CS_Signal( Stream);
   }
-  dassert( pthread_mutex_unlock( &Stream -> mutex_blk) == 0);
   
   dassert( pthread_mutex_unlock( &Stream -> mutex_write) == 0);
 }
