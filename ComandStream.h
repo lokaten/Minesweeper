@@ -27,7 +27,7 @@ typedef struct{
   pthread_mutex_t mutex_read;
   pthread_cond_t  cond_releas;
   pthread_mutexattr_t attr_mutex_debug;
-  _Bool waiting;
+  u8 waiting;
 }ComandStream;
 
 static const size_t true_blk_size = 512;
@@ -185,7 +185,9 @@ CS_Releas( ComandStream *Stream){
   address ret = 0;
   assert( Stream != NULL);
   
-  dassert( pthread_mutex_lock( &Stream -> mutex_read) == 0);
+  if( pthread_mutex_trylock( &Stream -> mutex_read) != 0){
+    goto end;
+  }
   
   dassert( pthread_mutex_lock( &Stream -> mutex_push) == 0);
   if unlikely( Stream -> push == Stream -> releas){
