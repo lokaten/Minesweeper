@@ -206,6 +206,15 @@ CS_Releas( ComandStream *Stream){
     }
     Stream -> blk_releas = *( address *)( Stream -> blk_releas + Stream -> blk_size);
     Stream -> releas = Stream -> blk_releas;
+    
+    dassert( pthread_mutex_lock( &Stream -> mutex_push) == 0);
+    if unlikely( Stream -> push == Stream -> releas){
+      dassert( pthread_mutex_unlock( &Stream -> mutex_push) == 0);
+      dassert( pthread_mutex_unlock( &Stream -> mutex_blk) == 0);
+      pthread_mutex_unlock( &Stream -> mutex_read);
+      goto end;
+    }
+    dassert( pthread_mutex_unlock( &Stream -> mutex_push) == 0);
   }
   dassert( pthread_mutex_unlock( &Stream -> mutex_blk) == 0);
   
