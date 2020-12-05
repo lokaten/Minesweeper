@@ -26,7 +26,6 @@ typedef struct{
   pthread_mutex_t mutex_write;
   pthread_mutex_t mutex_read;
   pthread_cond_t  cond_releas;
-  pthread_mutexattr_t attr_mutex;
   pthread_mutexattr_t attr_mutex_debug;
   _Bool waiting;
 }ComandStream;
@@ -74,9 +73,7 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t true_size){
   Stream -> push   = addr;
   Stream -> releas = addr;
   
-  pthread_mutexattr_init( &Stream -> attr_mutex);
   pthread_mutexattr_init( &Stream -> attr_mutex_debug);
-  pthread_mutexattr_settype( &Stream -> attr_mutex, PTHREAD_MUTEX_RECURSIVE);
 #ifdef DEBUG
   pthread_mutexattr_settype( &Stream -> attr_mutex_debug, PTHREAD_MUTEX_ERRORCHECK);
 #else
@@ -85,8 +82,8 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t true_size){
   pthread_mutex_init( &Stream -> mutex_signal, &Stream -> attr_mutex_debug);
   pthread_mutex_init( &Stream -> mutex_blk   , &Stream -> attr_mutex_debug);
   pthread_mutex_init( &Stream -> mutex_push  , &Stream -> attr_mutex_debug);
-  pthread_mutex_init( &Stream -> mutex_write , &Stream -> attr_mutex);
-  pthread_mutex_init( &Stream -> mutex_read  , &Stream -> attr_mutex);
+  pthread_mutex_init( &Stream -> mutex_write , &Stream -> attr_mutex_debug);
+  pthread_mutex_init( &Stream -> mutex_read  , &Stream -> attr_mutex_debug);
   pthread_cond_init(  &Stream -> cond_releas , NULL);
   
   Stream -> waiting = 0;
