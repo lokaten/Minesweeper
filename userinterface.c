@@ -163,7 +163,7 @@ event_dispatch( MS_root *root){
   
   assert( GW);
   
-  if( SDL_WaitEventTimeout( &event, root -> idle? U64C( 50): 0)){
+  if( SDL_WaitEventTimeout( &event, root -> idle? U64C( 60): 0)){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
       quit( root);
@@ -306,7 +306,7 @@ event_dispatch( MS_root *root){
 	break;
       }
     case SDL_MOUSEBUTTONDOWN:
-      if( getnanosec() > root -> tutime + 10000000){
+      if( root -> idle){
 	mousebuttondown( root, event);
       }
       break;
@@ -378,8 +378,8 @@ draw( MS_root *root){
   DrawComand *dc = NULL;
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
-
-  if( getnanosec() > root -> tutime + 20000000){
+  
+  if( root -> idle){
     root -> tutime = getnanosec();
   }
   
@@ -430,6 +430,7 @@ draw( MS_root *root){
 		 (int)GW -> logical.element_height);
     
   finish:
+    
     CS_Finish( root -> drawque, dc);
     
     if( getnanosec() > root -> tutime + 15000000){
@@ -453,8 +454,6 @@ draw( MS_root *root){
 		   GW -> real.realheight + GW -> real.realydiff < GW -> real.element_height * GW -> mfvid.height? GW -> real.realheight: GW -> real.element_height * GW -> mfvid.height - GW -> real.realydiff);
     
     SDL_RenderPresent( GW -> renderer);
-    
-    root -> tutime = getnanosec();
   }
 }
 

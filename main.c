@@ -214,7 +214,7 @@ main( const int argc, const char** argv){
   bool gameover;
   u64 tutime;
 #ifdef DEBUG
-  u64 wtime = 0, wtutime = 0;
+  u64 wtime = 0, wtutime = 0, ftime[ 16] = { 0}, fos = 0;
 #endif
   u64 gamestart;
   
@@ -229,6 +229,10 @@ main( const int argc, const char** argv){
   while( TRUE){
     
     event_dispatch( root);
+    
+#ifdef DEBUG
+    ftime[ fos] = getmicrosec();
+#endif
     
     tutime = getnanosec();
     
@@ -260,22 +264,23 @@ main( const int argc, const char** argv){
       }else{
 	// do nothing
       }
-      
-      draw( root);
     }
     
+    draw( root);
     
 #ifdef DEBUG
     if( root -> mss -> deb != NULL){
       u64 mytime = getnanosec() - tutime;
-
+      
       if( mytime > wtime ||
-	  getnanosec() - wtutime > 1000000000){
+	  getnanosec() - wtutime > 2000000000){
 	wtime = mytime;
 	wtutime = getnanosec();
       }
       
-      DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      %lu.%09lu      ", ( u64)( ( mytime) / 1000000000), ( u64)( ( mytime) % 1000000000), ( u64)( ( wtime) / 1000000000), ( u64)( ( wtime) % 1000000000));
+      fos = ( fos + 1) % 16;
+      
+      DEBUG_PRINT( root -> mss -> deb, "\r\t\t\t\t\t\t\t %lu.%09lu      %lu.%09lu      fps: %lf      ", ( u64)( ( mytime) / 1000000000), ( u64)( ( mytime) % 1000000000), ( u64)( ( wtime) / 1000000000), ( u64)( ( wtime) % 1000000000), ( double)16000000 / ( double)( getmicrosec() - ftime[ fos]));
     }
 #endif
     

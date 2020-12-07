@@ -144,6 +144,8 @@ setminefield( void *root){
 static inline void
 addelement( MS_field *minefield, s16 x, s16 y){
   
+  pthread_mutex_lock( &minefield -> mutex_field);
+  
   if( acse( *minefield, x, y) -> cover       &&
       acse( *minefield, x, y) -> count == 15 &&
       !acse( *minefield, x, y) -> flag){
@@ -153,25 +155,32 @@ addelement( MS_field *minefield, s16 x, s16 y){
     acse( *minefield, pos -> x, pos -> y) -> cover = 0;
     CS_Push( minefield -> uncovque, pos);
   }
+  pthread_mutex_unlock( &minefield -> mutex_field);
 }
 
 
 void *
 uncov_workthread( void *root){
   MS_field *minefield = ( ( MS_root *)root) -> minefield;
-  MS_pos *pos;
+  MS_pos *pos, *com;
   MS_element *element;
   assert( minefield != NULL);
   
   while( TRUE){
     
-    pos = ( MS_pos *)CS_WaitReleas( minefield -> uncovque);
+    com = ( MS_pos *)CS_WaitReleas( minefield -> uncovque);
+    
+    pos = MS_CreateLocalFromLocal( MS_pos, com);
+    
+    CS_Finish( minefield -> uncovque, com);
     
     assert( pos != NULL);
     
+    pthread_mutex_lock( &minefield -> mutex_field);
+    
     element = uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *pos, minefield -> mine);
     
-    CS_Finish( minefield -> uncovque, pos);
+    pthread_mutex_unlock( &minefield -> mutex_field);
     
     if likely( element -> count == 0){
       addelement( minefield, pos -> x + 1, pos -> y + 1);
@@ -185,8 +194,6 @@ uncov_workthread( void *root){
       addelement( minefield, pos -> x + 1, pos -> y    );
       addelement( minefield, pos -> x - 1, pos -> y    );
     }
-    
-    ( ( MS_root *) root) -> idle = 0;
   }
   
   return NULL;
@@ -195,6 +202,8 @@ uncov_workthread( void *root){
 void *
 uncov( void *root){
   CS_Signal( ( ( MS_root *)root) -> minefield -> uncovque);
+  
+  ( ( MS_root *) root) -> idle = 0;
   
   return NULL;
 }
@@ -307,6 +316,6 @@ setzero( MS_field *minefield,
       ++minefield -> mine ->  set;
     }
   }
-
+  
   pthread_mutex_unlock( &minefield -> mutex_field);
 }
