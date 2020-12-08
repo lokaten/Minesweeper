@@ -45,8 +45,8 @@ CFLAGS += -DNO_TERM
 endif
 
 ifeq ($(DEV), yes)
-CFLAGS += -Werror -DDEBUG -pg -ftrapv -fsanitize=address -ftime-report
-LIBS += -lasan
+CFLAGS += -Werror -DDEBUG -ftime-report #-fsanitize=address -ftrapv -pg
+#LIBS += -lasan
 endif
 
 ifeq ($(NATIVE), yes)
