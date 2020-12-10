@@ -7,7 +7,7 @@
 #include "minefield.h"
 #include "userinterface.h"
 
-static inline MS_element *uncover_element( MS_field, ComandStream *, MS_pos, MS_mstr *);
+static inline MS_element *uncover_element( MS_field, MS_pos, MS_mstr *);
 static inline MS_element *setmine_element( MS_field, u32, MS_mstr *);
 static inline void addelement( MS_field *, s16, s16);
 
@@ -59,6 +59,8 @@ void
 MF_FreeField(  FreeNode *freenode, const MS_field *pminefield){
   MS_field *minefield = MS_CreateLocalFromLocal( MS_field, pminefield);
   if( minefield != NULL){
+    
+    pthread_mutex_lock( &minefield -> mutex_field);
     
     MS_Free( freenode, pminefield);
     
@@ -123,7 +125,7 @@ setminefield( void *root){
     if( !w || !h || w == minefield -> width - 1 || h == minefield -> height - 1){
       *( minefield -> data + i) = ( MS_element){ .count = 15, .set = 1};
       
-      uncover_element( *minefield, ( ( MS_root *)root) -> drawque, ( MS_pos){ .x = w, .y = h}, minefield -> mine);
+      drawelement( ( ( MS_root *)root) -> drawque, uncover_element( *minefield, ( MS_pos){ .x = w, .y = h}, minefield -> mine), ( s32)w, ( s32)h);
     }
   }
   
@@ -170,17 +172,15 @@ uncov_workthread( void *root){
     
     com = ( MS_pos *)CS_WaitReleas( minefield -> uncovque);
     
+    assert( com != NULL);
+    
     pos = MS_CreateLocalFromLocal( MS_pos, com);
     
     CS_Finish( minefield -> uncovque, com);
     
-    assert( pos != NULL);
+    element = uncover_element( *minefield, *pos, minefield -> mine);
     
-    pthread_mutex_lock( &minefield -> mutex_field);
-    
-    element = uncover_element( *minefield, ( ( MS_root *)root) -> drawque, *pos, minefield -> mine);
-    
-    pthread_mutex_unlock( &minefield -> mutex_field);
+    drawelement( ( ( MS_root *) root) -> drawque, element, pos -> x, pos -> y);
     
     if likely( element -> count == 0){
       addelement( minefield, pos -> x + 1, pos -> y + 1);
@@ -210,7 +210,9 @@ uncov( void *root){
 
 
 static inline MS_element *
-uncover_element( MS_field minefield, ComandStream *drawque, MS_pos postion, MS_mstr *mine){
+uncover_element( MS_field minefield, MS_pos postion, MS_mstr *mine){
+  
+  pthread_mutex_lock( &minefield.mutex_field);
   
   if likely( acse( minefield, postion.x, postion.y) -> count == 15){
     
@@ -230,9 +232,9 @@ uncover_element( MS_field minefield, ComandStream *drawque, MS_pos postion, MS_m
     
     acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x + 1, postion.y    ), mine) -> mine;
     acse( minefield, postion.x, postion.y) -> count += setmine_element( minefield, acse_u( minefield, postion.x - 1, postion.y    ), mine) -> mine;
-    
-    drawelement( drawque, acse( minefield, postion.x, postion.y), postion.x, postion.y);
   }
+  
+  pthread_mutex_unlock( &minefield.mutex_field);
   
   return acse( minefield, postion.x, postion.y);
 }

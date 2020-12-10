@@ -62,7 +62,7 @@ LTO_FLAGS =
 LDFLAGS =
 
 ifeq ($(LTO),yes)
-LTO_FLAGS += -flto -flto=jobserv
+LTO_FLAGS += -flto #-flto=jobserv
 endif
 
 ifeq ($(PROFILE_GEN),yes)
