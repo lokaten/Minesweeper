@@ -27,6 +27,7 @@ typedef struct{
   ComandStream *drawque;
   _Bool idle;
   u64 tutime;
+  u64 fliptime;
 }MS_root;
 
 void *GW_Init( FreeNode *, MS_root *);

@@ -96,6 +96,8 @@ GW_Init( FreeNode *freenode, MS_root *root){
   GW -> logical.width  = GW -> logical.realwidth  / GW -> logical.element_width  + 1;
   GW -> logical.height = GW -> logical.realheight / GW -> logical.element_height + 1;
   
+  GW -> logical.ydiff = GW -> mfvid.height - GW -> logical.height - GW -> logical.realydiff / GW -> logical.element_height;
+  
   GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> mfvid.realwidth, GW -> mfvid.realheight);
   
   {
@@ -138,12 +140,7 @@ GW_Init( FreeNode *freenode, MS_root *root){
   root -> tutime = getnanosec();
   
   SDL_ShowWindow( GW -> window);
-  
-  GW -> logical.realydiff = ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
-  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.realheight) / ( s32)GW -> logical.realheight;
-  
-  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
-  
+    
   return GW;
 }
 
@@ -172,7 +169,8 @@ event_dispatch( MS_root *root){
       case SDL_WINDOWEVENT_RESIZED:
       case SDL_WINDOWEVENT_SIZE_CHANGED:
 #ifdef DEBUG
-	GW -> real.realydiff  -= event.window.data2 - GW -> real.realheight;
+	
+	
 	
 	GW -> real.realwidth  = event.window.data1;
 	GW -> real.realheight = event.window.data2;
@@ -186,9 +184,6 @@ event_dispatch( MS_root *root){
 	GW -> logical.width  = GW -> logical.realwidth  / GW -> logical.element_width  + 1;
 	GW -> logical.height = GW -> logical.realheight / GW -> logical.element_height + 1;
 	
-	GW -> logical.realydiff = ( GW -> real.realydiff * ( s32)GW -> logical.element_height) / ( s32)GW -> real.element_height;
-	GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
-	GW -> real.ydiff = GW -> real.realydiff / GW -> real.element_height;
 #endif
 	//fallthrough
       case SDL_WINDOWEVENT_TAKE_FOCUS:
@@ -204,6 +199,8 @@ event_dispatch( MS_root *root){
 	  }
 	}
 	root -> idle = 0;
+	break;
+      default:
 	break;
       }
       break;
@@ -238,19 +235,26 @@ event_dispatch( MS_root *root){
 	      
 	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff - 1, h), GW -> logical.xdiff - 1, h);
 	    }
+
+	    if( ( ( MS_root *) root) -> minefield -> mine -> hit)
+	      uncov_elements( root, ( MS_video){ .xdiff = GW -> logical.xdiff - 1, .ydiff = GW -> logical.ydiff, .width  = 1, .height = GW -> real.height});
 	  }
-	  root -> idle = 0;
 	  break;
 	case SDLK_DOWN:
 	case 'j':
-	  GW -> logical.realydiff = GW -> logical.realydiff - ( s32)GW -> logical.element_height;
+	  GW -> logical.realydiff = GW -> logical.realydiff + ( s32)GW -> logical.element_height;
 	  if( !GW -> global)
-	    GW -> logical.realydiff = GW -> logical.realydiff >= 0? GW -> logical.realydiff: 0;
+	    GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight - GW -> logical.realheight)?
+	      GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
 	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.element_height) / ( s32)GW -> logical.element_height;
+
+	  GW -> logical.ydiff = GW -> mfvid.height - GW -> logical.height - GW -> logical.realydiff / GW -> logical.element_height;
 	  
-	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
 	  {
 	    u32 i = GW -> real.width + 2;
+	    
+	    if( ( ( MS_root *) root) -> minefield -> mine -> hit)
+	      uncov_elements( root, ( MS_video){ .xdiff = GW -> logical.xdiff, .ydiff = GW -> logical.ydiff - 1, .width  = GW -> real.width, .height = 1});
 	    
 	    while( i--){
 	      s32 w = GW -> logical.xdiff + i - 1;
@@ -258,19 +262,21 @@ event_dispatch( MS_root *root){
 	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff - 1), w, GW -> logical.ydiff - 1);
 	    }
 	  }
-	  root -> idle = 0;
 	  break;
 	case SDLK_UP:
 	case 'k':
-	  GW -> logical.realydiff = GW -> logical.realydiff + ( s32)GW -> logical.element_height;
+	  GW -> logical.realydiff = GW -> logical.realydiff - ( s32)GW -> logical.element_height;
 	  if( !GW -> global)
-	    GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight - GW -> logical.realheight)?
-	      GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
+	    GW -> logical.realydiff = GW -> logical.realydiff >= 0? GW -> logical.realydiff: 0;
 	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.element_height) / ( s32)GW -> logical.element_height;
-	  
-	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
-	  { 
+
+	  GW -> logical.ydiff = GW -> mfvid.height - GW -> logical.height - GW -> logical.realydiff / GW -> logical.element_height;
+
+	  {
 	    u32 i = GW -> real.width + 2;
+	    
+	    if( ( ( MS_root *) root) -> minefield -> mine -> hit)
+	      uncov_elements( root, ( MS_video){ .xdiff = GW -> logical.xdiff, .ydiff = GW -> logical.ydiff + GW -> real.height, .width  = GW -> real.width, .height = 1});
 	    
 	    while( i--){
 	      s32 w = GW -> logical.xdiff + i - 1;
@@ -278,7 +284,6 @@ event_dispatch( MS_root *root){
 	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff + GW -> real.height), w, GW -> logical.ydiff + GW -> real.height);
 	    }
 	  }
-	  root -> idle = 0;
 	  break;
 	case SDLK_RIGHT:
 	case 'l':
@@ -292,13 +297,15 @@ event_dispatch( MS_root *root){
 	  { 
 	    u32 i = GW -> real.height + 2;
 	    
+	    if( ( ( MS_root *) root) -> minefield -> mine -> hit)
+	      uncov_elements( root, ( MS_video){ .xdiff = GW -> logical.xdiff + GW -> real.width, .ydiff = GW -> logical.ydiff, .width  = 1, .height = GW -> real.height});
+	    
 	    while( i--){
 	      s32 h = GW -> logical.ydiff + i - 1;
 	      
 	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff + GW -> real.width , h), GW -> logical.xdiff + GW -> real.width , h);
 	    }
 	  }
-	  root -> idle = 0;
 	  break;
 	default:
 	  break;
@@ -326,8 +333,8 @@ mousebuttondown( MS_root * root,
   
   MS_pos postion;
   
-  postion.x = (                         event.button.x + GW -> real.realxdiff) / GW -> real.element_width;
-  postion.y = ( GW -> real.realheight - event.button.y + GW -> real.realydiff) / GW -> real.element_height;
+  postion.x =                          ( event.button.x + GW -> real.realxdiff) / GW -> real.element_width;
+  postion.y = GW -> mfvid.realheight - ( event.button.y + GW -> real.realydiff) / GW -> real.element_height - 1;
   
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
@@ -376,6 +383,7 @@ void
 draw( MS_root *root){
   GraphicWraper *GW = ( GraphicWraper *)root -> GW;
   DrawComand *dc = NULL;
+  u64 mytime, cutime;
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
   
@@ -384,19 +392,23 @@ draw( MS_root *root){
   }
   
   root -> idle = 1;
-    
+  
+  root -> tutime += 1000000000 / 60;
+  
   while( ( dc = ( DrawComand *)CS_Releas( root -> drawque)) != NULL){ 
     SDL_Texture *tile = NULL;
     MS_element *element = &( dc -> element);
     s16 w = mol_( ( dc -> pos.x + root -> minefield -> width ), root -> minefield -> width , root -> minefield -> width_divobj);
     s16 h = mol_( ( dc -> pos.y + root -> minefield -> height), root -> minefield -> height, root -> minefield -> height_divobj);
     
+    CS_Finish( root -> drawque, dc);
+    
     root -> idle = 0;
     
     if( w < GW -> logical.xdiff - 1 ||
 	w > GW -> logical.xdiff + ( int)GW -> logical.width ||
-	h < GW -> logical.ydiff - 1 ||
-	h > GW -> logical.ydiff + ( int)GW -> logical.height){
+        h < GW -> logical.ydiff - 1 ||
+        h > GW -> logical.ydiff + ( int)GW -> logical.height){
       goto finish;
     }
     
@@ -431,27 +443,36 @@ draw( MS_root *root){
     
   finish:
     
-    CS_Finish( root -> drawque, dc);
-    
-    if( getnanosec() > root -> tutime + 15000000){
+    if( getnanosec() > root -> tutime - root -> fliptime){
       break;
     }
   }
   
-  if( !root -> idle){
-    root -> tutime = getnanosec();
+  mytime = getnanosec();
     
+  if( !root -> idle){
     SDL_SetRenderTarget( GW -> renderer, NULL);
     
     MS_BlitTarget( GW -> renderer, GW -> target,
-		   GW -> logical.realxdiff,
-		   GW -> logical.realydiff,
-		   GW -> logical.realwidth  + GW -> logical.realxdiff < GW -> mfvid.realwidth ? GW -> logical.realwidth : GW -> mfvid.realwidth  - GW -> logical.realxdiff,
-		   GW -> logical.realheight + GW -> logical.realydiff < GW -> mfvid.realheight? GW -> logical.realheight: GW -> mfvid.realheight - GW -> logical.realydiff,
 		   0,
-		   GW -> real.realheight + GW -> real.realydiff < GW -> real.element_height * GW -> mfvid.height? 0 : GW -> real.realheight - GW -> real.element_height * GW -> mfvid.height - GW -> real.realydiff,
-		   GW -> real.realwidth  + GW -> real.realxdiff < GW -> real.element_width  * GW -> mfvid.width ? GW -> real.realwidth : GW -> real.element_width  * GW -> mfvid.width  - GW -> real.realxdiff,
-		   GW -> real.realheight + GW -> real.realydiff < GW -> real.element_height * GW -> mfvid.height? GW -> real.realheight: GW -> real.element_height * GW -> mfvid.height - GW -> real.realydiff);
+		   0,
+		   GW -> mfvid.realwidth,
+		   GW -> mfvid.realheight,
+		   -GW -> real.realxdiff,
+		   -GW -> real.realydiff,
+		   GW -> real.element_width  * GW -> mfvid.width,
+		   GW -> real.element_height * GW -> mfvid.height);
+    
+    mytime = getnanosec() - mytime;
+    
+    cutime = getnanosec() + 50000000;
+    
+    if( root -> tutime > cutime){
+      nanosleep( &( struct timespec){ .tv_nsec = root -> tutime - cutime}, NULL);
+    }
+    
+    root -> fliptime = mytime;
+    root -> fliptime = 3000000 < root -> fliptime? root -> fliptime: 3000000;
     
     SDL_RenderPresent( GW -> renderer);
   }
