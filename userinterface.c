@@ -170,8 +170,6 @@ event_dispatch( MS_root *root){
       case SDL_WINDOWEVENT_SIZE_CHANGED:
 #ifdef DEBUG
 	
-	
-	
 	GW -> real.realwidth  = event.window.data1;
 	GW -> real.realheight = event.window.data2;
 	
@@ -183,6 +181,8 @@ event_dispatch( MS_root *root){
 	
 	GW -> logical.width  = GW -> logical.realwidth  / GW -> logical.element_width  + 1;
 	GW -> logical.height = GW -> logical.realheight / GW -> logical.element_height + 1;
+	
+	GW -> logical.ydiff = GW -> mfvid.height - GW -> logical.height - GW -> logical.realydiff / GW -> logical.element_height;
 	
 #endif
 	//fallthrough
@@ -449,7 +449,7 @@ draw( MS_root *root){
   }
   
   mytime = getnanosec();
-    
+  
   if( !root -> idle){
     SDL_SetRenderTarget( GW -> renderer, NULL);
     
@@ -465,7 +465,7 @@ draw( MS_root *root){
     
     mytime = getnanosec() - mytime;
     
-    cutime = getnanosec() + 50000000;
+    ycutime = getnanosec() + 50000000;
     
     if( root -> tutime > cutime){
       nanosleep( &( struct timespec){ .tv_nsec = root -> tutime - cutime}, NULL);
