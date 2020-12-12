@@ -70,9 +70,6 @@ GW_Init( FreeNode *freenode, MS_root *root){
   assert( GW -> renderer != NULL);
   
   SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-#ifndef DEBUG
-  SDL_RenderSetLogicalSize( GW -> renderer, (int)GW -> real.realwidth, (int)GW -> real.realheight);
-#endif
   SDL_SetRenderDrawColor( GW -> renderer, 0, 0xff, 0, 0xff);
   
   SDL_SetWindowResizable( GW ->  window, ( SDL_bool)!root -> no_resize);
@@ -84,8 +81,8 @@ GW_Init( FreeNode *freenode, MS_root *root){
   GW -> logical.element_width  = GW -> renderer_info -> max_texture_width  / GW -> mfvid.width;
   GW -> logical.element_height = GW -> renderer_info -> max_texture_height / GW -> mfvid.height;
   
-  GW -> logical.element_width  = GW -> logical.element_width  < 120? GW -> logical.element_width : 120;
-  GW -> logical.element_height = GW -> logical.element_height < 120? GW -> logical.element_height: 120;
+  GW -> logical.element_width  = GW -> logical.element_width  < 120? GW -> logical.element_width : GW -> real.element_width;
+  GW -> logical.element_height = GW -> logical.element_height < 120? GW -> logical.element_height: GW -> real.element_height;
   
   GW -> mfvid.realwidth  = GW -> logical.element_width  * GW -> mfvid.width;
   GW -> mfvid.realheight = GW -> logical.element_height * GW -> mfvid.height;
@@ -168,7 +165,6 @@ event_dispatch( MS_root *root){
       switch( event.window.event){
       case SDL_WINDOWEVENT_RESIZED:
       case SDL_WINDOWEVENT_SIZE_CHANGED:
-#ifdef DEBUG
 	
 	GW -> real.realwidth  = event.window.data1;
 	GW -> real.realheight = event.window.data2;
@@ -184,7 +180,6 @@ event_dispatch( MS_root *root){
 	
 	GW -> logical.ydiff = GW -> mfvid.height - GW -> logical.height - GW -> logical.realydiff / GW -> logical.element_height;
 	
-#endif
 	//fallthrough
       case SDL_WINDOWEVENT_TAKE_FOCUS:
       case SDL_WINDOWEVENT_RESTORED:
@@ -465,7 +460,7 @@ draw( MS_root *root){
     
     mytime = getnanosec() - mytime;
     
-    ycutime = getnanosec() + 50000000;
+    cutime = getnanosec() + 50000000;
     
     if( root -> tutime > cutime){
       nanosleep( &( struct timespec){ .tv_nsec = root -> tutime - cutime}, NULL);
