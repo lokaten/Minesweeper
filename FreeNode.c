@@ -37,7 +37,9 @@ address
 MS_FreeFromSize( FreeNode *freenode, const address addr, const size_t size){
   ( void)freenode;
   ( void)size;
-  free( ( void *)addr);
+  if( addr){
+    free( ( void *)addr);
+  }
   return 0;
 }
 

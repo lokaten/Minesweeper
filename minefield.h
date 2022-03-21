@@ -59,16 +59,17 @@ extern "C" {
   static inline MS_element *
   acse( const MS_field field, int x, int y){
     return field.data + ( mol_( (u32)( x + (int)field.width ), field.width , field.width_divobj ) +
-			  mol_( (u32)( y + (int)field.height), field.height, field.height_divobj) * field.width);
+                          mol_( (u32)( y + (int)field.height), field.height, field.height_divobj) * field.width);
   }
   
-  void setzero( MS_field *, MS_video);
+  void setzero( void *, MS_video);
   MS_field *MF_CreateFieldFromLocal( FreeNode *, const MS_field *);
 #define MF_CreateField( freenode, ...) MF_CreateFieldFromLocal( freenode, &( MS_field){__VA_ARGS__})
   void *setminefield( void *);
   void MF_FreeField( FreeNode *, const MS_field *);
   void *uncov_workthread( void *);
   void *uncov( void *);
+  void setmine_elements( MS_field *,  MS_video);
   void uncov_elements( void *,  MS_video);
   void *uncov_field( void *);
   

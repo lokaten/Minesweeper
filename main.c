@@ -48,7 +48,7 @@ ROOT_Init( const int argc, const char **argv){
   MS_root *root;
   FreeNode *freenode;
   
-  MS_video real;
+  MS_video real = {};
   MS_field *minefield;
   MS_stream *mss;
   bool no_resize = 0;
@@ -63,11 +63,12 @@ ROOT_Init( const int argc, const char **argv){
   
   u32 benchmark = FALSE;
   
-  MS_field *field_beginner  = MS_CreateLocal( MS_field, .title = "Beginner" , .width =     9, .height =     9, .level =  10, .global = 0, .reseed = 0);
-  MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "Advanced" , .width =    16, .height =    16, .level =  40, .global = 0, .reseed = 0);
-  MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "Expert"   , .width =    30, .height =    16, .level =  99, .global = 0, .reseed = 0);
-  MS_field *field_extrem    = MS_CreateLocal( MS_field, .title = "Extrem"   , .width =    32, .height =    18, .level = 127, .global = 0, .reseed = 0);
-  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "Benchmark", .width = 32000, .height = 18000, .level = 127, .global = 1, .reseed = 0);
+  MS_field *field_beginner  = MS_CreateLocal( MS_field, .title = "Beginner" , .width =     9, .height =     9, .level =     10, .global = 0, .reseed = 0);
+  MS_field *field_advanced  = MS_CreateLocal( MS_field, .title = "Advanced" , .width =    16, .height =    16, .level =     40, .global = 0, .reseed = 0);
+  MS_field *field_expert    = MS_CreateLocal( MS_field, .title = "Expert"   , .width =    30, .height =    16, .level =     99, .global = 0, .reseed = 0);
+  MS_field *field_extrem    = MS_CreateLocal( MS_field, .title = "Extrem"   , .width =    32, .height =    18, .level =    127, .global = 0, .reseed = 0);
+  MS_field *field_fractal   = MS_CreateLocal( MS_field, .title = "Fractal"  , .width =  2000, .height =  1200, .level = 215000, .global = 0, .reseed = 0);
+  MS_field *field_benchmark = MS_CreateLocal( MS_field, .title = "Benchmark", .width = 32000, .height = 18000, .level =    127, .global = 0, .reseed = 0);
   
 #ifndef NO_TERM
   MS_stream *very_quiet = MS_CreateLocal( MS_stream, .out = NULL  , .err = NULL  , .deb = NULL, .hlp = NULL);
@@ -108,6 +109,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_CPY, TERM("Mimic windows minesweeper advanced mode"), "advanced"       , 'a', &minefield                  , field_advanced },
       { OPTSW_CPY, TERM("Mimic windows minesweeper expert mode"  ), "expert"         , 'e', &minefield                  , field_expert   },
       { OPTSW_CPY, TERM(""                                       ), "extrem"         , 'x', &minefield                  , field_extrem   },
+      { OPTSW_CPY, TERM(""                                       ), "fractal"        , 'f', &minefield                  , field_fractal  },
       { OPTSW_CPY, TERM(""                                       ), "benchmark"      , 'B', &benchmark                  , &opt_true      },
 #ifndef NO_TERM
       { OPTSW_GRP, TERM("Output"                                 ), ""               , 0  , NULL                       , NULL},
@@ -117,8 +119,6 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_CPY, TERM("Debug data"                             ), "debug"          , 'd', &( def_out -> deb         ), stdout},
 #endif
       { OPTSW_NUL, TERM(""/* Last elemnt is a NULL termination */), NULL             , 0  , NULL                       , NULL}};
-    
-    real = ( MS_video){ .element_width = 15, .element_height = 15};
     
     if( procopt( mss, opt, argc, argv) < 0){
       MS_print( mss -> err, TERM("\rWrong or broken input, pleas refer to --help\n"));
@@ -138,6 +138,18 @@ ROOT_Init( const int argc, const char **argv){
   
   freenode = MS_CreateFreeList();
   
+  if( benchmark){
+    minefield = field_benchmark;
+  }
+  
+  if( minefield == field_fractal){
+    real.element_width  = real.element_width ? real.element_width : 1;
+    real.element_height = real.element_height? real.element_height: 1;
+  }else{
+    real.element_width  = real.element_width ? real.element_width : 15;
+    real.element_height = real.element_height? real.element_height: 15;
+  }
+  
   if( custom){
     custom_width  = custom_width  ? custom_width : minefield -> width;
     custom_height = custom_height ? custom_height: minefield -> height;
@@ -149,8 +161,6 @@ ROOT_Init( const int argc, const char **argv){
     }
     
     minefield = MF_CreateField( freenode, .title = custom_title, .width = custom_width, .height = custom_height, .level = custom_level, .global = custom_global, .reseed = custom_reseed);
-  }else if( benchmark){
-    minefield = MF_CreateFieldFromLocal( freenode, field_benchmark);
   }else{
     minefield = MF_CreateFieldFromLocal( freenode, minefield);
   }
@@ -184,19 +194,53 @@ ROOT_Init( const int argc, const char **argv){
   
   root -> drawque = CS_CreateStream( freenode, DrawComand);
   
+  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
+  
   if( benchmark){
-    setminefield( ( void *)root);
-    setzero( minefield, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
-    uncov_elements( minefield, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
-    uncov( ( void *)root);
+    // run setminefield and setzero in same theared to avoid race condition
+    setminefield( root);
+    setzero( root, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
+    uncov_elements( root, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
+    uncov( root);
+    
+    {
+      u64 tutime;
+      u64 gamestart;
+      
+      tutime    = getnanosec();
+      gamestart = tutime;
+      
+      while( TRUE){
+	struct timespec tv;
+	
+	clock_gettime( CLOCK_REALTIME, &tv);
+	
+	tv.tv_nsec += 150000000;
+	
+	CS_iswaiting( root -> minefield -> uncovque, tv, 1);
+	
+	tutime = getnanosec();
+	
+	printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
+	
+	if( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
+	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
+	  break;
+	}else{
+	  MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> uncoverd, root -> minefield -> mine -> noelements);
+	}
+	
+      }
+    }
+    
     quit( root);
   }
   
-  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
-  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
-  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
+  // Launching an extra work theard hurt preformance, but lead to more even work delivery
+  // leading to better visual effect when runing the fractal mode
   pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   
+  // safe to run setminfield in parrel due to setzero will run on user input affter window is shown
   pthread_create( NULL, NULL, setminefield, ( void *)root);
   
   root -> GW = GW_Init( root -> freenode, root);
@@ -306,7 +350,7 @@ printtime( FILE * stream, u64 time){
   }else{
     MS_print( stream, "\r%lu.", ( time / U64C( 1000   )) % U64C( 60));
   }
-  MS_print( stream, "%03lu    ", time % U64C( 1000));
+  MS_print( stream, "%03lu                         ", time % U64C( 1000));
 #endif
   return;
 }

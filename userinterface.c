@@ -345,7 +345,7 @@ mousebuttondown( MS_root * root,
       
       if( minefield -> mine -> uncoverd == 0){
 	//let's play "Texas Sharpshooter"
-	setzero( minefield, vid);
+	setzero( root, vid);
       }
       
       uncov_elements( root, vid);
@@ -388,7 +388,7 @@ draw( MS_root *root){
   
   root -> idle = 1;
   
-  root -> tutime += 1000000000 / 60;
+  root -> tutime += 1000000000 / 45;
   
   while( ( dc = ( DrawComand *)CS_Releas( root -> drawque)) != NULL){ 
     SDL_Texture *tile = NULL;
@@ -458,16 +458,48 @@ draw( MS_root *root){
 		   GW -> real.element_width  * GW -> mfvid.width,
 		   GW -> real.element_height * GW -> mfvid.height);
     
+    if( GW -> global){
+      MS_BlitTarget( GW -> renderer, GW -> target,
+                     0,
+                     0,
+                     GW -> mfvid.realwidth,
+                     GW -> mfvid.realheight,
+                     -GW -> real.realxdiff + GW -> real.element_width  * GW -> mfvid.width,
+                     -GW -> real.realydiff,
+                     GW -> real.element_width  * GW -> mfvid.width,
+                     GW -> real.element_height * GW -> mfvid.height);
+
+      MS_BlitTarget( GW -> renderer, GW -> target,
+                     0,
+                     0,
+                     GW -> mfvid.realwidth,
+                     GW -> mfvid.realheight,
+                     -GW -> real.realxdiff,
+                     -GW -> real.realydiff + GW -> real.element_height * GW -> mfvid.height,
+                     GW -> real.element_width  * GW -> mfvid.width,
+                     GW -> real.element_height * GW -> mfvid.height);
+
+      MS_BlitTarget( GW -> renderer, GW -> target,
+                     0,
+                     0,
+                     GW -> mfvid.realwidth,
+                     GW -> mfvid.realheight,
+                     -GW -> real.realxdiff + GW -> real.element_width  * GW -> mfvid.width,
+                     -GW -> real.realydiff + GW -> real.element_height * GW -> mfvid.height,
+                     GW -> real.element_width  * GW -> mfvid.width,
+                     GW -> real.element_height * GW -> mfvid.height);
+    }
+    
     mytime = getnanosec() - mytime;
     
-    cutime = getnanosec() + 50000000;
+    cutime = getnanosec() + 5000000;
     
     if( root -> tutime > cutime){
       nanosleep( &( struct timespec){ .tv_nsec = root -> tutime - cutime}, NULL);
     }
     
     root -> fliptime = mytime;
-    root -> fliptime = 3000000 < root -> fliptime? root -> fliptime: 3000000;
+    root -> fliptime = 300000 < root -> fliptime? root -> fliptime: 300000;
     
     SDL_RenderPresent( GW -> renderer);
   }

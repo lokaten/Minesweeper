@@ -26,8 +26,10 @@ typedef struct{
   pthread_mutex_t mutex_write;
   pthread_mutex_t mutex_read;
   pthread_cond_t  cond_releas;
+  pthread_cond_t  cond_waiting;
   pthread_mutexattr_t attr_mutex_debug;
   u8 waiting;
+  u8 worker;
 }ComandStream;
 
 static const size_t true_blk_size = 512;
@@ -84,9 +86,11 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t true_size){
   pthread_mutex_init( &Stream -> mutex_push  , &Stream -> attr_mutex_debug);
   pthread_mutex_init( &Stream -> mutex_write , &Stream -> attr_mutex_debug);
   pthread_mutex_init( &Stream -> mutex_read  , &Stream -> attr_mutex_debug);
+  pthread_cond_init(  &Stream -> cond_waiting, NULL);
   pthread_cond_init(  &Stream -> cond_releas , NULL);
   
   Stream -> waiting = 0;
+  Stream -> worker = 0;
   
   return Stream;
 }
@@ -154,6 +158,24 @@ CS_Signal( ComandStream *Stream){
   }
 }
 
+
+static inline void
+CS_iswaiting( ComandStream *Stream, struct timespec tv, u8 worker){
+    
+  dassert( pthread_mutex_lock( &Stream -> mutex_signal) == 0);
+  
+  Stream -> worker = worker;
+  
+  pthread_cond_timedwait( &Stream -> cond_waiting, &Stream -> mutex_signal, &tv);
+  
+  Stream -> worker = 0;
+  
+  dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
+  
+  return;
+}
+
+
 static inline void *
 CS_WaitReleas( ComandStream *Stream){
   address ret = 0;
@@ -164,6 +186,10 @@ CS_WaitReleas( ComandStream *Stream){
     if( pthread_mutex_trylock( &Stream -> mutex_signal) == 0){
       
       Stream -> waiting += 1;
+      
+      if( Stream -> waiting >= Stream -> worker){
+	pthread_cond_signal( &Stream -> cond_waiting);
+      }
       
       pthread_cond_wait( &Stream -> cond_releas, &Stream -> mutex_signal);
       
