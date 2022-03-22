@@ -34,7 +34,18 @@ void *GW_Init( FreeNode *, MS_root *);
 void GW_Free( FreeNode *, void *);
 void event_dispatch( MS_root *);
 void draw( MS_root *);
-void drawelement( ComandStream *, const MS_element *, s16, s16);
+
+
+static inline void
+drawelement( ComandStream *drawque, const MS_element *element, s16 w, s16 h){
+  DrawComand *dc = ( DrawComand *)CS_Fetch( drawque);
+  
+  dc -> pos.x = w;
+  dc -> pos.y = h;
+  dc -> element = *element;
+    
+  CS_Push( drawque, dc);
+}
 
 
 /**/

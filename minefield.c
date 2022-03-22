@@ -7,18 +7,18 @@
 #include "minefield.h"
 #include "userinterface.h"
 
-static inline MS_element *uncover_element( MS_field, MS_pos, MS_mstr *);
-static inline MS_element *setmine_element( MS_field, u32, MS_mstr *);
+static inline MS_element *uncover_element( MS_field *, MS_pos, MS_mstr *);
+static inline MS_element *setmine_element( MS_field *, u32, MS_mstr *);
 static inline void addelement( MS_field *, s16, s16);
 
 static inline u32
-acse_u( const MS_field field, int x, int y){
-  return y * field.width + x;
+acse_u( const MS_field *field, int x, int y){
+  return y * field -> width + x;
 }
 
 static inline MS_element *
-acse_f( const MS_field field, int x, int y){
-  return field.data + acse_u( field, x, y);
+acse_f( const MS_field *field, int x, int y){
+  return field -> data + acse_u( field, x, y);
 }
 
 MS_field *
@@ -167,12 +167,12 @@ addelement( MS_field *minefield, s16 x, s16 y){
   lpos.x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
   lpos.y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
   
-  if( acse_f( *minefield, lpos.x, lpos.y) -> cover &&
-      !acse_f( *minefield, lpos.x, lpos.y) -> flag){
+  if( acse_f( minefield, lpos.x, lpos.y) -> cover &&
+      !acse_f( minefield, lpos.x, lpos.y) -> flag){
     MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
     *pos = lpos;
-    if( acse_f( *minefield, pos -> x, pos -> y) -> cover){
-      acse_f( *minefield, pos -> x, pos -> y) -> cover = 0;
+    if( acse_f( minefield, pos -> x, pos -> y) -> cover){
+      acse_f( minefield, pos -> x, pos -> y) -> cover = 0;
       minefield -> mine -> uncoverd += 1;
     }
     CS_Push( minefield -> uncovque, pos);
@@ -183,59 +183,53 @@ addelement( MS_field *minefield, s16 x, s16 y){
 void *
 uncov_workthread( void *root){
   MS_field *minefield = ( ( MS_root *)root) -> minefield;
-  MS_pos *pos, *com;
+  MS_pos *pos;
+  address com;
   MS_element *element;
   assert( minefield != NULL);
   
   while( TRUE){
+    struct CS_Block block = { 0};
     
-    com = ( MS_pos *)CS_WaitReleas( minefield -> uncovque);
+    com = ( address)CS_WaitReleas( minefield -> uncovque);
     
-    assert( com != NULL);
+    assert( ( MS_pos *)com != NULL);
     
-    pos = MS_CreateLocalFromLocal( MS_pos, com);
+    block = CS_BlockReleas( minefield -> uncovque);
     
-    CS_Finish( minefield -> uncovque, com);
+    pos = MS_CreateLocalFromLocal( MS_pos, ( MS_pos *)com);
     
-    pthread_mutex_lock( &minefield -> mutex_field);
-
-    if( pos -> y){
-      setmine_element( *minefield, acse_u( *minefield, pos -> x - 1, pos -> y - 1), minefield -> mine);
-      setmine_element( *minefield, acse_u( *minefield, pos -> x    , pos -> y - 1), minefield -> mine);
-      setmine_element( *minefield, acse_u( *minefield, pos -> x + 1, pos -> y - 1), minefield -> mine);
-    }
-
-    if( pos -> y < ( s16)minefield -> height){
-      setmine_element( *minefield, acse_u( *minefield, pos -> x - 1, pos -> y + 1), minefield -> mine);
-      setmine_element( *minefield, acse_u( *minefield, pos -> x    , pos -> y + 1), minefield -> mine);
-      setmine_element( *minefield, acse_u( *minefield, pos -> x + 1, pos -> y + 1), minefield -> mine);
+    if( !block.blk_ptr){
+      CS_Finish( minefield -> uncovque, ( void *)com);
     }
     
-    if( pos -> x){
-      setmine_element( *minefield, acse_u( *minefield, pos -> x - 1, pos -> y    ), minefield -> mine);
-    }
-
-    if( pos -> x < ( s16)minefield -> width){
-      setmine_element( *minefield, acse_u( *minefield, pos -> x + 1, pos -> y    ), minefield -> mine);
-    }
-    
-    pthread_mutex_unlock( &minefield -> mutex_field);
-    
-    element = uncover_element( *minefield, *pos, minefield -> mine);
-    
-    drawelement( ( ( MS_root *) root) -> drawque, element, pos -> x, pos -> y);
-    
-    if likely( element -> count == 0){
-      addelement( minefield, pos -> x - 1, pos -> y + 1);
-      addelement( minefield, pos -> x    , pos -> y + 1);
-      addelement( minefield, pos -> x + 1, pos -> y + 1);
+    do{
       
-      addelement( minefield, pos -> x - 1, pos -> y - 1);
-      addelement( minefield, pos -> x    , pos -> y - 1);
-      addelement( minefield, pos -> x + 1, pos -> y - 1);
+      element = uncover_element( minefield, *pos, minefield -> mine);
       
-      addelement( minefield, pos -> x - 1, pos -> y    );
-      addelement( minefield, pos -> x + 1, pos -> y    );
+      drawelement( ( ( MS_root *) root) -> drawque, element, pos -> x, pos -> y);
+      
+      if likely( element -> count == 0){
+	addelement( minefield, pos -> x - 1, pos -> y + 1);
+	addelement( minefield, pos -> x    , pos -> y + 1);
+	addelement( minefield, pos -> x + 1, pos -> y + 1);
+	
+	addelement( minefield, pos -> x - 1, pos -> y - 1);
+	addelement( minefield, pos -> x    , pos -> y - 1);
+	addelement( minefield, pos -> x + 1, pos -> y - 1);
+	
+	addelement( minefield, pos -> x - 1, pos -> y    );
+	addelement( minefield, pos -> x + 1, pos -> y    );
+      }
+      
+      com += block.size;
+      
+      pos = ( MS_pos *)com;
+      
+    }while( block.blk_ptr && com != block.blk_ptr + block.blk_size);
+    
+    if( block.blk_ptr){
+      MS_FreeFromSize( ( ( MS_root *) root) -> freenode, block.blk_ptr, true_blk_size);
     }
   }
   
@@ -253,11 +247,36 @@ uncov( void *root){
 
 
 static inline MS_element *
-uncover_element( MS_field minefield, MS_pos postion, MS_mstr *mine){
+uncover_element( MS_field *minefield, MS_pos postion, MS_mstr *mine){
+  MS_pos *pos = &postion;
+  
+  pthread_mutex_lock( &minefield -> mutex_field);
+  
+  mine -> hit += setmine_element( minefield, acse_u( minefield, pos -> x, pos -> y), minefield -> mine) -> mine;
+  
+  if( pos -> y){
+    setmine_element( minefield, acse_u( minefield, pos -> x - 1, pos -> y - 1), minefield -> mine);
+    setmine_element( minefield, acse_u( minefield, pos -> x    , pos -> y - 1), minefield -> mine);
+    setmine_element( minefield, acse_u( minefield, pos -> x + 1, pos -> y - 1), minefield -> mine);
+  }
+  
+  if( pos -> y < ( s16)minefield -> height){
+    setmine_element( minefield, acse_u( minefield, pos -> x - 1, pos -> y + 1), minefield -> mine);
+    setmine_element( minefield, acse_u( minefield, pos -> x    , pos -> y + 1), minefield -> mine);
+    setmine_element( minefield, acse_u( minefield, pos -> x + 1, pos -> y + 1), minefield -> mine);
+  }
+  
+  if( pos -> x){
+    setmine_element( minefield, acse_u( minefield, pos -> x - 1, pos -> y    ), minefield -> mine);
+  }
+  
+  if( pos -> x < ( s16)minefield -> width){
+    setmine_element( minefield, acse_u( minefield, pos -> x + 1, pos -> y    ), minefield -> mine);
+  }
+  
+  pthread_mutex_unlock( &minefield -> mutex_field);
   
   acse_f( minefield, postion.x, postion.y) -> count = 0;
-    
-  mine -> hit += acse_f( minefield, postion.x, postion.y) -> mine;
   
   acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x - 1, postion.y + 1) -> mine;
   acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x    , postion.y + 1) -> mine;
@@ -270,13 +289,13 @@ uncover_element( MS_field minefield, MS_pos postion, MS_mstr *mine){
   acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x - 1, postion.y    ) -> mine;
   acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x + 1, postion.y    ) -> mine;
   
-  return acse( minefield, postion.x, postion.y);
+  return acse_f( minefield, postion.x, postion.y);
 }
 
 
 static inline MS_element *
-setmine_element( MS_field minefield, u32 index, MS_mstr *mine){
-  MS_element *element = minefield.data + index;
+setmine_element( MS_field *minefield, u32 index, MS_mstr *mine){
+  MS_element *element = minefield -> data + index;
   
   if( !element -> set){
     element -> mine = ( ( ( u64)( mine -> seed = MS_rand( mine -> seed)) * ( mine -> noelements - mine -> set)) >> 32) < ( mine -> level - mine -> mines);
@@ -308,7 +327,7 @@ setmine_elements( MS_field *minefield,
       postion.x = vid.xdiff + x;
       postion.y = vid.ydiff + y;
       
-      setmine_element( *minefield, acse_u( *minefield, postion.x, postion.y), minefield -> mine);
+      setmine_element( minefield, acse_u( minefield, postion.x, postion.y), minefield -> mine);
     }
   }
   

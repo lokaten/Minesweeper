@@ -378,6 +378,7 @@ void
 draw( MS_root *root){
   GraphicWraper *GW = ( GraphicWraper *)root -> GW;
   DrawComand *dc = NULL;
+  address com;
   u64 mytime, cutime;
   
   SDL_SetRenderTarget( GW -> renderer, GW -> target);
@@ -390,53 +391,72 @@ draw( MS_root *root){
   
   root -> tutime += 1000000000 / 45;
   
-  while( ( dc = ( DrawComand *)CS_Releas( root -> drawque)) != NULL){ 
-    SDL_Texture *tile = NULL;
-    MS_element *element = &( dc -> element);
-    s16 w = mol_( ( dc -> pos.x + root -> minefield -> width ), root -> minefield -> width , root -> minefield -> width_divobj);
-    s16 h = mol_( ( dc -> pos.y + root -> minefield -> height), root -> minefield -> height, root -> minefield -> height_divobj);
+  while( ( void *)( com = ( address)CS_Releas( root -> drawque)) != NULL){ 
+    struct CS_Block block;
     
-    CS_Finish( root -> drawque, dc);
+    block = CS_BlockReleas( root -> drawque);
     
-    root -> idle = 0;
+    dc = MS_CreateLocalFromLocal( DrawComand, ( DrawComand *)com);
     
-    if( w < GW -> logical.xdiff - 1 ||
-	w > GW -> logical.xdiff + ( int)GW -> logical.width ||
-        h < GW -> logical.ydiff - 1 ||
-        h > GW -> logical.ydiff + ( int)GW -> logical.height){
-      goto finish;
+    if( !block.blk_ptr){
+      CS_Finish( root -> drawque, ( DrawComand *)com);
     }
     
-    if( element -> flag){
-      tile =  GW -> flag;
-    }else if( element -> cover){
-      tile =  GW -> cover;
-    }else if( element -> mine){
-      tile =  GW -> mine;
-    }else switch( element -> count){
-    case 0: tile =  GW -> clear; break;
-    case 1: tile =  GW -> one; break;
-    case 2: tile =  GW -> two; break;
-    case 3: tile =  GW -> three; break;
-    case 4: tile =  GW -> four; break;
-    case 5: tile =  GW -> five; break;
-    case 6: tile =  GW -> six; break;
-    case 7: tile =  GW -> seven; break;
-    case 8: tile =  GW -> eight; break;
-    default:
-      goto finish;
-      break;
+    do{
+      SDL_Texture *tile = NULL;
+      MS_element *element = &( dc -> element);
+      s16 w = mol_( ( dc -> pos.x + root -> minefield -> width ), root -> minefield -> width , root -> minefield -> width_divobj);
+      s16 h = mol_( ( dc -> pos.y + root -> minefield -> height), root -> minefield -> height, root -> minefield -> height_divobj);
+      
+      root -> idle = 0;
+      
+      if( w < GW -> logical.xdiff - 1 ||
+	  w > GW -> logical.xdiff + ( int)GW -> logical.width ||
+	  h < GW -> logical.ydiff - 1 ||
+	  h > GW -> logical.ydiff + ( int)GW -> logical.height){
+	goto finish;
+      }
+      
+      if( element -> flag){
+	tile =  GW -> flag;
+      }else if( element -> cover){
+	tile =  GW -> cover;
+      }else if( element -> mine){
+	tile =  GW -> mine;
+      }else switch( element -> count){
+	case 0: tile =  GW -> clear; break;
+	case 1: tile =  GW -> one; break;
+	case 2: tile =  GW -> two; break;
+	case 3: tile =  GW -> three; break;
+	case 4: tile =  GW -> four; break;
+	case 5: tile =  GW -> five; break;
+	case 6: tile =  GW -> six; break;
+	case 7: tile =  GW -> seven; break;
+	case 8: tile =  GW -> eight; break;
+	default:
+	  goto finish;
+	  break;
+	}
+      
+      assert( tile != NULL);
+      
+      MS_BlitTile( GW -> renderer, tile,
+		   (int)w * ( int)GW -> logical.element_width ,
+		   (int)h * ( int)GW -> logical.element_height,
+		   (int)GW -> logical.element_width,
+		   (int)GW -> logical.element_height);
+      
+    finish:
+      
+      com += block.size;
+      
+      dc = ( DrawComand *)com;
+      
+    }while( block.blk_ptr && com != block.blk_ptr + block.blk_size);
+    
+    if( block.blk_ptr){
+      MS_FreeFromSize( root -> freenode, block.blk_ptr, true_blk_size);
     }
-    
-    assert( tile != NULL);
-    
-    MS_BlitTile( GW -> renderer, tile,
-		 (int)w * ( int)GW -> logical.element_width ,
-		 (int)h * ( int)GW -> logical.element_height,
-		 (int)GW -> logical.element_width,
-		 (int)GW -> logical.element_height);
-    
-  finish:
     
     if( getnanosec() > root -> tutime - root -> fliptime){
       break;
@@ -503,17 +523,6 @@ draw( MS_root *root){
     
     SDL_RenderPresent( GW -> renderer);
   }
-}
-
-void
-drawelement( ComandStream *drawque, const MS_element *element, s16 w, s16 h){
-  DrawComand *dc = ( DrawComand *)CS_Fetch( drawque);
-  
-  dc -> pos.x = w;
-  dc -> pos.y = h;
-  dc -> element = *element;
-    
-  CS_Push( drawque, dc);
 }
 
 static inline SDL_Texture *

@@ -48,7 +48,7 @@ ROOT_Init( const int argc, const char **argv){
   MS_root *root;
   FreeNode *freenode;
   
-  MS_video real = {};
+  MS_video real = { 0};
   MS_field *minefield;
   MS_stream *mss;
   bool no_resize = 0;
@@ -350,7 +350,7 @@ printtime( FILE * stream, u64 time){
   }else{
     MS_print( stream, "\r%lu.", ( time / U64C( 1000   )) % U64C( 60));
   }
-  MS_print( stream, "%03lu                         ", time % U64C( 1000));
+  MS_print( stream, "%03lu                 ", time % U64C( 1000));
 #endif
   return;
 }

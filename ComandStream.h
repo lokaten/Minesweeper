@@ -12,6 +12,12 @@ extern "C" {
 
 #include "MS_util.h"
 
+struct CS_Block{
+  address blk_ptr;
+  size_t blk_size;
+  size_t size;
+};
+
 typedef struct{
   const size_t blk_size;
   const size_t size;
@@ -201,6 +207,43 @@ CS_WaitReleas( ComandStream *Stream){
   
   assert( ret != 0);
   return ( void *)ret;
+}
+
+
+static inline struct CS_Block
+CS_BlockReleas( ComandStream *Stream){
+  struct CS_Block block = { 0};
+  
+  assert( Stream != NULL);
+  
+  block.blk_size = Stream -> blk_size;
+  block.size = Stream -> size;
+  
+  dassert( pthread_mutex_lock( &Stream -> mutex_blk) == 0);
+  
+  if( Stream -> blk_releas != Stream -> blk_push &&
+      *( address *)( Stream -> blk_push + Stream -> blk_size) == Stream -> blk_releas){
+    
+    address addr = MS_CreateFromSize( Stream -> freenode, true_blk_size);
+    
+    block.blk_ptr = Stream -> blk_releas;
+    
+    
+    
+    *( address *)( addr + Stream -> blk_size) = *( address *)( Stream -> blk_releas + Stream -> blk_size);
+    *( address *)( Stream -> blk_push + Stream -> blk_size) = addr;
+    
+    Stream -> blk_releas = addr;
+    
+    Stream -> releas = Stream -> blk_releas + Stream -> blk_size;
+    
+    dassert( pthread_mutex_unlock( &Stream -> mutex_read) == 0);
+    
+  }
+  
+  dassert( pthread_mutex_unlock( &Stream -> mutex_blk) == 0);
+    
+  return block;
 }
 
 //
