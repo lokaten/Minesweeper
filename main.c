@@ -93,7 +93,7 @@ ROOT_Init( const int argc, const char **argv){
       { OPTSW_LU , TERM("Element high minefield"                 ), "height"         , 0  , &custom_height              , NULL},
       { OPTSW_LU , TERM("Element wide minefield"                 ), "width"          , 0  , &custom_width               , NULL},
       { OPTSW_LU , TERM("Number of mines"                        ), "level"          , 0  , &custom_level               , NULL},
-      { OPTSW_X  , TERM("seed"                                   ), "reseed"         , 0  , &custom_reseed              , NULL},
+      { OPTSW_X  , TERM("seed"                                   ), "seed"           , 0  , &custom_reseed              , NULL},
 #ifdef DEBUG
       { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &custom_global              , &opt_true},
 #endif
@@ -192,8 +192,6 @@ ROOT_Init( const int argc, const char **argv){
 		    .mss = mss,
 		    .no_resize = no_resize);
   
-  root -> drawque = CS_CreateStream( freenode, DrawComand);
-  
   pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   
   if( benchmark){
@@ -223,6 +221,9 @@ ROOT_Init( const int argc, const char **argv){
 	
 	printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
 	
+	assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
+	assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
+	
 	if( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
 	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
 	  break;
@@ -236,9 +237,8 @@ ROOT_Init( const int argc, const char **argv){
     quit( root);
   }
   
-  // Launching an extra work theard hurt preformance, but lead to more even work delivery
-  // leading to better visual effect when runing the fractal mode
-  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
+  // minefield test for drawque before submiting to drawque
+  root -> drawque = CS_CreateStream( freenode, DrawComand);
   
   // safe to run setminfield in parrel due to setzero will run on user input affter window is shown
   pthread_create( NULL, NULL, setminefield, ( void *)root);
@@ -294,19 +294,17 @@ main( const int argc, const char** argv){
 	if( root -> minefield -> mine -> hit){
 	  pthread_create( NULL, NULL, uncov_field, ( void *)root);
 	  
-	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!               "));
+	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!        "));
 	  gameover = TRUE;
 	}else if( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
 	  printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
 	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
 	  gameover = TRUE;
 	}else{
-	  MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
+	  MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu    "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
 	}
       }else if( !root -> minefield -> mine -> uncoverd){
 	gameover = FALSE;
-      }else{
-	// do nothing
       }
     }
     

@@ -57,11 +57,12 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t true_size){
   address addr;
   assert( true_size);
   
-  size = true_size + sizeof( address) - 1;
-  size -= size % sizeof( address);
+  size = true_size;
   
   blk_size = true_blk_size - sizeof( address);
   blk_size -= blk_size % sizeof( address);
+  
+  assert( !( blk_size % size));
   
   assert( blk_size >= size);
   
