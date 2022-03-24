@@ -36,6 +36,7 @@ typedef struct{
   SDL_Texture *eight;
 }GraphicWraper;
 
+static inline void drawelement_unqued( GraphicWraper *, const MS_element *, s16, s16);
 static inline SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
 static inline int MS_BlitTarget( SDL_Renderer *, SDL_Texture *, s32, s32, s32, s32, int, int, int, int);
 static inline int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
@@ -93,9 +94,9 @@ GW_Init( FreeNode *freenode, MS_root *root){
   GW -> logical.width  = GW -> logical.realwidth  / GW -> logical.element_width  + 1;
   GW -> logical.height = GW -> logical.realheight / GW -> logical.element_height + 1;
   
-  GW -> logical.ydiff = GW -> mfvid.height - GW -> logical.height - GW -> logical.realydiff / GW -> logical.element_height;
-  
   GW -> target = SDL_CreateTexture( GW -> renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, GW -> mfvid.realwidth, GW -> mfvid.realheight);
+  
+  SDL_SetRenderTarget( GW -> renderer, GW -> target);
   
   {
     // confirm size of GW -> target
@@ -132,12 +133,26 @@ GW_Init( FreeNode *freenode, MS_root *root){
   
   SDL_EventState( SDL_MOUSEMOTION  , SDL_IGNORE);
   
+  SDL_ShowWindow( GW -> window);
+  
+  {
+    s32 h = GW -> real.height + 1;
+    
+    while( h--){
+      s32 w = GW -> real.width + 1;
+      
+      while( w--){
+	u8 cover = GW -> global || !( w + ( s32)GW -> mfvid.xdiff == 0 || h + ( s32)GW -> logical.ydiff == 0 || w + GW -> logical.xdiff == ( s32)GW -> mfvid.width || h + GW -> logical.ydiff == ( s32)GW -> mfvid.height);
+	
+	drawelement_unqued( GW, &( MS_element){ .cover = cover}, GW -> logical.xdiff + w, GW -> logical.ydiff + h);
+      }
+    }
+  }
+  
   root -> idle = 0;
   
   root -> tutime = getnanosec();
-  
-  SDL_ShowWindow( GW -> window);
-    
+      
   return GW;
 }
 
@@ -178,22 +193,24 @@ event_dispatch( MS_root *root){
 	GW -> logical.width  = GW -> logical.realwidth  / GW -> logical.element_width  + 1;
 	GW -> logical.height = GW -> logical.realheight / GW -> logical.element_height + 1;
 	
-	GW -> logical.ydiff = GW -> mfvid.height - GW -> logical.height - GW -> logical.realydiff / GW -> logical.element_height;
-	
 	//fallthrough
       case SDL_WINDOWEVENT_TAKE_FOCUS:
       case SDL_WINDOWEVENT_RESTORED:
+	
 	{
-	  u32 i = GW -> real.width * GW -> real.height + GW -> real.width + GW -> real.height + 1;
+	  s32 h = GW -> real.height + 1;
 	  
-	  while( i--){
-	    s32 w = i % GW -> logical.width;
-	    s32 h = i / GW -> logical.width - 1;
+	  while( h--){
+	    s32 w = GW -> real.width + 1;
 	    
-	    drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
+	    while( w--){
+	      drawelement_unqued( GW, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
+	    }
 	  }
 	}
+	
 	root -> idle = 0;
+	
 	break;
       default:
 	break;
@@ -206,7 +223,25 @@ event_dispatch( MS_root *root){
 	  quit( root);
 	case SDLK_F2:
 	case 'r':
-	  pthread_create( NULL, NULL, setminefield, ( void *)root);
+	  	  
+	  {
+	    s32 h = GW -> real.height + 1;
+	    
+	    while( h--){
+	      s32 w = GW -> real.width + 1;
+	      
+	      while( w--){
+		u8 cover = GW -> global || !( ( s32)GW -> logical.xdiff + w == 0 || ( s32)GW -> logical.ydiff + h == 0 || GW -> logical.xdiff + w == ( s32)GW -> mfvid.width || GW -> logical.ydiff + h == ( s32)GW -> mfvid.height);
+
+		if( acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h) -> cover != cover)
+		  drawelement_unqued( GW, &( MS_element){ .cover = cover}, GW -> logical.xdiff + w, GW -> logical.ydiff + h);
+	      }
+	    }
+	  }
+	  
+	  setminefield( root);
+	  
+	  root -> idle = 0;
 	  
 	  break;
 	case SDLK_F3:
@@ -219,21 +254,24 @@ event_dispatch( MS_root *root){
 	  GW -> logical.realxdiff = GW -> logical.realxdiff - ( s32)GW -> logical.element_width;
 	  if( !GW -> global)
 	    GW -> logical.realxdiff = GW -> logical.realxdiff >= 0? GW -> logical.realxdiff: 0;
+	  
+	  GW -> logical.realxdiff = ( GW -> logical.realxdiff + GW -> mfvid.realwidth) % GW -> mfvid.realwidth;
+	  
 	  GW -> real.realxdiff = ( GW -> logical.realxdiff * ( s32)GW -> real.element_width ) / ( s32)GW -> logical.element_width;
 	  
 	  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
+	  
 	  {
-	    u32 i = GW -> real.height + 2;
+	    s32 w = 0;
+	    s32 h = GW -> real.height + 1;
 	    
-	    while( i--){
-	      s32 h = GW -> logical.ydiff + i - 1;
-	      
-	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff - 1, h), GW -> logical.xdiff - 1, h);
+	    while( h--){
+	      drawelement_unqued( GW, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
 	    }
-
-	    if( ( ( MS_root *) root) -> minefield -> mine -> hit)
-	      uncov_elements( root, ( MS_video){ .xdiff = GW -> logical.xdiff - 1, .ydiff = GW -> logical.ydiff, .width  = 1, .height = GW -> real.height});
 	  }
+	  
+	  root -> idle = 0;
+	  
 	  break;
 	case SDLK_DOWN:
 	case 'j':
@@ -241,44 +279,48 @@ event_dispatch( MS_root *root){
 	  if( !GW -> global)
 	    GW -> logical.realydiff = GW -> logical.realydiff <= ( s32)( GW -> mfvid.realheight - GW -> logical.realheight)?
 	      GW -> logical.realydiff: ( s32)( GW -> mfvid.realheight - GW -> logical.realheight);
+	  
+	  GW -> logical.realydiff = ( GW -> logical.realydiff + GW -> mfvid.realheight) % GW -> mfvid.realheight;
+	  
 	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.element_height) / ( s32)GW -> logical.element_height;
-
-	  GW -> logical.ydiff = GW -> mfvid.height - GW -> logical.height - GW -> logical.realydiff / GW -> logical.element_height;
+	  
+	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
 	  
 	  {
-	    u32 i = GW -> real.width + 2;
+	    s32 w = GW -> real.width + 1;
+	    s32 h = GW -> real.height;
 	    
-	    if( ( ( MS_root *) root) -> minefield -> mine -> hit)
-	      uncov_elements( root, ( MS_video){ .xdiff = GW -> logical.xdiff, .ydiff = GW -> logical.ydiff - 1, .width  = GW -> real.width, .height = 1});
-	    
-	    while( i--){
-	      s32 w = GW -> logical.xdiff + i - 1;
-	      
-	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff - 1), w, GW -> logical.ydiff - 1);
+	    while( w--){
+	      drawelement_unqued( GW, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
 	    }
 	  }
+	  
+	  root -> idle = 0;
+	  
 	  break;
 	case SDLK_UP:
 	case 'k':
 	  GW -> logical.realydiff = GW -> logical.realydiff - ( s32)GW -> logical.element_height;
 	  if( !GW -> global)
 	    GW -> logical.realydiff = GW -> logical.realydiff >= 0? GW -> logical.realydiff: 0;
+	  
+	  GW -> logical.realydiff = ( GW -> logical.realydiff + GW -> mfvid.realheight) % GW -> mfvid.realheight;
+	  
 	  GW -> real.realydiff = ( GW -> logical.realydiff * ( s32)GW -> real.element_height) / ( s32)GW -> logical.element_height;
-
-	  GW -> logical.ydiff = GW -> mfvid.height - GW -> logical.height - GW -> logical.realydiff / GW -> logical.element_height;
-
+	  
+	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
+	  
 	  {
-	    u32 i = GW -> real.width + 2;
+	    s32 w = GW -> real.width + 1;
+	    s32 h = 0;
 	    
-	    if( ( ( MS_root *) root) -> minefield -> mine -> hit)
-	      uncov_elements( root, ( MS_video){ .xdiff = GW -> logical.xdiff, .ydiff = GW -> logical.ydiff + GW -> real.height, .width  = GW -> real.width, .height = 1});
-	    
-	    while( i--){
-	      s32 w = GW -> logical.xdiff + i - 1;
-	      
-	      drawelement( root -> drawque, acse( *root -> minefield, w, GW -> logical.ydiff + GW -> real.height), w, GW -> logical.ydiff + GW -> real.height);
+	    while( w--){
+	      drawelement_unqued( GW, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
 	    }
 	  }
+	  
+	  root -> idle = 0;
+	  
 	  break;
 	case SDLK_RIGHT:
 	case 'l':
@@ -286,21 +328,24 @@ event_dispatch( MS_root *root){
 	  if( !GW -> global)
 	    GW -> logical.realxdiff = GW -> logical.realxdiff <= ( s32)( GW -> mfvid.realwidth - GW -> logical.realwidth)?
 	      GW -> logical.realxdiff: ( s32)( GW -> mfvid.realwidth - GW -> logical.realwidth);
+	  
+	  GW -> logical.realxdiff = ( GW -> logical.realxdiff + GW -> mfvid.realwidth) % GW -> mfvid.realwidth;
+	  
 	  GW -> real.realxdiff = ( GW -> logical.realxdiff * ( s32)GW -> real.element_width ) / ( s32)GW -> logical.element_width;
 	  
 	  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
-	  { 
-	    u32 i = GW -> real.height + 2;
+	  
+	  {
+	    s32 w = GW -> real.width;
+	    s32 h = GW -> real.height + 1;
 	    
-	    if( ( ( MS_root *) root) -> minefield -> mine -> hit)
-	      uncov_elements( root, ( MS_video){ .xdiff = GW -> logical.xdiff + GW -> real.width, .ydiff = GW -> logical.ydiff, .width  = 1, .height = GW -> real.height});
-	    
-	    while( i--){
-	      s32 h = GW -> logical.ydiff + i - 1;
-	      
-	      drawelement( root -> drawque, acse( *root -> minefield, GW -> logical.xdiff + GW -> real.width , h), GW -> logical.xdiff + GW -> real.width , h);
+	    while( h--){
+	      drawelement_unqued( GW, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
 	    }
 	  }
+	  
+	  root -> idle = 0;
+	  
 	  break;
 	default:
 	  break;
@@ -328,8 +373,8 @@ mousebuttondown( MS_root * root,
   
   MS_pos postion;
   
-  postion.x =                          ( event.button.x + GW -> real.realxdiff) / GW -> real.element_width;
-  postion.y = GW -> mfvid.realheight - ( event.button.y + GW -> real.realydiff) / GW -> real.element_height - 1;
+  postion.x = ( ( event.button.x + GW -> real.realxdiff) / GW -> real.element_width ) % GW -> mfvid.width;
+  postion.y = ( ( event.button.y + GW -> real.realydiff) / GW -> real.element_height) % GW -> mfvid.height;
   
   switch( event.button.button){
   case SDL_BUTTON_LEFT:
@@ -360,14 +405,14 @@ mousebuttondown( MS_root * root,
       if( element -> flag){
 	element -> flag = 0;
 	--minefield -> mine -> flaged;
+	
+	drawelement( root -> drawque, &( MS_element){ .cover = 1}, postion.x, postion.y);
       }else if( element -> cover){
 	element -> flag = 1;
 	++minefield -> mine -> flaged;
+	
+	drawelement( root -> drawque, &( MS_element){ .flag = 1}, postion.x, postion.y);
       }
-      
-      root -> idle = 0;
-      
-      drawelement( root -> drawque, element, postion.x, postion.y);
     }
   default:
     break;
@@ -386,13 +431,13 @@ draw( MS_root *root){
   if( root -> idle){
     root -> tutime = getnanosec();
   }
-  
-  root -> idle = 1;
-  
+    
   root -> tutime += 1000000000 / 45;
   
   while( ( void *)( com = ( address)CS_Releas( root -> drawque)) != NULL){ 
     struct CS_Block block;
+    
+    root -> idle = 0;
     
     block = CS_BlockReleas( root -> drawque);
     
@@ -403,50 +448,16 @@ draw( MS_root *root){
     }
     
     do{
-      SDL_Texture *tile = NULL;
       MS_element *element = &( dc -> element);
-      s16 w = mol_( ( dc -> pos.x + root -> minefield -> width ), root -> minefield -> width , root -> minefield -> width_divobj);
-      s16 h = mol_( ( dc -> pos.y + root -> minefield -> height), root -> minefield -> height, root -> minefield -> height_divobj);
+      s16 w = dc -> pos.x;
+      s16 h = dc -> pos.y;
       
-      root -> idle = 0;
-      
-      if( w < GW -> logical.xdiff - 1 ||
-	  w > GW -> logical.xdiff + ( int)GW -> logical.width ||
-	  h < GW -> logical.ydiff - 1 ||
-	  h > GW -> logical.ydiff + ( int)GW -> logical.height){
-	goto finish;
+      if( !( ( w < GW -> logical.xdiff && GW -> logical.xdiff + GW -> real.width < GW -> mfvid.width) ||
+	     w > GW -> logical.xdiff + ( s32)GW -> real.width  + 1 ||
+	     ( h < GW -> logical.ydiff && GW -> logical.ydiff + GW -> real.height < GW -> mfvid.height) ||
+	     h > GW -> logical.ydiff + ( s32)GW -> real.height + 1)){
+	drawelement_unqued( GW, element, w, h);
       }
-      
-      if( element -> flag){
-	tile =  GW -> flag;
-      }else if( element -> cover){
-	tile =  GW -> cover;
-      }else if( element -> mine){
-	tile =  GW -> mine;
-      }else switch( element -> count){
-	case 0: tile =  GW -> clear; break;
-	case 1: tile =  GW -> one; break;
-	case 2: tile =  GW -> two; break;
-	case 3: tile =  GW -> three; break;
-	case 4: tile =  GW -> four; break;
-	case 5: tile =  GW -> five; break;
-	case 6: tile =  GW -> six; break;
-	case 7: tile =  GW -> seven; break;
-	case 8: tile =  GW -> eight; break;
-	default:
-	  goto finish;
-	  break;
-	}
-      
-      assert( tile != NULL);
-      
-      MS_BlitTile( GW -> renderer, tile,
-		   (int)w * ( int)GW -> logical.element_width ,
-		   (int)h * ( int)GW -> logical.element_height,
-		   (int)GW -> logical.element_width,
-		   (int)GW -> logical.element_height);
-      
-    finish:
       
       com += block.size;
       
@@ -465,8 +476,28 @@ draw( MS_root *root){
   
   mytime = getnanosec();
   
-  if( !root -> idle){
-    SDL_SetRenderTarget( GW -> renderer, NULL);
+  SDL_SetRenderTarget( GW -> renderer, NULL);
+  
+  MS_BlitTarget( GW -> renderer, GW -> target,
+		 0,
+		 0,
+		 GW -> mfvid.realwidth,
+		 GW -> mfvid.realheight,
+		 -GW -> real.realxdiff,
+		 -GW -> real.realydiff,
+		 GW -> real.element_width  * GW -> mfvid.width,
+		 GW -> real.element_height * GW -> mfvid.height);
+  
+  if( GW -> global){
+    MS_BlitTarget( GW -> renderer, GW -> target,
+		   0,
+		   0,
+		   GW -> mfvid.realwidth,
+		   GW -> mfvid.realheight,
+		   -GW -> real.realxdiff + GW -> real.element_width  * GW -> mfvid.width,
+		   -GW -> real.realydiff,
+		   GW -> real.element_width  * GW -> mfvid.width,
+		   GW -> real.element_height * GW -> mfvid.height);
     
     MS_BlitTarget( GW -> renderer, GW -> target,
 		   0,
@@ -474,41 +505,26 @@ draw( MS_root *root){
 		   GW -> mfvid.realwidth,
 		   GW -> mfvid.realheight,
 		   -GW -> real.realxdiff,
-		   -GW -> real.realydiff,
+		   -GW -> real.realydiff + GW -> real.element_height * GW -> mfvid.height,
 		   GW -> real.element_width  * GW -> mfvid.width,
 		   GW -> real.element_height * GW -> mfvid.height);
     
-    if( GW -> global){
-      MS_BlitTarget( GW -> renderer, GW -> target,
-                     0,
-                     0,
-                     GW -> mfvid.realwidth,
-                     GW -> mfvid.realheight,
-                     -GW -> real.realxdiff + GW -> real.element_width  * GW -> mfvid.width,
-                     -GW -> real.realydiff,
-                     GW -> real.element_width  * GW -> mfvid.width,
-                     GW -> real.element_height * GW -> mfvid.height);
-
-      MS_BlitTarget( GW -> renderer, GW -> target,
-                     0,
-                     0,
-                     GW -> mfvid.realwidth,
-                     GW -> mfvid.realheight,
-                     -GW -> real.realxdiff,
-                     -GW -> real.realydiff + GW -> real.element_height * GW -> mfvid.height,
-                     GW -> real.element_width  * GW -> mfvid.width,
-                     GW -> real.element_height * GW -> mfvid.height);
-
-      MS_BlitTarget( GW -> renderer, GW -> target,
-                     0,
-                     0,
-                     GW -> mfvid.realwidth,
-                     GW -> mfvid.realheight,
-                     -GW -> real.realxdiff + GW -> real.element_width  * GW -> mfvid.width,
-                     -GW -> real.realydiff + GW -> real.element_height * GW -> mfvid.height,
-                     GW -> real.element_width  * GW -> mfvid.width,
-                     GW -> real.element_height * GW -> mfvid.height);
-    }
+    MS_BlitTarget( GW -> renderer, GW -> target,
+		   0,
+		   0,
+		   GW -> mfvid.realwidth,
+		   GW -> mfvid.realheight,
+		   -GW -> real.realxdiff + GW -> real.element_width  * GW -> mfvid.width,
+		   -GW -> real.realydiff + GW -> real.element_height * GW -> mfvid.height,
+		   GW -> real.element_width  * GW -> mfvid.width,
+		   GW -> real.element_height * GW -> mfvid.height);
+  }
+  
+  SDL_SetRenderTarget( GW -> renderer, GW -> target);
+  
+  if( !root -> idle){
+    
+    root -> idle = !com;
     
     mytime = getnanosec() - mytime;
     
@@ -523,6 +539,43 @@ draw( MS_root *root){
     
     SDL_RenderPresent( GW -> renderer);
   }
+}
+
+static inline void
+drawelement_unqued( GraphicWraper *GW, const MS_element *element, s16 w, s16 h){
+  SDL_Texture *tile = NULL;
+  
+  if( GW == NULL) return;
+  
+  if( element -> flag){
+    tile =  GW -> flag;
+  }else if( element -> cover){
+    tile =  GW -> cover;
+  }else if( element -> mine){
+    tile =  GW -> mine;
+  }else switch( element -> count){
+    case  0: tile =  GW -> clear; break;
+    case  1: tile =  GW -> one; break;
+    case  2: tile =  GW -> two; break;
+    case  3: tile =  GW -> three; break;
+    case  4: tile =  GW -> four; break;
+    case  5: tile =  GW -> five; break;
+    case  6: tile =  GW -> six; break;
+    case  7: tile =  GW -> seven; break;
+    case  8: tile =  GW -> eight; break;
+    case 15: tile =  GW -> clear; break;
+    default:
+      return;
+      break;
+  }
+  
+  assert( tile != NULL);
+  
+  MS_BlitTile( GW -> renderer, tile,
+	       (int)w * ( int)GW -> logical.element_width ,
+	       (int)h * ( int)GW -> logical.element_height,
+	       (int)GW -> logical.element_width,
+	       (int)GW -> logical.element_height);
 }
 
 static inline SDL_Texture *
@@ -553,14 +606,14 @@ MS_BlitTarget( SDL_Renderer *renderer, SDL_Texture *target, s32 sx, s32 sy, s32 
 					  .y = dy,
 					  .w = dw,
 					  .h = dh},
-			   0, NULL, SDL_FLIP_VERTICAL);
+			   0, NULL, 0);
 }
 
 static inline int
 MS_BlitTile( SDL_Renderer *renderer, SDL_Texture *tile, int dx, int dy, int w, int h){
   assert( renderer != NULL);
   assert(     tile != NULL);
-  return SDL_RenderCopyEx( renderer, tile, NULL, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, SDL_FLIP_VERTICAL);
+  return SDL_RenderCopyEx( renderer, tile, NULL, &( SDL_Rect){ .x = dx, .y = dy, .w = w, .h = h}, 0, NULL, 0);
 }
 
 

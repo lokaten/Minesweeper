@@ -54,12 +54,15 @@ extern "C" {
     pthread_mutexattr_t attr_mutex;
   }MS_field;
   
-  static inline MS_element *acse( const MS_field, int, int);
-  
   static inline MS_element *
-  acse( const MS_field field, int x, int y){
-    return field.data + ( mol_( (u32)( x + (int)field.width ), field.width , field.width_divobj ) +
-                          mol_( (u32)( y + (int)field.height), field.height, field.height_divobj) * field.width);
+  acse( const MS_field field, s32 x, s32 y){
+    
+    if( x < 0 || y < 0 || x > ( s32)field.width || y > ( s32)field.height){
+      x = (s32)mol_( (u32)( x + (s32)field.width ), field.width , field.width_divobj );
+      y = (s32)mol_( (u32)( y + (s32)field.height), field.height, field.height_divobj);
+    }
+    
+    return field.data + x + y * field.width;
   }
   
   void setzero( void *, MS_video);

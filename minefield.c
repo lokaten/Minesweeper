@@ -107,18 +107,13 @@ setminefield( void *root){
   
   MS_print( ( ( MS_root *)root) -> mss -> out, "\r\t\t\t\t\tseed: %x   ", minefield -> mine -> seed);
   
-  h = minefield -> height;
+  h = -1;
   
-  while( h--){
+  while( ++h < minefield -> height){
     w = minefield -> width;
     
     while( w--){
       u8 cover = minefield -> global || ( w > 0 && w < minefield -> subwidth + 1 && h > 0 && h < minefield -> subheight + 1);
-      
-      if( ( ( MS_root *)root) -> drawque != NULL &&
-	  ( !acse_f( minefield, w, h) -> cover || acse_f( minefield, w, h) -> flag)){
-	drawelement( ( ( MS_root *)root) -> drawque, &( MS_element){ .cover = cover}, ( s32)w, ( s32)h);
-      }
       
       *acse_f( minefield, w, h) = ( MS_element){ .count = 15, .cover = cover, .set = !cover};
     }
@@ -144,15 +139,20 @@ addelement( MS_field *minefield, s16 x, s16 y){
   
   assert( minefield -> data != NULL);
   
-  lpos.x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
-  lpos.y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
+  lpos.x = x;
+  lpos.y = y;
+  
+  if( lpos.x < 0 || lpos.y < 0 || lpos.x > ( s32)minefield -> width || lpos.y > ( s32)minefield -> height){
+    lpos.x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
+    lpos.y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
+  }
   
   if( acse_f( minefield, lpos.x, lpos.y) -> cover &&
       !acse_f( minefield, lpos.x, lpos.y) -> flag){
     MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
     *pos = lpos;
-    if( acse_f( minefield, pos -> x, pos -> y) -> cover){
-      acse_f( minefield, pos -> x, pos -> y) -> cover = 0;
+    if( acse_f( minefield, lpos.x, lpos.y) -> cover){
+      acse_f( minefield, lpos.x, lpos.y) -> cover = 0;
       minefield -> mine -> uncoverd += 1;
     }
     CS_Push( minefield -> uncovque, pos);
@@ -245,16 +245,16 @@ uncover_element( MS_field *minefield, MS_pos postion, MS_mstr *mine){
   
   acse_f( minefield, postion.x, postion.y) -> count = 0;
   
-  acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x - 1, postion.y + 1) -> mine;
-  acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x    , postion.y + 1) -> mine;
-  acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x + 1, postion.y + 1) -> mine;
+  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x - 1, postion.y + 1) -> mine;
+  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x    , postion.y + 1) -> mine;
+  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x + 1, postion.y + 1) -> mine;
   
-  acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x - 1, postion.y - 1) -> mine;
-  acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x    , postion.y - 1) -> mine;
-  acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x + 1, postion.y - 1) -> mine;
+  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x - 1, postion.y - 1) -> mine;
+  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x    , postion.y - 1) -> mine;
+  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x + 1, postion.y - 1) -> mine;
   
-  acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x - 1, postion.y    ) -> mine;
-  acse_f( minefield, postion.x, postion.y) -> count += acse_f( minefield, postion.x + 1, postion.y    ) -> mine;
+  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x - 1, postion.y    ) -> mine;
+  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x + 1, postion.y    ) -> mine;
   
   return acse_f( minefield, postion.x, postion.y);
 }

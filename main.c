@@ -194,9 +194,9 @@ ROOT_Init( const int argc, const char **argv){
   
   pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
   
+  setminefield( root);
+  
   if( benchmark){
-    // run setminefield and setzero in same theared to avoid race condition
-    setminefield( root);
     setzero( root, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
     uncov_elements( root, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
     uncov( root);
@@ -239,9 +239,6 @@ ROOT_Init( const int argc, const char **argv){
   
   // minefield test for drawque before submiting to drawque
   root -> drawque = CS_CreateStream( freenode, DrawComand);
-  
-  // safe to run setminfield in parrel due to setzero will run on user input affter window is shown
-  pthread_create( NULL, NULL, setminefield, ( void *)root);
   
   root -> GW = GW_Init( root -> freenode, root);
   
