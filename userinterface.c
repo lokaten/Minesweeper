@@ -142,7 +142,7 @@ GW_Init( FreeNode *freenode, MS_root *root){
       s32 w = GW -> real.width + 1;
       
       while( w--){
-	u8 cover = GW -> global || !( w + ( s32)GW -> mfvid.xdiff == 0 || h + ( s32)GW -> logical.ydiff == 0 || w + GW -> logical.xdiff == ( s32)GW -> mfvid.width || h + GW -> logical.ydiff == ( s32)GW -> mfvid.height);
+	u8 cover = GW -> global || !( ( s32)GW -> logical.xdiff + w == 0 || ( s32)GW -> logical.ydiff + h == 0 || GW -> logical.xdiff + w == ( s32)GW -> mfvid.width - 1 || GW -> logical.ydiff + h == ( s32)GW -> mfvid.height - 1);
 	
 	drawelement_unqued( GW, &( MS_element){ .cover = cover}, GW -> logical.xdiff + w, GW -> logical.ydiff + h);
       }
@@ -223,7 +223,7 @@ event_dispatch( MS_root *root){
 	  quit( root);
 	case SDLK_F2:
 	case 'r':
-	  	  
+	  
 	  {
 	    s32 h = GW -> real.height + 1;
 	    
@@ -231,9 +231,10 @@ event_dispatch( MS_root *root){
 	      s32 w = GW -> real.width + 1;
 	      
 	      while( w--){
-		u8 cover = GW -> global || !( ( s32)GW -> logical.xdiff + w == 0 || ( s32)GW -> logical.ydiff + h == 0 || GW -> logical.xdiff + w == ( s32)GW -> mfvid.width || GW -> logical.ydiff + h == ( s32)GW -> mfvid.height);
-
-		if( acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h) -> cover != cover)
+		u8 cover = GW -> global || !( ( s32)GW -> logical.xdiff + w == 0 || ( s32)GW -> logical.ydiff + h == 0 || GW -> logical.xdiff + w == ( s32)GW -> mfvid.width - 1 || GW -> logical.ydiff + h == ( s32)GW -> mfvid.height - 1);
+		
+		if( acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h) -> cover != cover ||
+		    acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h) -> flag)
 		  drawelement_unqued( GW, &( MS_element){ .cover = cover}, GW -> logical.xdiff + w, GW -> logical.ydiff + h);
 	      }
 	    }
@@ -247,6 +248,8 @@ event_dispatch( MS_root *root){
 	case SDLK_F3:
 	case 'e':
 	  pthread_create( NULL, NULL, uncov_field, ( void *)root);
+	  
+	  root -> idle = 0;
 	  
 	  break;
 	case SDLK_LEFT:

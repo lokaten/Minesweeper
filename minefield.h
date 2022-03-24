@@ -57,7 +57,7 @@ extern "C" {
   static inline MS_element *
   acse( const MS_field field, s32 x, s32 y){
     
-    if( x < 0 || y < 0 || x > ( s32)field.width || y > ( s32)field.height){
+    if( x < 0 || y < 0 || x >= ( s32)field.width || y >= ( s32)field.height){
       x = (s32)mol_( (u32)( x + (s32)field.width ), field.width , field.width_divobj );
       y = (s32)mol_( (u32)( y + (s32)field.height), field.height, field.height_divobj);
     }

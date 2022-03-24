@@ -35,7 +35,6 @@ void GW_Free( FreeNode *, void *);
 void event_dispatch( MS_root *);
 void draw( MS_root *);
 
-
 static inline void
 drawelement( ComandStream *drawque, const MS_element *element, s16 w, s16 h){
   DrawComand *dc = ( DrawComand *)CS_Fetch( drawque);
