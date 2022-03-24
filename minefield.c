@@ -263,9 +263,14 @@ uncover_element( MS_field *minefield, MS_pos postion, MS_mstr *mine){
 static inline MS_element *
 setmine_element( MS_field *minefield, u32 index, MS_mstr *mine){
   MS_element *element = minefield -> data + index;
+
+  // call MS_rand() for every cell to keep an uniqe seed per cell.
+  // this means that that when we sellect which cells becomes mines,
+  // the decision will only depend on thier postion and the orginal seed set in setminefield.
+  mine -> seed = MS_rand( mine -> seed);
   
   if( !element -> set){
-    element -> mine = ( ( ( u64)( mine -> seed = MS_rand( mine -> seed)) * ( mine -> noelements - mine -> set)) >> 32) < ( mine -> level - mine -> mines);
+    element -> mine = ( ( ( u64)( mine -> seed) * ( mine -> noelements - mine -> set)) >> 32) < ( mine -> level - mine -> mines);
     
     mine -> set += 1;
     
