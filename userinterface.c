@@ -40,10 +40,10 @@ static inline void drawelement_unqued( GraphicWraper *, const MS_element *, s16,
 static inline SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
 static inline int MS_BlitTarget( SDL_Renderer *, SDL_Texture *, s32, s32, s32, s32, int, int, int, int);
 static inline int MS_BlitTile( SDL_Renderer *, SDL_Texture *, int, int, int, int);
-static inline void mousebuttondown( MS_root *, SDL_Event);
+static inline void mousebuttondown( SDL_Event);
 
 void *
-GW_Init( FreeNode *freenode, MS_root *root){
+GW_Init( FreeNode *freenode){
   GraphicWraper *GW = MS_CreateEmpty( freenode, GraphicWraper);
   
   GW -> global = root -> minefield -> global;
@@ -166,7 +166,7 @@ GW_Free( FreeNode *freenode, void *GW){
 }
 
 void
-event_dispatch( MS_root *root){
+event_dispatch( void){
   GraphicWraper *GW   = ( GraphicWraper *)root -> GW;
   SDL_Event event;
   
@@ -240,14 +240,14 @@ event_dispatch( MS_root *root){
 	    }
 	  }
 	  
-	  setminefield( root);
+	  setminefield();
 	  
 	  root -> idle = 0;
 	  
 	  break;
 	case SDLK_F3:
 	case 'e':
-	  pthread_create( NULL, NULL, uncov_field, ( void *)root);
+	  pthread_create( NULL, NULL, uncov_field, NULL);
 	  
 	  root -> idle = 0;
 	  
@@ -357,7 +357,7 @@ event_dispatch( MS_root *root){
       }
     case SDL_MOUSEBUTTONDOWN:
       if( root -> idle){
-	mousebuttondown( root, event);
+	mousebuttondown( event);
       }
       break;
     default:
@@ -368,8 +368,7 @@ event_dispatch( MS_root *root){
 
 
 static inline void
-mousebuttondown( MS_root * root,
-		 SDL_Event event){
+mousebuttondown( SDL_Event event){
   
   MS_field *minefield = root -> minefield;
   GraphicWraper *GW   = ( GraphicWraper *)root -> GW;
@@ -393,12 +392,12 @@ mousebuttondown( MS_root * root,
       
       if( minefield -> mine -> uncoverd == 0){
 	//let's play "Texas Sharpshooter"
-	setzero( root, vid);
+	setzero( vid);
       }
       
-      uncov_elements( root, vid);
+      uncov_elements( vid);
       
-      uncov( root);
+      uncov();
       break;
     }
   case SDL_BUTTON_RIGHT:
@@ -423,7 +422,7 @@ mousebuttondown( MS_root * root,
 }
 
 void
-draw( MS_root *root){
+draw( void){
   GraphicWraper *GW = ( GraphicWraper *)root -> GW;
   DrawComand *dc = NULL;
   address com;

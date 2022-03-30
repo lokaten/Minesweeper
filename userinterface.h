@@ -28,12 +28,15 @@ typedef struct{
   _Bool idle;
   u64 tutime;
   u64 fliptime;
+  u32 lives;
 }MS_root;
 
-void *GW_Init( FreeNode *, MS_root *);
+void *GW_Init( FreeNode *);
 void GW_Free( FreeNode *, void *);
-void event_dispatch( MS_root *);
-void draw( MS_root *);
+void event_dispatch( void);
+void draw( void);
+
+extern MS_root *root;
 
 static inline void
 drawelement( ComandStream *drawque, const MS_element *element, s16 w, s16 h){

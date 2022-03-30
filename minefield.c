@@ -79,7 +79,7 @@ MF_FreeField(  FreeNode *freenode, const MS_field *pminefield){
 
 
 void *
-setminefield( void *root){
+setminefield( void){
   MS_field *minefield = ( ( MS_root *)root) -> minefield;
   u32 w, h;
   
@@ -161,12 +161,14 @@ addelement( MS_field *minefield, s16 x, s16 y){
 
 
 void *
-uncov_workthread( void *root){
+uncov_workthread( void *v_ptr){
   MS_field *minefield = ( ( MS_root *)root) -> minefield;
   MS_pos *pos;
   address com;
   MS_element *element;
   assert( minefield != NULL);
+  
+  assert( v_ptr == NULL);
   
   while( TRUE){
     struct CS_Block block = { 0};
@@ -228,7 +230,7 @@ uncov_workthread( void *root){
 }
 
 void *
-uncov( void *root){
+uncov( void){
   CS_Signal( ( ( MS_root *)root) -> minefield -> uncovque);
   
   ( ( MS_root *) root) -> idle = 0;
@@ -316,8 +318,7 @@ setmine_elements( MS_field *minefield,
 
 
 void
-uncov_elements( void *root,
-		MS_video  vid){
+uncov_elements( MS_video vid){
   unsigned long i;
   MS_pos postion;
   
@@ -335,25 +336,26 @@ uncov_elements( void *root,
 
 
 void *
-uncov_field( void *root){
-  MS_video vid; 
+uncov_field( void *v_ptr){
+  MS_video vid;
   assert( root != NULL);
-
+  
+  assert( v_ptr == NULL);
+  
   vid  = ( MS_video){ .xdiff = 0, .ydiff = 0,
 		      .width  = ( ( MS_root *) root) -> minefield -> width,
 		      .height = ( ( MS_root *) root) -> minefield -> height};
   
-  uncov_elements( root, vid);
+  uncov_elements( vid);
   
-  uncov( root);
+  uncov();
   
   return NULL;
 }
 
 
 void
-setzero( void *root,
-	 MS_video  vid){
+setzero( MS_video  vid){
   MS_field *minefield = ( ( MS_root *) root) -> minefield;
   unsigned long i;
   int x, y;

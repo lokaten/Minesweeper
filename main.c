@@ -13,39 +13,40 @@
 
 #include "debug.h"
 
-static inline const MS_root * ROOT_FreeRoot( const MS_root *);
+static inline void ROOT_FreeRoot( void);
 MS_root *ROOT_Init( const int, const char **);
 static inline void printtime( FILE *, u64);
 
 FILE *debug_out;
+MS_root *root;
 
 FUNC_DEF( void, FUNC_quit){
   int ret = 0;
   FILE *f;
-  assert( parm -> root != NULL);
-  assert( parm -> root -> mss != NULL);
-  f = parm -> root -> mss -> out;
-  ROOT_FreeRoot( parm -> root);
+  assert( root != NULL);
+  assert( root -> mss != NULL);
+  ( void)parm;
+  f = root -> mss -> out;
+  ROOT_FreeRoot();
   MS_print( f, TERM("\rBye!                                \n"));
   exit( ret);
 }
 
-static inline const MS_root *
-ROOT_FreeRoot( const MS_root *proot){
-  const MS_root *root;
-  assert( proot != NULL);
-  root = MS_CreateLocalFromLocal( MS_root, proot);
+static inline void
+ROOT_FreeRoot( void){
+  const MS_root *troot = root;
+  assert( root != NULL);
+  root = MS_CreateLocalFromLocal( MS_root, root);
   GW_Free( root -> freenode, root -> GW);
-  MS_Free( root -> freenode, proot);
+  MS_Free( root -> freenode, troot);
   MS_Free( root -> freenode, root -> mss);
   MF_FreeField( root -> freenode, root -> minefield);
   MS_FreeFreeList( root -> freenode);
-  return NULL;
+  return;
 }
 
 MS_root *
 ROOT_Init( const int argc, const char **argv){
-  MS_root *root;
   FreeNode *freenode;
   
   MS_video real = { 0};
@@ -56,10 +57,12 @@ ROOT_Init( const int argc, const char **argv){
   u32 custom = FALSE; // procopt will overflow _Bool
   u32 custom_global = FALSE;
   char *custom_title = "Custom";
-  u32 custom_reseed = 0;
   u16 custom_width = 0;
   u16 custom_height = 0;
   u32 custom_level = 0;
+  u32 custom_reseed = 0;
+  
+  u32 lives = 1;
   
   u32 benchmark = FALSE;
   
@@ -97,6 +100,8 @@ ROOT_Init( const int argc, const char **argv){
 #ifdef DEBUG
       { OPTSW_CPY, TERM(""                                       ), "global"         , 'g', &custom_global              , &opt_true},
 #endif
+      { OPTSW_GRP, TERM("Game Play"                              ), ""               , 0  , NULL                        , NULL},
+      { OPTSW_LU , TERM(""                                       ), "lives"          , 0  , &lives                      , NULL},
       { OPTSW_GRP, TERM("Video"                                  ), ""               , 0  , NULL                        , NULL},
       { OPTSW_LU , TERM(""                                       ), "window-width"   , 0  , &real.realwidth             , NULL},
       { OPTSW_LU , TERM(""                                       ), "window-height"  , 0  , &real.realheight            , NULL},
@@ -190,16 +195,17 @@ ROOT_Init( const int argc, const char **argv){
 		    .real = real,
 		    .minefield = minefield,
 		    .mss = mss,
-		    .no_resize = no_resize);
+		    .no_resize = no_resize,
+		    .lives = lives);
   
-  pthread_create( NULL, NULL, uncov_workthread, ( void *)root);
+  pthread_create( NULL, NULL, uncov_workthread, NULL);
   
-  setminefield( root);
+  setminefield();
   
   if( benchmark){
-    setzero( root, ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
-    uncov_elements( root, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
-    uncov( root);
+    setzero( ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
+    uncov_elements( ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
+    uncov();
     
     {
       u64 tutime;
@@ -221,6 +227,8 @@ ROOT_Init( const int argc, const char **argv){
 	
 	printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
 	
+	pthread_mutex_lock( &root -> minefield -> mutex_field);
+	
 	assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
 	assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
 	
@@ -231,18 +239,20 @@ ROOT_Init( const int argc, const char **argv){
 	  MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> uncoverd, root -> minefield -> mine -> noelements);
 	}
 	
+	pthread_mutex_unlock( &root -> minefield -> mutex_field);
       }
     }
     
     quit( root);
   }
   
-  // minefield test for drawque before submiting to drawque
+  pthread_create( NULL, NULL, uncov_workthread, NULL);
+  
   root -> drawque = CS_CreateStream( freenode, DrawComand);
   
-  root -> GW = GW_Init( root -> freenode, root);
+  root -> GW = GW_Init( root -> freenode);
   
-  draw( root);
+  draw();
   
   return root;
 }
@@ -250,8 +260,6 @@ ROOT_Init( const int argc, const char **argv){
 
 int
 main( const int argc, const char** argv){
-  MS_root *root;
-  
   bool gameover;
   u64 tutime;
 #ifdef DEBUG
@@ -259,7 +267,7 @@ main( const int argc, const char** argv){
 #endif
   u64 gamestart;
   
-  root = ROOT_Init( argc, argv);
+  ROOT_Init( argc, argv);
   
   gameover  = FALSE;
   tutime    = getnanosec();
@@ -269,7 +277,7 @@ main( const int argc, const char** argv){
   
   while( TRUE){
     
-    event_dispatch( root);
+    event_dispatch();
     
 #ifdef DEBUG
     ftime[ fos] = getmicrosec();
@@ -277,35 +285,35 @@ main( const int argc, const char** argv){
     
     tutime = getnanosec();
     
+    pthread_mutex_lock( &root -> minefield -> mutex_field);
+    
     if( !root -> minefield -> mine -> uncoverd || gameover){
       gamestart = tutime;
     }
     
-    if( !root -> idle){
-      
-      
-      assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
-      assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
-      
-      if( !gameover){
-	if( root -> minefield -> mine -> hit){
-	  pthread_create( NULL, NULL, uncov_field, ( void *)root);
-	  
-	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!        "));
-	  gameover = TRUE;
-	}else if( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
-	  printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
-	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
-	  gameover = TRUE;
-	}else{
-	  MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu    "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
-	}
-      }else if( !root -> minefield -> mine -> uncoverd){
-	gameover = FALSE;
+    assert( root -> minefield -> mine -> mines <= root -> minefield -> mine -> level);
+    assert( root -> minefield -> mine -> set   <= root -> minefield -> mine -> noelements);
+    
+    if( !gameover){
+      if( root -> minefield -> mine -> hit >= root -> lives){
+	pthread_create( NULL, NULL, uncov_field, NULL);
+	
+	MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!        "));
+	gameover = TRUE;
+      }else if( root -> minefield -> mine -> uncoverd - root -> minefield -> mine -> hit == root -> minefield -> mine -> noelements - root -> minefield -> mine -> level){
+	printtime( root -> mss -> out, ( tutime - gamestart) / 1000000);
+	MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
+	gameover = TRUE;
+      }else{
+	MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu    "), root -> minefield -> mine -> flaged, root -> minefield -> mine -> level);
       }
+    }else if( !root -> minefield -> mine -> uncoverd){
+      gameover = FALSE;
     }
     
-    draw( root);
+    pthread_mutex_unlock( &root -> minefield -> mutex_field);
+    
+    draw();
     
 #ifdef DEBUG
     if( root -> mss -> deb != NULL){

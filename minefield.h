@@ -65,15 +65,15 @@ extern "C" {
     return field.data + x + y * field.width;
   }
   
-  void setzero( void *, MS_video);
+  void setzero( MS_video);
   MS_field *MF_CreateFieldFromLocal( FreeNode *, const MS_field *);
 #define MF_CreateField( freenode, ...) MF_CreateFieldFromLocal( freenode, &( MS_field){__VA_ARGS__})
-  void *setminefield( void *);
+  void *setminefield( void);
   void MF_FreeField( FreeNode *, const MS_field *);
   void *uncov_workthread( void *);
-  void *uncov( void *);
+  void *uncov( void);
   void setmine_elements( MS_field *,  MS_video);
-  void uncov_elements( void *,  MS_video);
+  void uncov_elements( MS_video);
   void *uncov_field( void *);
   
 #ifdef __cplusplus
