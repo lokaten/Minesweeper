@@ -34,7 +34,9 @@ typedef struct{
   SDL_Texture *six;
   SDL_Texture *seven;
   SDL_Texture *eight;
+  pthread_mutex_t mutex_rendertarget;
 }GraphicWraper;
+
 
 static inline void drawelement_unqued( GraphicWraper *, const MS_element *, s16, s16);
 static inline SDL_Texture *MS_OpenImage( SDL_Renderer *, const char *);
@@ -150,8 +152,6 @@ GW_Init( FreeNode *freenode){
   }
   
   root -> idle = 0;
-  
-  root -> tutime = getnanosec();
       
   return GW;
 }
@@ -172,7 +172,7 @@ event_dispatch( void){
   
   assert( GW);
   
-  if( SDL_WaitEventTimeout( &event, root -> idle? U64C( 60): 0)){
+  if( SDL_PollEvent( &event)){
     switch( expect( event.type, SDL_MOUSEBUTTONDOWN)){
     case SDL_QUIT:
       quit( root);
@@ -197,6 +197,10 @@ event_dispatch( void){
       case SDL_WINDOWEVENT_TAKE_FOCUS:
       case SDL_WINDOWEVENT_RESTORED:
 	
+	dassert( pthread_mutex_lock( &GW -> mutex_rendertarget) == 0);
+	
+	SDL_SetRenderTarget( GW -> renderer, GW -> target);
+	
 	{
 	  s32 h = GW -> real.height + 1;
 	  
@@ -208,6 +212,8 @@ event_dispatch( void){
 	    }
 	  }
 	}
+	
+	dassert( pthread_mutex_unlock( &GW -> mutex_rendertarget) == 0);
 	
 	root -> idle = 0;
 	
@@ -224,6 +230,10 @@ event_dispatch( void){
 	case SDLK_F2:
 	case 'r':
 	  
+	  dassert( pthread_mutex_lock( &GW -> mutex_rendertarget) == 0);
+	  
+	  SDL_SetRenderTarget( GW -> renderer, GW -> target);
+	  
 	  {
 	    s32 h = GW -> real.height + 1;
 	    
@@ -239,6 +249,8 @@ event_dispatch( void){
 	      }
 	    }
 	  }
+	  
+	  dassert( pthread_mutex_unlock( &GW -> mutex_rendertarget) == 0);
 	  
 	  setminefield();
 	  
@@ -264,6 +276,10 @@ event_dispatch( void){
 	  
 	  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
 	  
+	  dassert( pthread_mutex_lock( &GW -> mutex_rendertarget) == 0);
+	  
+	  SDL_SetRenderTarget( GW -> renderer, GW -> target);
+	  
 	  {
 	    s32 w = 0;
 	    s32 h = GW -> real.height + 1;
@@ -272,6 +288,8 @@ event_dispatch( void){
 	      drawelement_unqued( GW, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
 	    }
 	  }
+	  
+	  dassert( pthread_mutex_unlock( &GW -> mutex_rendertarget) == 0);
 	  
 	  root -> idle = 0;
 	  
@@ -289,6 +307,10 @@ event_dispatch( void){
 	  
 	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
 	  
+	  dassert( pthread_mutex_lock( &GW -> mutex_rendertarget) == 0);
+	  
+	  SDL_SetRenderTarget( GW -> renderer, GW -> target);
+	  
 	  {
 	    s32 w = GW -> real.width + 1;
 	    s32 h = GW -> real.height;
@@ -297,6 +319,8 @@ event_dispatch( void){
 	      drawelement_unqued( GW, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
 	    }
 	  }
+	  
+	  dassert( pthread_mutex_unlock( &GW -> mutex_rendertarget) == 0);
 	  
 	  root -> idle = 0;
 	  
@@ -313,6 +337,10 @@ event_dispatch( void){
 	  
 	  GW -> logical.ydiff = GW -> logical.realydiff / GW -> logical.element_height;
 	  
+	  dassert( pthread_mutex_lock( &GW -> mutex_rendertarget) == 0);
+	  
+	  SDL_SetRenderTarget( GW -> renderer, GW -> target);
+	  
 	  {
 	    s32 w = GW -> real.width + 1;
 	    s32 h = 0;
@@ -321,6 +349,8 @@ event_dispatch( void){
 	      drawelement_unqued( GW, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
 	    }
 	  }
+	  
+	  dassert( pthread_mutex_unlock( &GW -> mutex_rendertarget) == 0);
 	  
 	  root -> idle = 0;
 	  
@@ -338,6 +368,10 @@ event_dispatch( void){
 	  
 	  GW -> logical.xdiff = GW -> logical.realxdiff / GW -> logical.element_width;
 	  
+	  dassert( pthread_mutex_lock( &GW -> mutex_rendertarget) == 0);
+	  
+	  SDL_SetRenderTarget( GW -> renderer, GW -> target);
+	  
 	  {
 	    s32 w = GW -> real.width;
 	    s32 h = GW -> real.height + 1;
@@ -346,6 +380,8 @@ event_dispatch( void){
 	      drawelement_unqued( GW, acse( *root -> minefield, GW -> logical.xdiff + w, GW -> logical.ydiff + h), GW -> logical.xdiff + w, GW -> logical.ydiff + h);
 	    }
 	  }
+	  
+	  dassert( pthread_mutex_unlock( &GW -> mutex_rendertarget) == 0);
 	  
 	  root -> idle = 0;
 	  
@@ -404,102 +440,115 @@ mousebuttondown( SDL_Event event){
     {
       MS_element *element = acse( *minefield, postion.x, postion.y);
       
+      dassert( pthread_mutex_lock( &GW -> mutex_rendertarget) == 0);
+      
+      SDL_SetRenderTarget( GW -> renderer, GW -> target);
+      
       if( element -> flag){
 	element -> flag = 0;
 	--minefield -> mine -> flaged;
 	
-	drawelement( root -> drawque, &( MS_element){ .cover = 1}, postion.x, postion.y);
+	drawelement_unqued( GW, &( MS_element){ .cover = 1}, postion.x, postion.y);
       }else if( element -> cover){
 	element -> flag = 1;
 	++minefield -> mine -> flaged;
 	
-	drawelement( root -> drawque, &( MS_element){ .flag = 1}, postion.x, postion.y);
+	drawelement_unqued( GW, &( MS_element){ .flag = 1}, postion.x, postion.y);
       }
+      
+      dassert( pthread_mutex_unlock( &GW -> mutex_rendertarget) == 0);
+      
+      root -> idle = 0;
     }
   default:
     break;
   }
 }
 
-void
-draw( void){
+void *
+draw_workthread( void *v_ptr){
   GraphicWraper *GW = ( GraphicWraper *)root -> GW;
   DrawComand *dc = NULL;
   address com;
-  u64 mytime, cutime;
+  u64 tutime;
   
-  SDL_SetRenderTarget( GW -> renderer, GW -> target);
+  (void)v_ptr;
   
-  if( root -> idle){
-    root -> tutime = getnanosec();
-  }
+  while( TRUE){
     
-  root -> tutime += 1000000000 / 45;
-  
-  while( ( void *)( com = ( address)CS_Releas( root -> drawque)) != NULL){ 
-    struct CS_Block block;
+    tutime = getnanosec();
     
-    root -> idle = 0;
+    CS_Wait( root -> drawque);
     
-    block = CS_BlockReleas( root -> drawque);
+    dassert( pthread_mutex_lock( &GW -> mutex_rendertarget) == 0);
     
-    dc = MS_CreateLocalFromLocal( DrawComand, ( DrawComand *)com);
+    SDL_SetRenderTarget( GW -> renderer, GW -> target);
     
-    if( !block.blk_ptr){
-      CS_Finish( root -> drawque, ( DrawComand *)com);
-    }
-    
-    do{
-      MS_element *element = &( dc -> element);
-      s16 w = dc -> pos.x;
-      s16 h = dc -> pos.y;
+    while( ( DrawComand *)( com = ( address)CS_Releas( root -> drawque)) != NULL){
+      struct CS_Block block = { 0};
       
-      if( !( ( w < GW -> logical.xdiff && GW -> logical.xdiff + GW -> real.width < GW -> mfvid.width) ||
-	     w > GW -> logical.xdiff + ( s32)GW -> real.width  + 1 ||
-	     ( h < GW -> logical.ydiff && GW -> logical.ydiff + GW -> real.height < GW -> mfvid.height) ||
-	     h > GW -> logical.ydiff + ( s32)GW -> real.height + 1)){
-	drawelement_unqued( GW, element, w, h);
+      root -> idle = 0;
+      
+      block = CS_BlockReleas( root -> drawque);
+      
+      dc = MS_CreateLocalFromLocal( DrawComand, ( DrawComand *)com);
+      
+      if( !block.blk_ptr){
+	CS_Finish( root -> drawque, ( DrawComand *)com);
       }
       
-      com += block.size;
+      do{
+	MS_element *element = &( dc -> element);
+	s16 w = dc -> pos.x;
+	s16 h = dc -> pos.y;
+	
+	if( !( ( w < GW -> logical.xdiff && GW -> logical.xdiff + GW -> real.width < GW -> mfvid.width) ||
+	       w > GW -> logical.xdiff + ( s32)GW -> real.width  + 1 ||
+	       ( h < GW -> logical.ydiff && GW -> logical.ydiff + GW -> real.height < GW -> mfvid.height) ||
+	       h > GW -> logical.ydiff + ( s32)GW -> real.height + 1)){
+	  drawelement_unqued( GW, element, w, h);
+	}
+	
+	com += block.size;
+	
+	dc = ( DrawComand *)com;
+	
+      }while( block.blk_ptr && com != block.blk_ptr + block.blk_size);
       
-      dc = ( DrawComand *)com;
+      if( block.blk_ptr){
+	MS_FreeFromSize( root -> freenode, block.blk_ptr, true_blk_size);
+      }
       
-    }while( block.blk_ptr && com != block.blk_ptr + block.blk_size);
-    
-    if( block.blk_ptr){
-      MS_FreeFromSize( root -> freenode, block.blk_ptr, true_blk_size);
+      if( getnanosec() > tutime + 1000000000 / 40)
+	break;
+      
     }
     
-    if( getnanosec() > root -> tutime - root -> fliptime){
-      break;
-    }
+    dassert( pthread_mutex_unlock( &GW -> mutex_rendertarget) == 0);
   }
   
-  mytime = getnanosec();
+  return NULL;
+}
+
+void
+draw( void){
+  GraphicWraper *GW = ( GraphicWraper *)root -> GW;
   
-  SDL_SetRenderTarget( GW -> renderer, NULL);
+  root -> tv_lastpresent.tv_nsec += 1000000000 / ( root -> idle? 100: 40);
   
-  MS_BlitTarget( GW -> renderer, GW -> target,
-		 0,
-		 0,
-		 GW -> mfvid.realwidth,
-		 GW -> mfvid.realheight,
-		 -GW -> real.realxdiff,
-		 -GW -> real.realydiff,
-		 GW -> real.element_width  * GW -> mfvid.width,
-		 GW -> real.element_height * GW -> mfvid.height);
+  CS_iswaiting( root -> drawque, root -> tv_lastpresent, 1);
   
-  if( GW -> global){
-    MS_BlitTarget( GW -> renderer, GW -> target,
-		   0,
-		   0,
-		   GW -> mfvid.realwidth,
-		   GW -> mfvid.realheight,
-		   -GW -> real.realxdiff + GW -> real.element_width  * GW -> mfvid.width,
-		   -GW -> real.realydiff,
-		   GW -> real.element_width  * GW -> mfvid.width,
-		   GW -> real.element_height * GW -> mfvid.height);
+  CS_Signal( root -> drawque);
+  
+  clock_gettime( CLOCK_REALTIME, &root -> tv_lastpresent);
+  
+  dassert( pthread_mutex_lock( &GW -> mutex_rendertarget) == 0);
+  
+  if( !root -> idle){
+    
+    SDL_SetRenderTarget( GW -> renderer, NULL);
+    
+    SDL_RenderClear( GW -> renderer);
     
     MS_BlitTarget( GW -> renderer, GW -> target,
 		   0,
@@ -507,40 +556,51 @@ draw( void){
 		   GW -> mfvid.realwidth,
 		   GW -> mfvid.realheight,
 		   -GW -> real.realxdiff,
-		   -GW -> real.realydiff + GW -> real.element_height * GW -> mfvid.height,
+		   -GW -> real.realydiff,
 		   GW -> real.element_width  * GW -> mfvid.width,
 		   GW -> real.element_height * GW -> mfvid.height);
     
-    MS_BlitTarget( GW -> renderer, GW -> target,
-		   0,
-		   0,
-		   GW -> mfvid.realwidth,
-		   GW -> mfvid.realheight,
-		   -GW -> real.realxdiff + GW -> real.element_width  * GW -> mfvid.width,
-		   -GW -> real.realydiff + GW -> real.element_height * GW -> mfvid.height,
-		   GW -> real.element_width  * GW -> mfvid.width,
-		   GW -> real.element_height * GW -> mfvid.height);
-  }
-  
-  SDL_SetRenderTarget( GW -> renderer, GW -> target);
-  
-  if( !root -> idle){
-    
-    root -> idle = !com;
-    
-    mytime = getnanosec() - mytime;
-    
-    cutime = getnanosec() + 5000000;
-    
-    if( root -> tutime > cutime){
-      nanosleep( &( struct timespec){ .tv_nsec = root -> tutime - cutime}, NULL);
+    if( GW -> global){
+      MS_BlitTarget( GW -> renderer, GW -> target,
+		     0,
+		     0,
+		     GW -> mfvid.realwidth,
+		     GW -> mfvid.realheight,
+		     -GW -> real.realxdiff + GW -> real.element_width  * GW -> mfvid.width,
+		     -GW -> real.realydiff,
+		     GW -> real.element_width  * GW -> mfvid.width,
+		     GW -> real.element_height * GW -> mfvid.height);
+      
+      MS_BlitTarget( GW -> renderer, GW -> target,
+		     0,
+		     0,
+		     GW -> mfvid.realwidth,
+		     GW -> mfvid.realheight,
+		     -GW -> real.realxdiff,
+		     -GW -> real.realydiff + GW -> real.element_height * GW -> mfvid.height,
+		     GW -> real.element_width  * GW -> mfvid.width,
+		     GW -> real.element_height * GW -> mfvid.height);
+      
+      MS_BlitTarget( GW -> renderer, GW -> target,
+		     0,
+		     0,
+		     GW -> mfvid.realwidth,
+		     GW -> mfvid.realheight,
+		     -GW -> real.realxdiff + GW -> real.element_width  * GW -> mfvid.width,
+		     -GW -> real.realydiff + GW -> real.element_height * GW -> mfvid.height,
+		     GW -> real.element_width  * GW -> mfvid.width,
+		     GW -> real.element_height * GW -> mfvid.height);
     }
-    
-    root -> fliptime = mytime;
-    root -> fliptime = 300000 < root -> fliptime? root -> fliptime: 300000;
+
+    if( root -> drawque -> releas == root -> drawque -> push)
+      root -> idle = 1;
     
     SDL_RenderPresent( GW -> renderer);
   }
+  
+  dassert( pthread_mutex_unlock( &GW -> mutex_rendertarget) == 0);
+  
+  SDL_ShowWindow( GW -> window);
 }
 
 static inline void

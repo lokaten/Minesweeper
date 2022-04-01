@@ -26,8 +26,7 @@ typedef struct{
   const bool no_resize;
   ComandStream *drawque;
   _Bool idle;
-  u64 tutime;
-  u64 fliptime;
+  struct timespec tv_lastpresent;
   u32 lives;
 }MS_root;
 
@@ -35,6 +34,7 @@ void *GW_Init( FreeNode *);
 void GW_Free( FreeNode *, void *);
 void event_dispatch( void);
 void draw( void);
+void *draw_workthread( void *);
 
 extern MS_root *root;
 
@@ -45,7 +45,7 @@ drawelement( ComandStream *drawque, const MS_element *element, s16 w, s16 h){
   dc -> pos.x = w;
   dc -> pos.y = h;
   dc -> element = *element;
-    
+  
   CS_Push( drawque, dc);
 }
 

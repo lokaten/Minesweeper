@@ -45,6 +45,7 @@ static inline void *CS_Fetch( ComandStream *);
 static inline void CS_Push( ComandStream *, const void *);
 static inline void CS_Signal( ComandStream *);
 static inline void *CS_WaitReleas( ComandStream *);
+static inline void CS_Wait( ComandStream *);
 static inline void *CS_Releas( ComandStream *);
 static inline void CS_Finish( ComandStream *, const void *);
 static inline void CS_Free( FreeNode *, ComandStream *);
@@ -189,25 +190,29 @@ CS_WaitReleas( ComandStream *Stream){
   assert( Stream != NULL);
   
   while( ( ret = ( address)CS_Releas( Stream)) == 0){
-    
-    if( pthread_mutex_trylock( &Stream -> mutex_signal) == 0){
-      
-      Stream -> waiting += 1;
-      
-      if( Stream -> waiting >= Stream -> worker){
-	pthread_cond_signal( &Stream -> cond_waiting);
-      }
-      
-      pthread_cond_wait( &Stream -> cond_releas, &Stream -> mutex_signal);
-      
-      Stream -> waiting -= 1;
-      
-      dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
-    }
+    CS_Wait( Stream);
   }
   
   assert( ret != 0);
   return ( void *)ret;
+}
+
+
+static inline void
+CS_Wait( ComandStream *Stream){
+  if( pthread_mutex_lock( &Stream -> mutex_signal) == 0){
+    Stream -> waiting += 1;
+    
+    if( Stream -> waiting >= Stream -> worker){
+      pthread_cond_signal( &Stream -> cond_waiting);
+    }
+    
+    pthread_cond_wait( &Stream -> cond_releas, &Stream -> mutex_signal);
+    
+    Stream -> waiting -= 1;
+    
+    dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
+  }
 }
 
 
@@ -228,8 +233,6 @@ CS_BlockReleas( ComandStream *Stream){
     address addr = MS_CreateFromSize( Stream -> freenode, true_blk_size);
     
     block.blk_ptr = Stream -> blk_releas;
-    
-    
     
     *( address *)( addr + Stream -> blk_size) = *( address *)( Stream -> blk_releas + Stream -> blk_size);
     *( address *)( Stream -> blk_push + Stream -> blk_size) = addr;

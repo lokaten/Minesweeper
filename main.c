@@ -246,13 +246,11 @@ ROOT_Init( const int argc, const char **argv){
     quit( root);
   }
   
-  pthread_create( NULL, NULL, uncov_workthread, NULL);
-  
   root -> drawque = CS_CreateStream( freenode, DrawComand);
   
   root -> GW = GW_Init( root -> freenode);
   
-  draw();
+  pthread_create( NULL, NULL, draw_workthread, NULL);
   
   return root;
 }

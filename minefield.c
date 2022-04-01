@@ -221,6 +221,8 @@ uncov_workthread( void *v_ptr){
       
     }while( block.blk_ptr && com != block.blk_ptr + block.blk_size);
     
+    CS_Signal( root -> drawque);
+    
     if( block.blk_ptr){
       MS_FreeFromSize( ( ( MS_root *) root) -> freenode, block.blk_ptr, true_blk_size);
     }
