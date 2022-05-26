@@ -9,7 +9,7 @@
 
 static inline MS_element *uncover_element( MS_field *, MS_pos, MS_mstr *);
 static inline MS_element *setmine_element( MS_field *, u32, MS_mstr *);
-static inline void addelement( MS_field *, s16, s16);
+static inline void addelement( MS_field *, s32, s32);
 
 static inline u32
 acse_u( const MS_field *field, int x, int y){
@@ -134,7 +134,7 @@ setminefield( void){
 
 
 static inline void
-addelement( MS_field *minefield, s16 x, s16 y){
+addelement( MS_field *minefield, s32 x, s32 y){
   MS_pos lpos;
   
   assert( minefield -> data != NULL);
@@ -162,7 +162,7 @@ addelement( MS_field *minefield, s16 x, s16 y){
 
 void *
 uncov_workthread( void *v_ptr){
-  MS_field *minefield = ( ( MS_root *)root) -> minefield;
+  MS_field *minefield = root -> minefield;
   MS_pos *pos;
   address com;
   MS_element *element;
@@ -198,8 +198,8 @@ uncov_workthread( void *v_ptr){
       
       element = uncover_element( minefield, *pos, minefield -> mine);
       
-      if( ( ( MS_root *)root) -> drawque != NULL){
-	drawelement( ( ( MS_root *) root) -> drawque, element, pos -> x, pos -> y);
+      if( root -> drawque != NULL){
+	drawelement( root -> drawque, element, pos -> x, pos -> y);
       }
       
       if likely( element -> count == 0){
@@ -221,10 +221,12 @@ uncov_workthread( void *v_ptr){
       
     }while( block.blk_ptr && com != block.blk_ptr + block.blk_size);
     
-    CS_Signal( root -> drawque);
+    if( root -> drawque != NULL){
+      CS_Signal( root -> drawque);
+    }
     
     if( block.blk_ptr){
-      MS_FreeFromSize( ( ( MS_root *) root) -> freenode, block.blk_ptr, true_blk_size);
+      MS_FreeFromSize( root -> freenode, block.blk_ptr, true_blk_size);
     }
   }
   
@@ -267,7 +269,7 @@ uncover_element( MS_field *minefield, MS_pos postion, MS_mstr *mine){
 static inline MS_element *
 setmine_element( MS_field *minefield, u32 index, MS_mstr *mine){
   MS_element *element = minefield -> data + index;
-
+  
   // call MS_rand() for every cell to keep an uniqe seed per cell.
   // this means that that when we sellect which cells becomes mines,
   // the decision will only depend on thier postion and the orginal seed set in setminefield.

@@ -538,8 +538,6 @@ draw( void){
   
   CS_iswaiting( root -> drawque, root -> tv_lastpresent, 1);
   
-  CS_Signal( root -> drawque);
-  
   clock_gettime( CLOCK_REALTIME, &root -> tv_lastpresent);
   
   dassert( pthread_mutex_lock( &GW -> mutex_rendertarget) == 0);
@@ -591,14 +589,16 @@ draw( void){
 		     GW -> real.element_width  * GW -> mfvid.width,
 		     GW -> real.element_height * GW -> mfvid.height);
     }
-
-    if( root -> drawque -> releas == root -> drawque -> push)
+    
+    //if( root -> drawque -> releas == root -> drawque -> push)
       root -> idle = 1;
     
     SDL_RenderPresent( GW -> renderer);
   }
   
   dassert( pthread_mutex_unlock( &GW -> mutex_rendertarget) == 0);
+  
+  CS_Signal( root -> drawque);
   
   SDL_ShowWindow( GW -> window);
 }

@@ -19,8 +19,8 @@ extern "C" {
   
   
   typedef struct{
-    s16 x;
-    s16 y;
+    s32 x;
+    s32 y;
   }MS_pos;
   
   

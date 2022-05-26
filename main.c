@@ -20,6 +20,11 @@ static inline void printtime( FILE *, u64);
 FILE *debug_out;
 MS_root *root;
 
+__thread struct _cs_substream **_cs_substream_bunker = NULL;
+__thread struct _cs_substream **_cs_reading_bunker = NULL;
+
+u8 id_allocate = 0;
+
 FUNC_DEF( void, FUNC_quit){
   int ret = 0;
   FILE *f;
@@ -198,6 +203,9 @@ ROOT_Init( const int argc, const char **argv){
 		    .no_resize = no_resize,
 		    .lives = lives);
   
+  pthread_create( NULL, NULL, uncov_workthread, NULL);
+  pthread_create( NULL, NULL, uncov_workthread, NULL);
+  pthread_create( NULL, NULL, uncov_workthread, NULL);
   pthread_create( NULL, NULL, uncov_workthread, NULL);
   
   setminefield();
