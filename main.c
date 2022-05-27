@@ -20,8 +20,8 @@ static inline void printtime( FILE *, u64);
 FILE *debug_out;
 MS_root *root;
 
-__thread struct _cs_substream **_cs_substream_bunker = NULL;
-__thread struct _cs_substream **_cs_reading_bunker = NULL;
+__thread struct _cs_substream **_cs_substream_bunker;
+__thread struct _cs_substream **_cs_reading_bunker;
 
 u8 id_allocate = 0;
 
@@ -207,6 +207,10 @@ ROOT_Init( const int argc, const char **argv){
   pthread_create( NULL, NULL, uncov_workthread, NULL);
   pthread_create( NULL, NULL, uncov_workthread, NULL);
   pthread_create( NULL, NULL, uncov_workthread, NULL);
+  pthread_create( NULL, NULL, uncov_workthread, NULL);
+  pthread_create( NULL, NULL, uncov_workthread, NULL);
+  pthread_create( NULL, NULL, uncov_workthread, NULL);
+  pthread_create( NULL, NULL, uncov_workthread, NULL);
   
   setminefield();
   
@@ -229,7 +233,7 @@ ROOT_Init( const int argc, const char **argv){
 	
 	tv.tv_nsec += 150000000;
 	
-	CS_iswaiting( root -> minefield -> uncovque, tv, 1);
+	CS_iswaiting( root -> minefield -> uncovque, tv, 8);
 	
 	tutime = getnanosec();
 	

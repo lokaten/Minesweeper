@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdatomic.h>
 
 #include "MS_util.h"
 #include "ComandStream.h"
@@ -135,6 +136,7 @@ setminefield( void){
 
 static inline void
 addelement( MS_field *minefield, s32 x, s32 y){
+  MS_element tmp;
   MS_pos lpos;
   
   assert( minefield -> data != NULL);
@@ -147,14 +149,18 @@ addelement( MS_field *minefield, s32 x, s32 y){
     lpos.y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
   }
   
-  if( acse_f( minefield, lpos.x, lpos.y) -> cover &&
-      !acse_f( minefield, lpos.x, lpos.y) -> flag){
+  tmp = atomic_load( acse_f( minefield, lpos.x, lpos.y));
+  
+  if( tmp.cover &&
+      !tmp.flag){
     MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
+    
     *pos = lpos;
-    if( acse_f( minefield, lpos.x, lpos.y) -> cover){
-      acse_f( minefield, lpos.x, lpos.y) -> cover = 0;
-      minefield -> mine -> uncoverd += 1;
-    }
+    
+    tmp.cover = 0;
+    
+    atomic_fetch_add( &minefield -> mine -> uncoverd, atomic_exchange( acse_f( minefield, pos -> x, pos -> y), tmp).cover? 1: 0);
+    
     CS_Push( minefield -> uncovque, pos);
   }
 }
@@ -247,7 +253,7 @@ static inline MS_element *
 uncover_element( MS_field *minefield, MS_pos postion, MS_mstr *mine){
   MS_pos *pos = &postion;
   
-  mine -> hit += acse_f( minefield, pos -> x, pos -> y) -> mine;
+  atomic_fetch_add( &mine -> hit, acse_f( minefield, pos -> x, pos -> y) -> mine? 1: 0);
   
   acse_f( minefield, postion.x, postion.y) -> count = 0;
   

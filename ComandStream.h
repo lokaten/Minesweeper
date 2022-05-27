@@ -44,13 +44,13 @@ typedef struct{
   u8 id;
 }ComandStream;
 
+static const size_t true_blk_size = 512;
+static const u8 _cs_max_stream_id = 64;
+
 extern __thread struct _cs_substream **_cs_substream_bunker;
 extern __thread struct _cs_substream **_cs_reading_bunker;
 
 extern u8 id_allocate;
-
-static const size_t true_blk_size = 512;
-static const u8 _cs_max_stream_id = 64;
 
 static inline ComandStream *CS_CreateStreamFromSize( FreeNode *, const size_t);
 static inline void *CS_Fetch( ComandStream *);
@@ -190,30 +190,21 @@ CS_Push( ComandStream *Stream, const void *ptr){
   _cs_substream -> push = _cs_substream -> push + Stream -> size;
   dassert( pthread_mutex_unlock( &_cs_substream -> mutex_push) == 0);
   
-  if( _cs_substream -> push == _cs_substream -> blk_push + Stream -> blk_size){
+  if( _cs_substream -> push == _cs_substream -> blk_push + Stream -> blk_size)
     CS_Signal( Stream);
-  }
 }
 
 static inline void
 CS_Signal( ComandStream *Stream){
   assert( Stream != NULL);
   
-  if( pthread_mutex_trylock( &Stream -> mutex_signal) == 0){
-    if( Stream -> waiting){
-      dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
-      
-      pthread_cond_signal( &Stream -> cond_releas);
-    }else{
-      dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
-    }
-  }
+  pthread_cond_signal( &Stream -> cond_releas);
 }
 
 
 static inline void
 CS_iswaiting( ComandStream *Stream, struct timespec tv, u8 worker){
-    
+  
   dassert( pthread_mutex_lock( &Stream -> mutex_signal) == 0);
   
   Stream -> worker = worker;
@@ -288,10 +279,12 @@ CS_BlockReleas( ComandStream *Stream){
     
     dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
     
+    CS_Signal( Stream);
+    
   }
   
   dassert( pthread_mutex_unlock( &_cs_substream -> mutex_blk) == 0);
-    
+  
   return block;
 }
 
@@ -325,6 +318,8 @@ CS_Releas( ComandStream *Stream){
     return NULL;
   }
   
+  _cs_reading_bunker[ Stream -> id] = _cs_substream;
+  
   end_sentinel = _cs_substream;
   
   do{
@@ -344,7 +339,11 @@ CS_Releas( ComandStream *Stream){
     }
     dassert( pthread_mutex_unlock( &_cs_substream -> mutex_push) == 0);
     
-    dassert( pthread_mutex_lock( &_cs_substream -> mutex_blk) == 0);
+    if( pthread_mutex_trylock( &_cs_substream -> mutex_blk) != 0){
+      dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
+      continue;
+    }
+    
     if unlikely( _cs_substream -> releas == _cs_substream -> blk_releas + Stream -> blk_size){
       if unlikely( *( address *)( _cs_substream -> blk_push + Stream -> blk_size) != _cs_substream -> blk_releas){
 	address blk_free =  *( address *)( _cs_substream -> blk_push + Stream -> blk_size);
@@ -358,7 +357,7 @@ CS_Releas( ComandStream *Stream){
       if unlikely( _cs_substream -> push == _cs_substream -> releas){
 	dassert( pthread_mutex_unlock( &_cs_substream -> mutex_push) == 0);
 	dassert( pthread_mutex_unlock( &_cs_substream -> mutex_blk) == 0);
-	pthread_mutex_unlock( &_cs_substream -> mutex_read);
+	dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
 	continue;
       }
       dassert( pthread_mutex_unlock( &_cs_substream -> mutex_push) == 0);
@@ -367,11 +366,11 @@ CS_Releas( ComandStream *Stream){
     
     ret = _cs_substream -> releas;
     
-    _cs_reading_bunker[ Stream -> id] = _cs_substream;
-    
     break;
     
   }while( _cs_substream != end_sentinel);
+  
+  _cs_reading_bunker[ Stream -> id] = _cs_substream;
   
   return ( void *)ret;
 }
@@ -379,7 +378,7 @@ CS_Releas( ComandStream *Stream){
 
 static inline void
 CS_Finish( ComandStream *Stream, const void *ptr){
-  address addr;
+  address addr = ( address)ptr;
   struct _cs_substream *_cs_substream;
   
   assert( Stream != NULL);
@@ -388,15 +387,13 @@ CS_Finish( ComandStream *Stream, const void *ptr){
   
   _cs_substream = _cs_reading_bunker[ Stream -> id];
   
-  addr = ( address)ptr;
-  
-  assert( ptr != NULL);
-  
-  dassert( addr == _cs_substream -> releas);
+  assert( addr == _cs_substream -> releas);
   
   _cs_substream -> releas = _cs_substream -> releas + Stream -> size;
   
   dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
+  
+  CS_Signal( Stream);
 }
 
 
