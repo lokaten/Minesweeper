@@ -144,9 +144,9 @@ addelement( MS_field *minefield, s32 x, s32 y){
   lpos.x = x;
   lpos.y = y;
   
-  if( lpos.x < 0 || lpos.y < 0 || lpos.x > ( s32)minefield -> width || lpos.y > ( s32)minefield -> height){
-    lpos.x = (s32)mol_( (u32)( x + (s32)minefield -> width ), minefield -> width , minefield -> width_divobj );
-    lpos.y = (s32)mol_( (u32)( y + (s32)minefield -> height), minefield -> height, minefield -> height_divobj);
+  if( lpos.x < 0 || lpos.y < 0 || lpos.x >= ( s32)minefield -> width || lpos.y >= ( s32)minefield -> height){
+    lpos.x = ( lpos.x + minefield -> width ) % minefield -> width;
+    lpos.y = ( lpos.y + minefield -> height) % minefield -> height;
   }
   
   tmp = atomic_load( acse_f( minefield, lpos.x, lpos.y));
@@ -340,8 +340,10 @@ uncov_elements( MS_video vid){
     postion.x = ( s32)( i % vid.width) + vid.xdiff;
     postion.y = ( s32)( i / vid.width) + vid.ydiff;
     
-    addelement( ( ( MS_root *) root) -> minefield, postion.x, postion.y);
+    addelement( root -> minefield, postion.x, postion.y);
   }
+  
+  CS_Signal( root -> minefield -> uncovque);
 }
 
 
