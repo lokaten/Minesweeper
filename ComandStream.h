@@ -9,6 +9,7 @@ extern "C" {
 
 #include <stdlib.h>
 #include <pthread.h>
+#include <stdatomic.h>
 
 #include "MS_util.h"
 
@@ -19,7 +20,6 @@ struct _cs_substream{
   address push;
   address releas;
   pthread_mutex_t mutex_blk;
-  pthread_mutex_t mutex_push;
   pthread_mutex_t mutex_read;
 };
 
@@ -67,6 +67,7 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t true_size){
   ComandStream *Stream;
   size_t blk_size;
   size_t size;
+  
   assert( true_size);
   
   size = true_size;
@@ -86,8 +87,9 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t true_size){
   
   assert( id_allocate < _cs_max_stream_id);
   
-  // this scream race condition
-  Stream -> id = id_allocate++;
+  atomic_fetch_add( &id_allocate, 1);
+  
+  Stream -> id = id_allocate;
   
   pthread_mutexattr_init( &Stream -> attr_mutex_debug);
 #ifdef DEBUG
@@ -113,6 +115,7 @@ static inline void *
 CS_Fetch( ComandStream *Stream){
   address ret = 0;
   struct _cs_substream *_cs_substream;
+  
   assert( Stream != NULL);
   
   if unlikely( _cs_substream_bunker == NULL){
@@ -133,16 +136,21 @@ CS_Fetch( ComandStream *Stream){
     *( address *)( _cs_substream -> blk_push + Stream -> blk_size) = addr;
     
     pthread_mutex_init( &_cs_substream -> mutex_blk   , &Stream -> attr_mutex_debug);
-    pthread_mutex_init( &_cs_substream -> mutex_push  , &Stream -> attr_mutex_debug);
     pthread_mutex_init( &_cs_substream -> mutex_read  , &Stream -> attr_mutex_debug);
     
     dassert( pthread_mutex_lock( &Stream -> mutex_head) == 0);
     
-    if( Stream -> head == NULL)
-      Stream -> head = _cs_substream;
+    _cs_substream -> next = _cs_substream;
+    
+    if( Stream -> head == NULL){
+      atomic_store( &Stream -> head, _cs_substream);
+      goto done;
+    }
     
     _cs_substream -> next = Stream -> head -> next;
-    Stream -> head -> next = _cs_substream;
+    atomic_store( &Stream -> head -> next, _cs_substream);
+    
+  done:
     
     dassert( pthread_mutex_unlock( &Stream -> mutex_head) == 0);
     
@@ -151,19 +159,20 @@ CS_Fetch( ComandStream *Stream){
   
   _cs_substream = _cs_substream_bunker[ Stream -> id];
   
-  dassert( pthread_mutex_lock( &_cs_substream -> mutex_blk) == 0);
   if unlikely( _cs_substream -> push == _cs_substream -> blk_push + Stream -> blk_size){
+    dassert( pthread_mutex_lock( &_cs_substream -> mutex_blk) == 0);
     if unlikely( *( address *)( _cs_substream -> blk_push + Stream -> blk_size) == _cs_substream -> blk_releas){
       address addr = MS_CreateFromSize( Stream -> freenode, true_blk_size);
       *( address *)( addr + Stream -> blk_size) = *( address *)( _cs_substream -> blk_push + Stream -> blk_size);
-      *( address *)( _cs_substream -> blk_push + Stream -> blk_size) = addr;
+      atomic_store( ( address *)( _cs_substream -> blk_push + Stream -> blk_size), addr);
     }
-    _cs_substream -> blk_push = *( address *)( _cs_substream -> blk_push + Stream -> blk_size);
-    dassert( pthread_mutex_lock( &_cs_substream -> mutex_push) == 0);
-    _cs_substream -> push  = _cs_substream -> blk_push;
-    dassert( pthread_mutex_unlock( &_cs_substream -> mutex_push) == 0);
+    
+    atomic_store( &_cs_substream -> blk_push, *( address *)( _cs_substream -> blk_push + Stream -> blk_size));
+    
+    dassert( pthread_mutex_unlock( &_cs_substream -> mutex_blk) == 0);
+    
+    atomic_store( &_cs_substream -> push, _cs_substream -> blk_push);
   }
-  dassert( pthread_mutex_unlock( &_cs_substream -> mutex_blk) == 0);
   
   ret = _cs_substream -> push;
   
@@ -186,16 +195,15 @@ CS_Push( ComandStream *Stream, const void *ptr){
   
   assert( addr == _cs_substream -> push);
   
-  dassert( pthread_mutex_lock( &_cs_substream -> mutex_push) == 0);
-  _cs_substream -> push = _cs_substream -> push + Stream -> size;
-  dassert( pthread_mutex_unlock( &_cs_substream -> mutex_push) == 0);
-  
+  atomic_fetch_add( &_cs_substream -> push, Stream -> size);
+    
   if( _cs_substream -> push == _cs_substream -> blk_push + Stream -> blk_size)
     CS_Signal( Stream);
 }
 
 static inline void
 CS_Signal( ComandStream *Stream){
+  
   assert( Stream != NULL);
   
   pthread_cond_signal( &Stream -> cond_releas);
@@ -222,6 +230,7 @@ CS_iswaiting( ComandStream *Stream, struct timespec tv, u8 worker){
 static inline void *
 CS_WaitReleas( ComandStream *Stream){
   address ret = 0;
+  
   assert( Stream != NULL);
   
   while( ( ret = ( address)CS_Releas( Stream)) == 0){
@@ -254,9 +263,13 @@ CS_Wait( ComandStream *Stream){
 static inline struct CS_Block
 CS_BlockReleas( ComandStream *Stream){
   struct CS_Block block = { 0};
-  struct _cs_substream *_cs_substream = _cs_reading_bunker[ Stream -> id];
+  struct _cs_substream *_cs_substream;
   
-  assert( _cs_substream != NULL);
+  assert( Stream != NULL);
+  assert( _cs_reading_bunker != NULL);
+  assert( _cs_reading_bunker[ Stream -> id] != NULL);
+  
+  _cs_substream = _cs_reading_bunker[ Stream -> id];
   
   block.blk_size = Stream -> blk_size;
   block.size = Stream -> size;
@@ -265,22 +278,17 @@ CS_BlockReleas( ComandStream *Stream){
   
   if( _cs_substream -> blk_releas != _cs_substream -> blk_push &&
       *( address *)( _cs_substream -> blk_push + Stream -> blk_size) == _cs_substream -> blk_releas){
-    
-    address addr = MS_CreateFromSize( Stream -> freenode, true_blk_size);
+    address addr = *( address *)( _cs_substream -> blk_releas + Stream -> blk_size);
     
     block.blk_ptr = _cs_substream -> blk_releas;
     
-    *( address *)( addr + Stream -> blk_size) = *( address *)( _cs_substream -> blk_releas + Stream -> blk_size);
-    *( address *)( _cs_substream -> blk_push + Stream -> blk_size) = addr;
+    atomic_store( &_cs_substream -> blk_releas, addr);
     
-    _cs_substream -> blk_releas = addr;
+    atomic_store( ( address *)( _cs_substream -> blk_push + Stream -> blk_size), addr);
     
-    _cs_substream -> releas = _cs_substream -> blk_releas + Stream -> blk_size;
+    atomic_store( &_cs_substream -> releas, _cs_substream -> blk_releas);
     
     dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
-    
-    CS_Signal( Stream);
-    
   }
   
   dassert( pthread_mutex_unlock( &_cs_substream -> mutex_blk) == 0);
@@ -296,73 +304,58 @@ CS_Releas( ComandStream *Stream){
   address ret = 0;
   struct _cs_substream *_cs_substream;
   struct _cs_substream *end_sentinel;
+  
   assert( Stream != NULL);
   
   if unlikely( _cs_reading_bunker == NULL){
-    _cs_reading_bunker   = MS_CreateArray( Stream -> freenode, _cs_max_stream_id, struct _cs_substream *, 0);
+    _cs_reading_bunker = MS_CreateArray( Stream -> freenode, _cs_max_stream_id, struct _cs_substream *, 0);
   }
   
   _cs_substream = _cs_reading_bunker[ Stream -> id];
   
-  if unlikely( _cs_substream == NULL && _cs_substream_bunker != NULL){
-    _cs_substream = _cs_substream_bunker[ Stream -> id];
-  }
-  
   if unlikely( _cs_substream == NULL){
-    dassert( pthread_mutex_lock( &Stream -> mutex_head) == 0);
     _cs_substream = Stream -> head;
-    dassert( pthread_mutex_unlock( &Stream -> mutex_head) == 0);
+    
+    if( _cs_substream == NULL)
+      return NULL;
+    
+    atomic_store( &Stream -> head, Stream -> head -> next);
   }
-  
-  if unlikely( _cs_substream == NULL){
-    return NULL;
-  }
-  
-  _cs_reading_bunker[ Stream -> id] = _cs_substream;
   
   end_sentinel = _cs_substream;
   
   do{
-    dassert( pthread_mutex_lock( &Stream -> mutex_head) == 0);
     _cs_substream = _cs_substream -> next;
-    dassert( pthread_mutex_unlock( &Stream -> mutex_head) == 0);
+    
+    if( _cs_substream -> push == _cs_substream -> releas){
+      continue;
+    }
     
     if( pthread_mutex_trylock( &_cs_substream -> mutex_read) != 0){
       continue;
     }
     
-    dassert( pthread_mutex_lock( &_cs_substream -> mutex_push) == 0);
-    if unlikely( _cs_substream -> push == _cs_substream -> releas){
-      dassert( pthread_mutex_unlock( &_cs_substream -> mutex_push) == 0);
-      pthread_mutex_unlock( &_cs_substream -> mutex_read);
-      continue;
-    }
-    dassert( pthread_mutex_unlock( &_cs_substream -> mutex_push) == 0);
-    
-    if( pthread_mutex_trylock( &_cs_substream -> mutex_blk) != 0){
-      dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
-      continue;
-    }
-    
     if unlikely( _cs_substream -> releas == _cs_substream -> blk_releas + Stream -> blk_size){
-      if unlikely( *( address *)( _cs_substream -> blk_push + Stream -> blk_size) != _cs_substream -> blk_releas){
+      
+      dassert( pthread_mutex_lock( &_cs_substream -> mutex_blk) == 0);
+      
+      atomic_store( &_cs_substream -> blk_releas, *( address *)( _cs_substream -> blk_releas + Stream -> blk_size));
+      
+      if( *( address *)( _cs_substream -> blk_push + Stream -> blk_size) != _cs_substream -> blk_releas){
 	address blk_free =  *( address *)( _cs_substream -> blk_push + Stream -> blk_size);
-	*( address *)( _cs_substream -> blk_push + ( Stream -> blk_size)) = *( address *)( blk_free + Stream -> blk_size);
+	atomic_store( ( address *)( _cs_substream -> blk_push + ( Stream -> blk_size)), *( address *)( blk_free + Stream -> blk_size));
 	MS_FreeFromSize( Stream -> freenode, blk_free, true_blk_size);
       }
-      _cs_substream -> blk_releas = *( address *)( _cs_substream -> blk_releas + Stream -> blk_size);
-      _cs_substream -> releas = _cs_substream -> blk_releas;
       
-      dassert( pthread_mutex_lock( &_cs_substream -> mutex_push) == 0);
+      dassert( pthread_mutex_unlock( &_cs_substream -> mutex_blk) == 0);
+      
+      atomic_store( &_cs_substream -> releas, _cs_substream -> blk_releas);
+      
       if unlikely( _cs_substream -> push == _cs_substream -> releas){
-	dassert( pthread_mutex_unlock( &_cs_substream -> mutex_push) == 0);
-	dassert( pthread_mutex_unlock( &_cs_substream -> mutex_blk) == 0);
 	dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
 	continue;
       }
-      dassert( pthread_mutex_unlock( &_cs_substream -> mutex_push) == 0);
     }
-    dassert( pthread_mutex_unlock( &_cs_substream -> mutex_blk) == 0);
     
     ret = _cs_substream -> releas;
     
@@ -389,11 +382,9 @@ CS_Finish( ComandStream *Stream, const void *ptr){
   
   assert( addr == _cs_substream -> releas);
   
-  _cs_substream -> releas = _cs_substream -> releas + Stream -> size;
+  atomic_fetch_add( &_cs_substream -> releas, Stream -> size);
   
   dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
-  
-  CS_Signal( Stream);
 }
 
 
