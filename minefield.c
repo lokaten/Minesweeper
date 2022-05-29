@@ -159,6 +159,8 @@ addelement( MS_field *minefield, s32 x, s32 y){
     
     tmp.cover = 0;
     
+    tmp.count = 14;
+    
     atomic_fetch_add( &minefield -> mine -> uncoverd, atomic_exchange( acse_f( minefield, pos -> x, pos -> y), tmp).cover? 1: 0);
     
     CS_Push( minefield -> uncovque, pos);
@@ -202,23 +204,26 @@ uncov_workthread( void *v_ptr){
     
     do{
       
-      element = uncover_element( minefield, *pos, minefield -> mine);
-      
-      if( root -> drawque != NULL){
-	drawelement( root -> drawque, element, pos -> x, pos -> y);
-      }
-      
-      if likely( element -> count == 0){
-	addelement( minefield, pos -> x - 1, pos -> y + 1);
-	addelement( minefield, pos -> x    , pos -> y + 1);
-	addelement( minefield, pos -> x + 1, pos -> y + 1);
+      if likely( atomic_load( acse_f( minefield, pos -> x, pos -> y)).count == 14){
 	
-	addelement( minefield, pos -> x - 1, pos -> y - 1);
-	addelement( minefield, pos -> x    , pos -> y - 1);
-	addelement( minefield, pos -> x + 1, pos -> y - 1);
+	element = uncover_element( minefield, *pos, minefield -> mine);
 	
-	addelement( minefield, pos -> x - 1, pos -> y    );
-	addelement( minefield, pos -> x + 1, pos -> y    );
+	if( root -> drawque != NULL){
+	  drawelement( root -> drawque, element, pos -> x, pos -> y);
+	}
+	
+	if likely( element -> count == 0){
+	  addelement( minefield, pos -> x - 1, pos -> y + 1);
+	  addelement( minefield, pos -> x    , pos -> y + 1);
+	  addelement( minefield, pos -> x + 1, pos -> y + 1);
+	  
+	  addelement( minefield, pos -> x - 1, pos -> y - 1);
+	  addelement( minefield, pos -> x    , pos -> y - 1);
+	  addelement( minefield, pos -> x + 1, pos -> y - 1);
+	  
+	  addelement( minefield, pos -> x - 1, pos -> y    );
+	  addelement( minefield, pos -> x + 1, pos -> y    );
+	}
       }
       
       com += block.size;
@@ -255,18 +260,17 @@ uncover_element( MS_field *minefield, MS_pos postion, MS_mstr *mine){
   
   atomic_fetch_add( &mine -> hit, acse_f( minefield, pos -> x, pos -> y) -> mine? 1: 0);
   
-  acse_f( minefield, postion.x, postion.y) -> count = 0;
-  
-  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x - 1, postion.y + 1) -> mine;
-  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x    , postion.y + 1) -> mine;
-  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x + 1, postion.y + 1) -> mine;
-  
-  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x - 1, postion.y - 1) -> mine;
-  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x    , postion.y - 1) -> mine;
-  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x + 1, postion.y - 1) -> mine;
-  
-  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x - 1, postion.y    ) -> mine;
-  acse_f( minefield, postion.x, postion.y) -> count += acse( *minefield, postion.x + 1, postion.y    ) -> mine;
+  acse_f( minefield, postion.x, postion.y) -> count =
+    acse( *minefield, postion.x - 1, postion.y + 1) -> mine +
+    acse( *minefield, postion.x    , postion.y + 1) -> mine +
+    acse( *minefield, postion.x + 1, postion.y + 1) -> mine +
+    
+    acse( *minefield, postion.x - 1, postion.y - 1) -> mine +
+    acse( *minefield, postion.x    , postion.y - 1) -> mine +
+    acse( *minefield, postion.x + 1, postion.y - 1) -> mine +
+    
+    acse( *minefield, postion.x - 1, postion.y    ) -> mine +
+    acse( *minefield, postion.x + 1, postion.y    ) -> mine;
   
   return acse_f( minefield, postion.x, postion.y);
 }
