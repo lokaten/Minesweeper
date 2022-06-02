@@ -259,7 +259,7 @@ event_dispatch( void){
 	  break;
 	case SDLK_F3:
 	case 'e':
-	  pthread_create( NULL, NULL, uncov_field, NULL);
+	  uncov_field( root -> minefield);
 	  
 	  root -> idle = 0;
 	  
@@ -431,9 +431,8 @@ mousebuttondown( SDL_Event event){
 	setzero( vid);
       }
       
-      uncov_elements( vid);
+      uncov_elements( root -> minefield, vid);
       
-      uncov();
       break;
     }
   case SDL_BUTTON_RIGHT:
@@ -534,9 +533,9 @@ void
 draw( void){
   GraphicWraper *GW = ( GraphicWraper *)root -> GW;
   
-  root -> tv_lastpresent.tv_nsec += 1000000000 / ( root -> idle? 100: 40);
+  root -> tv_lastpresent.tv_nsec += 1000000000 / ( root -> idle? 100: 50);
   
-  CS_iswaiting( root -> drawque, root -> tv_lastpresent, 1);
+  CS_iswaiting( root -> drawque, root -> tv_lastpresent);
   
   clock_gettime( CLOCK_REALTIME, &root -> tv_lastpresent);
   
@@ -590,8 +589,7 @@ draw( void){
 		     GW -> real.element_height * GW -> mfvid.height);
     }
     
-    //if( root -> drawque -> releas == root -> drawque -> push)
-      root -> idle = 1;
+    root -> idle = CS_isEmpty( root -> drawque);
     
     SDL_RenderPresent( GW -> renderer);
   }
@@ -607,7 +605,7 @@ static inline void
 drawelement_unqued( GraphicWraper *GW, const MS_element *element, s16 w, s16 h){
   SDL_Texture *tile = NULL;
   
-  if( GW == NULL) return;
+  assert( GW != NULL);
   
   if( element -> flag){
     tile =  GW -> flag;
@@ -625,9 +623,7 @@ drawelement_unqued( GraphicWraper *GW, const MS_element *element, s16 w, s16 h){
     case  6: tile =  GW -> six; break;
     case  7: tile =  GW -> seven; break;
     case  8: tile =  GW -> eight; break;
-    case 15: tile =  GW -> clear; break;
     default:
-      return;
       break;
   }
   

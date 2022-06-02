@@ -136,8 +136,8 @@ setminefield( void){
 
 static inline void
 addelement( MS_field *minefield, s32 x, s32 y){
-  MS_element tmp;
   MS_pos lpos;
+  MS_element element;
   
   assert( minefield -> data != NULL);
   
@@ -149,21 +149,24 @@ addelement( MS_field *minefield, s32 x, s32 y){
     lpos.y = ( lpos.y + minefield -> height) % minefield -> height;
   }
   
-  tmp = atomic_load( acse_f( minefield, lpos.x, lpos.y));
+  element = atomic_load( acse_f( minefield, lpos.x, lpos.y));
   
-  if( tmp.cover &&
-      !tmp.flag){
-    MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
+  if( !element.flag && element.cover){
+    MS_element ex;
     
-    *pos = lpos;
+    element.cover = 0;
     
-    tmp.cover = 0;
-    
-    tmp.count = 14;
-    
-    atomic_fetch_add( &minefield -> mine -> uncoverd, atomic_exchange( acse_f( minefield, pos -> x, pos -> y), tmp).cover? 1: 0);
-    
-    CS_Push( minefield -> uncovque, pos);
+    ex = atomic_exchange( acse_f( minefield, lpos.x, lpos.y), element);
+        
+    if( ex.cover){
+      MS_pos *pos = ( MS_pos *)CS_Fetch( minefield -> uncovque);
+      
+      *pos = lpos;
+      
+      CS_Push( minefield -> uncovque, pos);
+      
+      atomic_fetch_add( &minefield -> mine -> uncoverd, 1);
+    }
   }
 }
 
@@ -204,26 +207,23 @@ uncov_workthread( void *v_ptr){
     
     do{
       
-      if likely( atomic_load( acse_f( minefield, pos -> x, pos -> y)).count == 14){
+      element = uncover_element( minefield, *pos, minefield -> mine);
+      
+      if( root -> drawque != NULL){
+	drawelement( root -> drawque, element, pos -> x, pos -> y);
+      }
+      
+      if likely( element -> count == 0){
+	addelement( minefield, pos -> x - 1, pos -> y + 1);
+	addelement( minefield, pos -> x    , pos -> y + 1);
+	addelement( minefield, pos -> x + 1, pos -> y + 1);
 	
-	element = uncover_element( minefield, *pos, minefield -> mine);
+	addelement( minefield, pos -> x - 1, pos -> y - 1);
+	addelement( minefield, pos -> x    , pos -> y - 1);
+	addelement( minefield, pos -> x + 1, pos -> y - 1);
 	
-	if( root -> drawque != NULL){
-	  drawelement( root -> drawque, element, pos -> x, pos -> y);
-	}
-	
-	if likely( element -> count == 0){
-	  addelement( minefield, pos -> x - 1, pos -> y + 1);
-	  addelement( minefield, pos -> x    , pos -> y + 1);
-	  addelement( minefield, pos -> x + 1, pos -> y + 1);
-	  
-	  addelement( minefield, pos -> x - 1, pos -> y - 1);
-	  addelement( minefield, pos -> x    , pos -> y - 1);
-	  addelement( minefield, pos -> x + 1, pos -> y - 1);
-	  
-	  addelement( minefield, pos -> x - 1, pos -> y    );
-	  addelement( minefield, pos -> x + 1, pos -> y    );
-	}
+	addelement( minefield, pos -> x - 1, pos -> y    );
+	addelement( minefield, pos -> x + 1, pos -> y    );
       }
       
       com += block.size;
@@ -232,23 +232,17 @@ uncov_workthread( void *v_ptr){
       
     }while( block.blk_ptr && com != block.blk_ptr + block.blk_size);
     
-    if( root -> drawque != NULL){
+    if( CS_isEmpty( minefield -> uncovque) &&
+	root -> drawque != NULL){
       CS_Signal( root -> drawque);
     }
+    
+    CS_Signal( minefield -> uncovque);
     
     if( block.blk_ptr){
       MS_FreeFromSize( root -> freenode, block.blk_ptr, true_blk_size);
     }
   }
-  
-  return NULL;
-}
-
-void *
-uncov( void){
-  CS_Signal( ( ( MS_root *)root) -> minefield -> uncovque);
-  
-  ( ( MS_root *) root) -> idle = 0;
   
   return NULL;
 }
@@ -288,11 +282,11 @@ setmine_element( MS_field *minefield, u32 index, MS_mstr *mine){
   if( !element -> set){
     element -> mine = ( ( ( u64)( mine -> seed) * ( mine -> noelements - mine -> set)) >> 32) < ( mine -> level - mine -> mines);
     
-    mine -> set += 1;
-    
     mine -> mines += element -> mine;
     
     element -> set = 1;
+    
+    ++mine -> set;
   }
   
   return element;
@@ -332,41 +326,40 @@ setmine_elements( MS_field *minefield,
 
 
 void
-uncov_elements( MS_video vid){
-  unsigned long i;
-  MS_pos postion;
+uncov_elements( MS_field *field, MS_video vid){
+  int x, y;
   
-  assert( root != NULL);
+  assert( field != NULL);
   
-  i = vid.width * vid.height;
+  assert( vid.width  <= field -> width);
+  assert( vid.height <= field -> height);
   
-  while( i--){
-    postion.x = ( s32)( i % vid.width) + vid.xdiff;
-    postion.y = ( s32)( i / vid.width) + vid.ydiff;
-    
-    addelement( root -> minefield, postion.x, postion.y);
+  y = -1;
+  
+  while( ++y < ( int)vid.height){
+    x = ( int)vid.width;
+    while( x--){
+      addelement( field, vid.xdiff + x, vid.ydiff + y);
+    }
   }
   
-  CS_Signal( root -> minefield -> uncovque);
+  CS_Signal( field -> uncovque);
 }
 
 
-void *
-uncov_field( void *v_ptr){
+void 
+uncov_field( MS_field *field){
   MS_video vid;
+  
   assert( root != NULL);
+  assert( field != NULL);
   
-  assert( v_ptr == NULL);
+  vid = ( MS_video){ .xdiff = 0,
+		     .ydiff = 0,
+		     .width  = field -> width,
+		     .height = field -> height};
   
-  vid  = ( MS_video){ .xdiff = 0, .ydiff = 0,
-		      .width  = ( ( MS_root *) root) -> minefield -> width,
-		      .height = ( ( MS_root *) root) -> minefield -> height};
-  
-  uncov_elements( vid);
-  
-  uncov();
-  
-  return NULL;
+  uncov_elements( field, vid);
 }
 
 
@@ -393,9 +386,10 @@ setzero( MS_video  vid){
 	!acse( *minefield, x, y) -> flag &&
 	acse(  *minefield, x, y) -> count == 15){
       acse( *minefield, x, y) -> set = 1;
-      ++minefield -> mine ->  set;
+      
+      ++minefield -> mine -> set;
     }
   }
-    
+  
   pthread_mutex_unlock( &minefield -> mutex_field);
 }

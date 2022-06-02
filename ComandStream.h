@@ -10,6 +10,7 @@ extern "C" {
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdatomic.h>
+#include <stdbool.h>
 
 #include "MS_util.h"
 
@@ -40,7 +41,8 @@ typedef struct{
   pthread_cond_t  cond_waiting;
   pthread_mutexattr_t attr_mutex_debug;
   u8 waiting;
-  u8 worker;
+  u8 reader;
+  u8 empty;
   u8 id;
 }ComandStream;
 
@@ -58,7 +60,9 @@ static inline void CS_Push( ComandStream *, const void *);
 static inline void CS_Signal( ComandStream *);
 static inline void *CS_WaitReleas( ComandStream *);
 static inline void CS_Wait( ComandStream *);
+static inline void CS_TimedWait( ComandStream *, struct timespec *);
 static inline void *CS_Releas( ComandStream *);
+static inline int CS_isEmpty( ComandStream *);
 static inline void CS_Finish( ComandStream *, const void *);
 static inline void CS_Free( FreeNode *, ComandStream *);
 
@@ -104,7 +108,8 @@ CS_CreateStreamFromSize( FreeNode *freenode, const size_t true_size){
   pthread_cond_init(  &Stream -> cond_releas , NULL);
   
   Stream -> waiting = 0;
-  Stream -> worker = 0;
+  Stream -> reader = 0;
+  Stream -> empty = true;
   
   return Stream;
 }
@@ -172,8 +177,6 @@ CS_Fetch( ComandStream *Stream){
     atomic_store( &_cs_substream -> push, _cs_substream -> blk_push);
     
     dassert( pthread_mutex_unlock( &_cs_substream -> mutex_blk) == 0);
-    
-    CS_Signal( Stream);
   }
   
   ret = _cs_substream -> push;
@@ -197,6 +200,9 @@ CS_Push( ComandStream *Stream, const void *ptr){
   
   assert( addr == _cs_substream -> push);
   
+  if( atomic_load( &Stream -> empty) != false)
+    atomic_store( &Stream -> empty, false);
+  
   atomic_fetch_add( &_cs_substream -> push, Stream -> size);
 }
 
@@ -210,15 +216,11 @@ CS_Signal( ComandStream *Stream){
 
 
 static inline void
-CS_iswaiting( ComandStream *Stream, struct timespec tv, u8 worker){
+CS_iswaiting( ComandStream *Stream, struct timespec tv){
   
   dassert( pthread_mutex_lock( &Stream -> mutex_signal) == 0);
   
-  Stream -> worker = worker;
-  
   pthread_cond_timedwait( &Stream -> cond_waiting, &Stream -> mutex_signal, &tv);
-  
-  Stream -> worker = 0;
   
   dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
   
@@ -243,19 +245,36 @@ CS_WaitReleas( ComandStream *Stream){
 
 static inline void
 CS_Wait( ComandStream *Stream){
-  if( pthread_mutex_lock( &Stream -> mutex_signal) == 0){
-    Stream -> waiting += 1;
-    
-    if( Stream -> waiting >= Stream -> worker){
-      pthread_cond_signal( &Stream -> cond_waiting);
-    }
-    
-    pthread_cond_wait( &Stream -> cond_releas, &Stream -> mutex_signal);
-    
-    Stream -> waiting -= 1;
-    
-    dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
+  CS_TimedWait( Stream, NULL);
+}
+
+
+static inline void
+CS_TimedWait( ComandStream *Stream, struct timespec *tv){
+  
+  assert( Stream != NULL);
+  
+  dassert( pthread_mutex_lock( &Stream -> mutex_signal) == 0);
+  
+  Stream -> waiting += 1;
+
+  if( Stream -> waiting >= Stream -> reader){
+    pthread_cond_signal( &Stream -> cond_waiting);
   }
+  
+  if( _cs_reading_bunker != NULL){
+    _cs_reading_bunker[ Stream -> id] = NULL;
+  }
+  
+  if( tv != NULL){
+    pthread_cond_timedwait( &Stream -> cond_releas, &Stream -> mutex_signal, tv);
+  }else{
+    pthread_cond_wait( &Stream -> cond_releas, &Stream -> mutex_signal);
+  }
+  
+  Stream -> waiting -= 1;
+  
+  dassert( pthread_mutex_unlock( &Stream -> mutex_signal) == 0);
 }
 
 
@@ -284,7 +303,7 @@ CS_BlockReleas( ComandStream *Stream){
     
     _cs_substream -> blk_releas = *( address *)( _cs_substream -> blk_releas + Stream -> blk_size);
     
-    atomic_store( &_cs_substream -> releas, _cs_substream -> blk_releas);
+    _cs_substream -> releas = _cs_substream -> blk_releas;
     
     dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
   }
@@ -299,7 +318,6 @@ CS_BlockReleas( ComandStream *Stream){
 //
 static inline void *
 CS_Releas( ComandStream *Stream){
-  address ret = 0;
   struct _cs_substream *_cs_substream;
   struct _cs_substream *end_sentinel;
   
@@ -312,10 +330,12 @@ CS_Releas( ComandStream *Stream){
   _cs_substream = _cs_reading_bunker[ Stream -> id];
   
   if unlikely( _cs_substream == NULL){
-    _cs_substream = Stream -> head;
+    _cs_substream = atomic_load( &Stream -> head);
     
     if( _cs_substream == NULL)
       return NULL;
+    
+    atomic_fetch_add( &Stream -> reader, 1);
     
     atomic_store( &Stream -> head, Stream -> head -> next);
   }
@@ -329,7 +349,7 @@ CS_Releas( ComandStream *Stream){
       continue;
     }
     
-    if( atomic_load( &_cs_substream -> push) == atomic_load( &_cs_substream -> releas)){
+    if( atomic_load( &_cs_substream -> push) == _cs_substream -> releas){
       dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
       continue;
     }
@@ -346,7 +366,7 @@ CS_Releas( ComandStream *Stream){
       }
       dassert( pthread_mutex_unlock( &_cs_substream -> mutex_blk) == 0);
       
-      atomic_store( &_cs_substream -> releas, _cs_substream -> blk_releas);
+      _cs_substream -> releas = _cs_substream -> blk_releas;
             
       if unlikely( atomic_load( &_cs_substream -> push) == _cs_substream -> releas){
 	dassert( pthread_mutex_unlock( &_cs_substream -> mutex_read) == 0);
@@ -354,15 +374,31 @@ CS_Releas( ComandStream *Stream){
       }
     }
     
-    ret = _cs_substream -> releas;
+    _cs_reading_bunker[ Stream -> id] = _cs_substream;
     
-    break;
+    return ( void *)_cs_substream -> releas;
     
   }while( _cs_substream != end_sentinel);
   
-  _cs_reading_bunker[ Stream -> id] = _cs_substream;
+  if( atomic_load( &Stream -> empty) != true)
+    atomic_store( &Stream -> empty, true);
   
-  return ( void *)ret;
+  _cs_reading_bunker[ Stream -> id] = NULL;
+  
+  return NULL;
+}
+
+
+static inline int
+CS_isEmpty( ComandStream *Stream){
+  
+  if( Stream == NULL)
+    return -1;
+  
+  if( Stream -> head == NULL)
+    return 1;
+  
+  return atomic_load( &Stream -> empty)? 1: 0;
 }
 
 
@@ -390,19 +426,87 @@ CS_Finish( ComandStream *Stream, const void *ptr){
 //
 static inline void
 CS_Free( FreeNode *freenode, ComandStream *Stream){
-  if likely( Stream != NULL){
+  {
+    struct _cs_substream *_cs_substream;
     address addr;
     
-    pthread_mutex_lock( &Stream -> head -> mutex_read);
-    addr = Stream -> head -> blk_push;
-    Stream -> head -> blk_push = *( address *)( Stream -> head -> blk_push + Stream -> blk_size);
+    assert( Stream != NULL);
+    if( _cs_substream_bunker == NULL &&
+	_cs_substream_bunker[ Stream -> id] != NULL){
+      goto free_readear;
+    }
+    
+    _cs_substream = _cs_substream_bunker[ Stream -> id];
+    
+    pthread_mutex_lock( &_cs_substream -> mutex_read);
+    
+    if( _cs_substream -> releas != _cs_substream -> push){
+      pthread_mutex_unlock( &_cs_substream -> mutex_read);
+      goto free_readear;
+    }
+    
+    addr = _cs_substream -> blk_push;
+    _cs_substream -> blk_push = *( address *)( _cs_substream -> blk_push + Stream -> blk_size);
     *( address *)( addr + Stream -> blk_size) = 0;
     
-    while( Stream -> head -> blk_push != 0){
-      addr = Stream -> head -> blk_push;
-      Stream -> head -> blk_push = *( address *)( Stream -> head -> blk_push + Stream -> blk_size);
-      MS_FreeFromSize( Stream -> freenode, addr, true_blk_size);
+    while( _cs_substream -> blk_push != 0){
+      addr = _cs_substream -> blk_push;
+      _cs_substream -> blk_push = *( address *)( _cs_substream -> blk_push + Stream -> blk_size);
+      MS_FreeFromSize( freenode, addr, true_blk_size);
     }
+  }
+  {
+    struct _cs_substream *end_sentinel;
+    
+    end_sentinel = atomic_load( &Stream -> head);
+    
+    do{
+      atomic_store( &Stream -> head, Stream -> head -> next);
+      
+      if( Stream -> head -> next == _cs_substream_bunker[ Stream -> id]){
+	atomic_store( &Stream -> head -> next, Stream -> head -> next -> next);
+	break;
+      }
+      
+    }while( Stream -> head != end_sentinel);
+    
+    if( Stream -> head != _cs_substream_bunker[ Stream -> id]){
+      MS_Free( freenode, _cs_substream_bunker[ Stream -> id]);
+      _cs_substream_bunker[ Stream -> id] = NULL;
+    }
+  }
+  
+ free_readear:
+  {
+    if( _cs_reading_bunker != NULL &&
+	_cs_reading_bunker[ Stream -> id] != NULL){
+      _cs_reading_bunker[ Stream -> id] = NULL;
+      atomic_fetch_sub( &Stream -> reader, 1);
+    }
+  }
+  {
+    struct _cs_substream *head;
+    
+    dassert( pthread_mutex_lock( &Stream -> mutex_head) == 0);
+    
+    head = atomic_load( &Stream -> head);
+    
+    if( head != head -> next ||
+	atomic_load( &Stream -> reader) != 0){
+      dassert( pthread_mutex_unlock( &Stream -> mutex_head) == 0);
+      return;
+    }
+    
+    atomic_store( &Stream -> head, NULL);
+    
+    if( atomic_load( &Stream -> reader) != 0){
+      dassert( pthread_mutex_unlock( &Stream -> mutex_head) == 0);
+      return;
+    }
+    
+    MS_Free( freenode, head);
+    
+    _cs_substream_bunker[ Stream -> id] = NULL;
     
     MS_Free( freenode, Stream);
   }

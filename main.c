@@ -55,7 +55,7 @@ ROOT_Init( const int argc, const char **argv){
   FreeNode *freenode;
   
   MS_video real = { 0};
-  MS_field *minefield;
+  MS_field *minefield = NULL;
   MS_stream *mss;
   bool no_resize = 0;
   
@@ -91,7 +91,6 @@ ROOT_Init( const int argc, const char **argv){
   dassert( !opt_false);
   
   mss = def_out;
-  minefield = field_beginner;
   
   {
     MS_options opt[] = {
@@ -147,9 +146,13 @@ ROOT_Init( const int argc, const char **argv){
 #endif
   
   freenode = MS_CreateFreeList();
-  
-  if( benchmark){
-    minefield = field_benchmark;
+
+  if( minefield == NULL){
+    if( benchmark){
+      minefield = field_benchmark;
+    }else{
+      minefield = field_beginner;
+    }
   }
   
   if( minefield == field_fractal){
@@ -216,9 +219,8 @@ ROOT_Init( const int argc, const char **argv){
   
   if( benchmark){
     setzero( ( MS_video){ .xdiff = 320, .ydiff = 180, .width  = 3, .height = 3});
-    uncov_elements( ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
-    uncov();
-    
+    uncov_elements( root -> minefield, ( MS_video){ .xdiff =  321, .ydiff =  181, .width  = 1, .height = 1});
+        
     {
       u64 tutime;
       u64 gamestart;
@@ -233,7 +235,7 @@ ROOT_Init( const int argc, const char **argv){
 	
 	tv.tv_nsec += 150000000;
 	
-	CS_iswaiting( root -> minefield -> uncovque, tv, 8);
+	CS_iswaiting( root -> minefield -> uncovque, tv);
 	
 	tutime = getnanosec();
 	
@@ -246,12 +248,14 @@ ROOT_Init( const int argc, const char **argv){
 	
 	if( ( root -> minefield -> mine -> uncoverd == ( root -> minefield -> mine -> noelements - root -> minefield -> mine -> level))){
 	  MS_print( root -> mss -> out, TERM( "\r\t\t\t Win!!         \n"));
-	  break;
 	}else{
 	  MS_print( root -> mss -> out, TERM( "\r\t\t\t %lu of %lu      "), root -> minefield -> mine -> uncoverd, root -> minefield -> mine -> noelements);
 	}
 	
 	pthread_mutex_unlock( &root -> minefield -> mutex_field);
+	
+	if( CS_isEmpty( root -> minefield -> uncovque))
+	  break;
       }
     }
     
@@ -306,7 +310,7 @@ main( const int argc, const char** argv){
     
     if( !gameover){
       if( root -> minefield -> mine -> hit >= root -> lives){
-	pthread_create( NULL, NULL, uncov_field, NULL);
+	uncov_field( root -> minefield);
 	
 	MS_print( root -> mss -> out, TERM( "\r\t\t\t Mine!!        "));
 	gameover = TRUE;
